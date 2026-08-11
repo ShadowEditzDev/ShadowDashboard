@@ -1,5 +1,3 @@
-YEAHH 😭 you mean like a **proper Discord/GitHub-style README** with sections and emojis:
-
 # 🌑 𝑆𝘩𝑎𝑑𝑜𝘸 • 影-Bot
 
 > ⚔️ **Rise from the shadows. Rule your server.**
