@@ -3,111 +3,194 @@
 <head>
     <meta charset="UTF-8">
 
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
-    <title>ShadowBot Dashboard | 𝑆𝘩𝑎𝑑𝑜𝘸 • 影-Bot</title>
+    <title>𝑆𝘩𝑎𝘥𝑜𝘸 • 影-Bot | Discord Dashboard</title>
 
     <meta
         name="description"
-        content="ShadowBot Dashboard — manage your Discord server, XP, games, moderation, verification and polls."
+        content="𝑆𝘩𝑎𝘥𝑜𝘸 • 影-Bot Discord dashboard. Manage your server, XP, levels, games, moderation, verification and polls."
     >
 
     <meta
         name="keywords"
-        content="ShadowBot, Discord bot, Discord dashboard, Shadow Bot, 𝑆𝘩𝑎𝑑𝑜𝘸 • 影"
+        content="ShadowBot, Discord Bot, Discord Dashboard, Shadow, 影, XP, Levels, Moderation, Discord Games"
     >
 
     <meta name="author" content="ShadowEditzDev">
 
-    <!-- Favicon -->
-    <link rel="icon" type="image/png" href="logo.png">
+    <meta
+        name="robots"
+        content="index, follow"
+    >
 
-    <!-- Open Graph -->
-    <meta property="og:type" content="website">
-    <meta property="og:title" content="ShadowBot Dashboard">
+    <link
+        rel="canonical"
+        href="https://shadoweditzdev.github.io/ShadowDashboard/"
+    >
+
+    <link
+        rel="icon"
+        type="image/png"
+        href="logo.png"
+    >
+
+    <link
+        rel="apple-touch-icon"
+        href="logo.png"
+    >
+
+    <meta
+        property="og:type"
+        content="website"
+    >
+
+    <meta
+        property="og:title"
+        content="𝑆𝘩𝑎𝘥𝑜𝘸 • 影-Bot | Discord Dashboard"
+    >
+
     <meta
         property="og:description"
-        content="Manage your Discord server with the ShadowBot Dashboard."
+        content="Manage your Discord server, XP system, games, moderation, verification and polls with the 𝑆𝘩𝑎𝘥𝑜𝘸 • 影-Bot dashboard."
     >
-    <meta
-        property="og:image"
-        content="https://shadoweditzdev.github.io/ShadowDashboard/ShadowDashboard/logo.png"
-    >
+
     <meta
         property="og:url"
         content="https://shadoweditzdev.github.io/ShadowDashboard/"
     >
-    <meta property="og:site_name" content="𝑆𝘩𝑎𝑑𝑜𝘸 • 影-Bot">
 
-    <!-- Twitter / Discord preview -->
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="ShadowBot Dashboard">
+    <meta
+        property="og:site_name"
+        content="𝑆𝘩𝑎𝘥𝑜𝘸 • 影-Bot"
+    >
+
+    <meta
+        property="og:image"
+        content="https://shadoweditzdev.github.io/ShadowDashboard/banner.png"
+    >
+
+    <meta
+        property="og:image:alt"
+        content="𝑆𝘩𝑎𝘥𝑜𝘸 • 影-Bot Dashboard"
+    >
+
+    <meta
+        property="og:image:type"
+        content="image/png"
+    >
+
+    <meta
+        name="twitter:card"
+        content="summary_large_image"
+    >
+
+    <meta
+        name="twitter:title"
+        content="𝑆𝘩𝑎𝘥𝑜𝘸 • 影-Bot | Discord Dashboard"
+    >
+
     <meta
         name="twitter:description"
-        content="Manage your Discord server, XP, games, moderation and verification."
-    >
-    <meta
-        name="twitter:image"
-        content="https://shadoweditzdev.github.io/ShadowDashboard/ShadowDashboard/banner.png"
+        content="The official 𝑆𝘩𝑎𝘥𝑜𝘸 • 影-Bot Discord dashboard."
     >
 
-    <link rel="stylesheet" href="style.css">
+    <meta
+        name="twitter:image"
+        content="https://shadoweditzdev.github.io/ShadowDashboard/banner.png"
+    >
+
+    <link
+        rel="stylesheet"
+        href="style.css"
+    >
 </head>
 
 <body>
+
+    <!-- =========================
+         SIDEBAR
+    ========================== -->
 
     <aside class="sidebar">
 
         <div class="brand">
 
-            <div class="brand-icon">
-                <img src="logo.png" alt="ShadowBot">
-            </div>
+            <img
+                class="brand-icon"
+                src="logo.png"
+                alt="ShadowBot Logo"
+            >
 
             <div>
-                <h1>𝑆𝘩𝑎𝑑𝑜𝘸 • 影-Bot</h1>
+                <h1>𝑆𝘩𝑎𝘥𝑜𝘸 • 影-Bot</h1>
                 <span>Control Panel</span>
             </div>
 
         </div>
 
-
         <nav>
 
-            <button class="nav-btn active" onclick="showPage('overview', this)">
+            <button
+                class="nav-btn active"
+                onclick="showPage('overview', this)"
+            >
                 🏠 <span>Overview</span>
             </button>
 
-            <button class="nav-btn" onclick="showPage('server', this)">
+            <button
+                class="nav-btn"
+                onclick="showPage('server', this)"
+            >
                 🛡️ <span>Server</span>
             </button>
 
-            <button class="nav-btn" onclick="showPage('xp', this)">
+            <button
+                class="nav-btn"
+                onclick="showPage('xp', this)"
+            >
                 ⭐ <span>XP & Levels</span>
             </button>
 
-            <button class="nav-btn" onclick="showPage('games', this)">
+            <button
+                class="nav-btn"
+                onclick="showPage('games', this)"
+            >
                 🎮 <span>Games</span>
             </button>
 
-            <button class="nav-btn" onclick="showPage('moderation', this)">
+            <button
+                class="nav-btn"
+                onclick="showPage('moderation', this)"
+            >
                 🔨 <span>Moderation</span>
             </button>
 
-            <button class="nav-btn" onclick="showPage('verification', this)">
+            <button
+                class="nav-btn"
+                onclick="showPage('verification', this)"
+            >
                 🔐 <span>Verification</span>
             </button>
 
-            <button class="nav-btn" onclick="showPage('polls', this)">
+            <button
+                class="nav-btn"
+                onclick="showPage('polls', this)"
+            >
                 🗳️ <span>Polls</span>
             </button>
 
-            <button class="nav-btn" onclick="showPage('settings', this)">
+            <button
+                class="nav-btn"
+                onclick="showPage('settings', this)"
+            >
                 ⚙️ <span>Settings</span>
             </button>
 
         </nav>
-
 
         <div class="sidebar-bottom">
 
@@ -119,11 +202,14 @@
                     alt="ShadowBot"
                 >
 
-                <span class="status-dot"></span>
+                <span
+                    id="status-dot"
+                    class="status-dot"
+                ></span>
 
                 <div>
-                    <strong>𝑆𝘩𝑎𝑑𝑜𝘸 • 影-Bot</strong>
-                    <small>ONLINE</small>
+                    <strong>𝑆𝘩𝑎𝘥𝑜𝘸 • 影-Bot</strong>
+                    <small id="bot-status">CHECKING...</small>
                 </div>
 
             </div>
@@ -132,19 +218,33 @@
 
     </aside>
 
+    <!-- =========================
+         MAIN
+    ========================== -->
 
     <main class="main">
+
+        <!-- TOPBAR -->
 
         <header class="topbar">
 
             <div>
-                <p class="eyebrow">SHADOW • 影</p>
-                <h2 id="pageTitle">Dashboard Overview</h2>
+
+                <p class="eyebrow">
+                    SHADOW • 影
+                </p>
+
+                <h2 id="pageTitle">
+                    Dashboard Overview
+                </h2>
+
             </div>
 
             <div class="user-area">
 
-                <div class="avatar">👤</div>
+                <div class="avatar">
+                    👤
+                </div>
 
                 <div>
                     <strong>Admin</strong>
@@ -155,16 +255,23 @@
 
         </header>
 
-
         <!-- =========================
              OVERVIEW
         ========================== -->
 
-        <section id="overview" class="page active">
+        <section
+            id="overview"
+            class="page active"
+        >
 
-            <div class="hero">
+            <div
+                class="hero"
+                style="background-image: url('banner.png');"
+            >
 
-                <div>
+                <div class="hero-overlay"></div>
+
+                <div class="hero-content">
 
                     <span class="hero-tag">
                         🌑 SHADOWBOT IS ONLINE
@@ -189,7 +296,6 @@
 
                 </div>
 
-
                 <div class="hero-symbol">
 
                     <img
@@ -201,173 +307,235 @@
 
             </div>
 
+            <!-- STATS -->
 
             <div class="stats-grid">
 
                 <div class="stat-card">
 
-                    <div class="stat-icon">👥</div>
+                    <div class="stat-icon">
+                        👥
+                    </div>
 
                     <div>
                         <span>Members</span>
-                        <strong id="memberCount">1,248</strong>
+
+                        <strong id="memberCount">
+                            1,248
+                        </strong>
                     </div>
 
                 </div>
 
-
                 <div class="stat-card">
 
-                    <div class="stat-icon">⭐</div>
+                    <div class="stat-icon">
+                        ⭐
+                    </div>
 
                     <div>
                         <span>Total XP</span>
-                        <strong id="xpCount">84,520</strong>
+
+                        <strong id="xpCount">
+                            84,520
+                        </strong>
                     </div>
 
                 </div>
 
-
                 <div class="stat-card">
 
-                    <div class="stat-icon">🎮</div>
+                    <div class="stat-icon">
+                        🎮
+                    </div>
 
                     <div>
                         <span>Games Played</span>
-                        <strong id="gameCount">2,431</strong>
+
+                        <strong id="gameCount">
+                            2,431
+                        </strong>
                     </div>
 
                 </div>
 
-
                 <div class="stat-card">
 
-                    <div class="stat-icon">🛡️</div>
+                    <div class="stat-icon">
+                        🛡️
+                    </div>
 
                     <div>
                         <span>Moderation</span>
-                        <strong>Protected</strong>
+
+                        <strong>
+                            Protected
+                        </strong>
                     </div>
 
                 </div>
 
             </div>
 
+            <!-- CONTENT -->
 
             <div class="content-grid">
 
+                <!-- FEATURES -->
 
                 <div class="panel">
 
                     <div class="panel-header">
 
                         <div>
-                            <h3>Bot Features</h3>
-                            <p>Current ShadowBot systems</p>
+
+                            <h3>
+                                Bot Features
+                            </h3>
+
+                            <p>
+                                Current ShadowBot systems
+                            </p>
+
                         </div>
 
                     </div>
 
-
                     <div class="feature-list">
-
 
                         <div class="feature">
 
                             <span>⭐</span>
 
                             <div>
-                                <strong>XP System</strong>
+
+                                <strong>
+                                    XP System
+                                </strong>
+
                                 <small>
                                     Levels and rank cards are enabled.
                                 </small>
+
                             </div>
 
-                            <b class="enabled">ENABLED</b>
+                            <b class="enabled">
+                                ENABLED
+                            </b>
 
                         </div>
-
 
                         <div class="feature">
 
                             <span>🎮</span>
 
                             <div>
-                                <strong>Games</strong>
+
+                                <strong>
+                                    Games
+                                </strong>
+
                                 <small>
                                     Interactive Discord games are enabled.
                                 </small>
+
                             </div>
 
-                            <b class="enabled">ENABLED</b>
+                            <b class="enabled">
+                                ENABLED
+                            </b>
 
                         </div>
-
 
                         <div class="feature">
 
                             <span>🗳️</span>
 
                             <div>
-                                <strong>Polls</strong>
+
+                                <strong>
+                                    Polls
+                                </strong>
+
                                 <small>
                                     Voting and poll commands are enabled.
                                 </small>
+
                             </div>
 
-                            <b class="enabled">ENABLED</b>
+                            <b class="enabled">
+                                ENABLED
+                            </b>
 
                         </div>
-
 
                         <div class="feature">
 
                             <span>🔐</span>
 
                             <div>
-                                <strong>Verification</strong>
+
+                                <strong>
+                                    Verification
+                                </strong>
+
                                 <small>
                                     Member verification is active.
                                 </small>
+
                             </div>
 
-                            <b class="enabled">ENABLED</b>
+                            <b class="enabled">
+                                ENABLED
+                            </b>
 
                         </div>
-
 
                         <div class="feature">
 
                             <span>🛡️</span>
 
                             <div>
-                                <strong>Moderation</strong>
+
+                                <strong>
+                                    Moderation
+                                </strong>
+
                                 <small>
                                     Server protection tools are active.
                                 </small>
+
                             </div>
 
-                            <b class="enabled">ENABLED</b>
+                            <b class="enabled">
+                                ENABLED
+                            </b>
 
                         </div>
-
 
                     </div>
 
                 </div>
 
+                <!-- QUICK ACTIONS -->
 
                 <div class="panel">
 
                     <div class="panel-header">
 
                         <div>
-                            <h3>Quick Actions</h3>
-                            <p>Frequently used controls</p>
+
+                            <h3>
+                                Quick Actions
+                            </h3>
+
+                            <p>
+                                Frequently used controls
+                            </p>
+
                         </div>
 
                     </div>
-
 
                     <div class="quick-actions">
 
@@ -391,21 +559,24 @@
 
                 </div>
 
-
             </div>
 
         </section>
-
 
         <!-- =========================
              SERVER
         ========================== -->
 
-        <section id="server" class="page">
+        <section
+            id="server"
+            class="page"
+        >
 
             <div class="section-title">
 
-                <h1>🛡️ Server Management</h1>
+                <h1>
+                    🛡️ Server Management
+                </h1>
 
                 <p>
                     Manage your Shadow Discord server.
@@ -413,15 +584,17 @@
 
             </div>
 
-
             <div class="settings-grid">
-
 
                 <div class="panel setting-card">
 
-                    <span class="big-icon">👋</span>
+                    <span class="big-icon">
+                        👋
+                    </span>
 
-                    <h3>Welcome Messages</h3>
+                    <h3>
+                        Welcome Messages
+                    </h3>
 
                     <p>
                         Send a Shadow-themed welcome message when someone joins.
@@ -440,12 +613,15 @@
 
                 </div>
 
-
                 <div class="panel setting-card">
 
-                    <span class="big-icon">🚪</span>
+                    <span class="big-icon">
+                        🚪
+                    </span>
 
-                    <h3>Leave Messages</h3>
+                    <h3>
+                        Leave Messages
+                    </h3>
 
                     <p>
                         Send a message when a member leaves the server.
@@ -464,12 +640,15 @@
 
                 </div>
 
-
                 <div class="panel setting-card">
 
-                    <span class="big-icon">📢</span>
+                    <span class="big-icon">
+                        📢
+                    </span>
 
-                    <h3>Announcements</h3>
+                    <h3>
+                        Announcements
+                    </h3>
 
                     <p>
                         Control bot announcement messages.
@@ -488,12 +667,15 @@
 
                 </div>
 
-
                 <div class="panel setting-card">
 
-                    <span class="big-icon">🤖</span>
+                    <span class="big-icon">
+                        🤖
+                    </span>
 
-                    <h3>Bot Status</h3>
+                    <h3>
+                        Bot Status
+                    </h3>
 
                     <p>
                         ShadowBot is currently connected to Discord.
@@ -505,21 +687,24 @@
 
                 </div>
 
-
             </div>
 
         </section>
-
 
         <!-- =========================
              XP
         ========================== -->
 
-        <section id="xp" class="page">
+        <section
+            id="xp"
+            class="page"
+        >
 
             <div class="section-title">
 
-                <h1>⭐ XP & Levels</h1>
+                <h1>
+                    ⭐ XP & Levels
+                </h1>
 
                 <p>
                     Configure your server's leveling system.
@@ -527,22 +712,21 @@
 
             </div>
 
-
             <div class="panel">
-
 
                 <div class="setting-row">
 
                     <div>
 
-                        <h3>XP System</h3>
+                        <h3>
+                            XP System
+                        </h3>
 
                         <p>
                             Give members XP when they chat.
                         </p>
 
                     </div>
-
 
                     <label class="switch">
 
@@ -558,12 +742,13 @@
 
                 </div>
 
-
                 <div class="setting-row">
 
                     <div>
 
-                        <h3>XP Per Message</h3>
+                        <h3>
+                            XP Per Message
+                        </h3>
 
                         <p>
                             Amount of XP members receive per message.
@@ -571,21 +756,22 @@
 
                     </div>
 
-
                     <input
                         class="number-input"
+                        id="xpPerMessage"
                         type="number"
                         value="10"
                     >
 
                 </div>
 
-
                 <div class="setting-row">
 
                     <div>
 
-                        <h3>XP Cooldown</h3>
+                        <h3>
+                            XP Cooldown
+                        </h3>
 
                         <p>
                             Seconds before a member can earn XP again.
@@ -593,21 +779,22 @@
 
                     </div>
 
-
                     <input
                         class="number-input"
+                        id="xpCooldown"
                         type="number"
                         value="30"
                     >
 
                 </div>
 
-
                 <div class="setting-row">
 
                     <div>
 
-                        <h3>Rank Cards</h3>
+                        <h3>
+                            Rank Cards
+                        </h3>
 
                         <p>
                             Allow members to use the /rank command.
@@ -615,11 +802,11 @@
 
                     </div>
 
-
                     <label class="switch">
 
                         <input
                             type="checkbox"
+                            id="rankCards"
                             checked
                         >
 
@@ -629,7 +816,6 @@
 
                 </div>
 
-
                 <button
                     class="primary-btn"
                     onclick="saveSettings()"
@@ -637,21 +823,24 @@
                     💾 Save XP Settings
                 </button>
 
-
             </div>
 
         </section>
-
 
         <!-- =========================
              GAMES
         ========================== -->
 
-        <section id="games" class="page">
+        <section
+            id="games"
+            class="page"
+        >
 
             <div class="section-title">
 
-                <h1>🎮 Games</h1>
+                <h1>
+                    🎮 Games
+                </h1>
 
                 <p>
                     Manage ShadowBot's interactive games.
@@ -659,19 +848,21 @@
 
             </div>
 
-
             <div class="stats-grid">
-
 
                 <div class="stat-card">
 
-                    <div class="stat-icon">🎮</div>
+                    <div class="stat-icon">
+                        🎮
+                    </div>
 
                     <div>
 
-                        <span>Games Played</span>
+                        <span>
+                            Games Played
+                        </span>
 
-                        <strong>
+                        <strong id="gamesPlayed">
                             2,431
                         </strong>
 
@@ -679,14 +870,17 @@
 
                 </div>
 
-
                 <div class="stat-card">
 
-                    <div class="stat-icon">🏆</div>
+                    <div class="stat-icon">
+                        🏆
+                    </div>
 
                     <div>
 
-                        <span>Winners</span>
+                        <span>
+                            Winners
+                        </span>
 
                         <strong>
                             1,207
@@ -696,14 +890,17 @@
 
                 </div>
 
-
                 <div class="stat-card">
 
-                    <div class="stat-icon">⚡</div>
+                    <div class="stat-icon">
+                        ⚡
+                    </div>
 
                     <div>
 
-                        <span>Fastest Win</span>
+                        <span>
+                            Fastest Win
+                        </span>
 
                         <strong>
                             3.2s
@@ -713,12 +910,9 @@
 
                 </div>
 
-
             </div>
 
-
             <div class="panel game-panel">
-
 
                 <div class="game-row">
 
@@ -730,7 +924,9 @@
 
                         <div>
 
-                            <h3>Reaction Game</h3>
+                            <h3>
+                                Reaction Game
+                            </h3>
 
                             <p>
                                 Test how quickly members can react.
@@ -739,7 +935,6 @@
                         </div>
 
                     </div>
-
 
                     <label class="switch">
 
@@ -753,7 +948,6 @@
                     </label>
 
                 </div>
-
 
                 <div class="game-row">
 
@@ -765,7 +959,9 @@
 
                         <div>
 
-                            <h3>Trivia</h3>
+                            <h3>
+                                Trivia
+                            </h3>
 
                             <p>
                                 Questions and answers for members.
@@ -774,7 +970,6 @@
                         </div>
 
                     </div>
-
 
                     <label class="switch">
 
@@ -788,7 +983,6 @@
                     </label>
 
                 </div>
-
 
                 <div class="game-row">
 
@@ -800,7 +994,9 @@
 
                         <div>
 
-                            <h3>Guessing Game</h3>
+                            <h3>
+                                Guessing Game
+                            </h3>
 
                             <p>
                                 Members guess the secret number.
@@ -809,7 +1005,6 @@
                         </div>
 
                     </div>
-
 
                     <label class="switch">
 
@@ -824,21 +1019,24 @@
 
                 </div>
 
-
             </div>
 
         </section>
-
 
         <!-- =========================
              MODERATION
         ========================== -->
 
-        <section id="moderation" class="page">
+        <section
+            id="moderation"
+            class="page"
+        >
 
             <div class="section-title">
 
-                <h1>🔨 Moderation</h1>
+                <h1>
+                    🔨 Moderation
+                </h1>
 
                 <p>
                     Protect and manage your server.
@@ -846,15 +1044,17 @@
 
             </div>
 
-
             <div class="settings-grid">
-
 
                 <div class="panel setting-card">
 
-                    <span class="big-icon">⚠️</span>
+                    <span class="big-icon">
+                        ⚠️
+                    </span>
 
-                    <h3>Warnings</h3>
+                    <h3>
+                        Warnings
+                    </h3>
 
                     <p>
                         Allow moderators to warn members.
@@ -873,12 +1073,15 @@
 
                 </div>
 
-
                 <div class="panel setting-card">
 
-                    <span class="big-icon">👢</span>
+                    <span class="big-icon">
+                        👢
+                    </span>
 
-                    <h3>Kick</h3>
+                    <h3>
+                        Kick
+                    </h3>
 
                     <p>
                         Allow authorized staff to kick members.
@@ -897,12 +1100,15 @@
 
                 </div>
 
-
                 <div class="panel setting-card">
 
-                    <span class="big-icon">🔨</span>
+                    <span class="big-icon">
+                        🔨
+                    </span>
 
-                    <h3>Ban</h3>
+                    <h3>
+                        Ban
+                    </h3>
 
                     <p>
                         Allow authorized staff to ban members.
@@ -921,12 +1127,15 @@
 
                 </div>
 
-
                 <div class="panel setting-card">
 
-                    <span class="big-icon">🧹</span>
+                    <span class="big-icon">
+                        🧹
+                    </span>
 
-                    <h3>Clear Messages</h3>
+                    <h3>
+                        Clear Messages
+                    </h3>
 
                     <p>
                         Allow staff to clear messages.
@@ -945,21 +1154,24 @@
 
                 </div>
 
-
             </div>
 
         </section>
-
 
         <!-- =========================
              VERIFICATION
         ========================== -->
 
-        <section id="verification" class="page">
+        <section
+            id="verification"
+            class="page"
+        >
 
             <div class="section-title">
 
-                <h1>🔐 Verification</h1>
+                <h1>
+                    🔐 Verification
+                </h1>
 
                 <p>
                     Configure your member verification system.
@@ -967,22 +1179,21 @@
 
             </div>
 
-
             <div class="panel">
-
 
                 <div class="setting-row">
 
                     <div>
 
-                        <h3>Verification System</h3>
+                        <h3>
+                            Verification System
+                        </h3>
 
                         <p>
                             Require members to verify themselves.
                         </p>
 
                     </div>
-
 
                     <label class="switch">
 
@@ -997,12 +1208,13 @@
 
                 </div>
 
-
                 <div class="setting-row">
 
                     <div>
 
-                        <h3>Verification Role</h3>
+                        <h3>
+                            Verification Role
+                        </h3>
 
                         <p>
                             Role given after successful verification.
@@ -1010,23 +1222,31 @@
 
                     </div>
 
+                    <select id="verificationRole">
 
-                    <select>
+                        <option>
+                            Verified
+                        </option>
 
-                        <option>Verified</option>
-                        <option>Member</option>
-                        <option>Shadow Member</option>
+                        <option>
+                            Member
+                        </option>
+
+                        <option>
+                            Shadow Member
+                        </option>
 
                     </select>
 
                 </div>
 
-
                 <div class="setting-row">
 
                     <div>
 
-                        <h3>Verification Channel</h3>
+                        <h3>
+                            Verification Channel
+                        </h3>
 
                         <p>
                             Channel where the verification panel appears.
@@ -1034,17 +1254,23 @@
 
                     </div>
 
+                    <select id="verificationChannel">
 
-                    <select>
+                        <option>
+                            #verification
+                        </option>
 
-                        <option>#verification</option>
-                        <option>#welcome</option>
-                        <option>#verify-here</option>
+                        <option>
+                            #welcome
+                        </option>
+
+                        <option>
+                            #verify-here
+                        </option>
 
                     </select>
 
                 </div>
-
 
                 <button
                     class="primary-btn"
@@ -1053,21 +1279,24 @@
                     💾 Save Verification
                 </button>
 
-
             </div>
 
         </section>
-
 
         <!-- =========================
              POLLS
         ========================== -->
 
-        <section id="polls" class="page">
+        <section
+            id="polls"
+            class="page"
+        >
 
             <div class="section-title">
 
-                <h1>🗳️ Polls</h1>
+                <h1>
+                    🗳️ Polls
+                </h1>
 
                 <p>
                     Create and manage community polls.
@@ -1075,11 +1304,11 @@
 
             </div>
 
-
             <div class="panel">
 
-                <h3>Create Poll</h3>
-
+                <h3>
+                    Create Poll
+                </h3>
 
                 <input
                     class="text-input"
@@ -1087,21 +1316,19 @@
                     placeholder="Enter your poll question..."
                 >
 
-
                 <div class="poll-options">
 
                     <input
-                        class="text-input"
+                        class="text-input poll-option"
                         placeholder="Option 1"
                     >
 
                     <input
-                        class="text-input"
+                        class="text-input poll-option"
                         placeholder="Option 2"
                     >
 
                 </div>
-
 
                 <button
                     class="primary-btn"
@@ -1110,23 +1337,26 @@
                     🗳️ Create Poll
                 </button>
 
-
                 <div id="pollMessage"></div>
 
             </div>
 
         </section>
 
-
         <!-- =========================
              SETTINGS
         ========================== -->
 
-        <section id="settings" class="page">
+        <section
+            id="settings"
+            class="page"
+        >
 
             <div class="section-title">
 
-                <h1>⚙️ Settings</h1>
+                <h1>
+                    ⚙️ Settings
+                </h1>
 
                 <p>
                     General ShadowBot dashboard settings.
@@ -1134,22 +1364,21 @@
 
             </div>
 
-
             <div class="panel">
-
 
                 <div class="setting-row">
 
                     <div>
 
-                        <h3>Dashboard Theme</h3>
+                        <h3>
+                            Dashboard Theme
+                        </h3>
 
                         <p>
                             Current dashboard appearance.
                         </p>
 
                     </div>
-
 
                     <select
                         id="themeSelect"
@@ -1168,12 +1397,13 @@
 
                 </div>
 
-
                 <div class="setting-row">
 
                     <div>
 
-                        <h3>Notifications</h3>
+                        <h3>
+                            Notifications
+                        </h3>
 
                         <p>
                             Show dashboard notifications.
@@ -1181,11 +1411,11 @@
 
                     </div>
 
-
                     <label class="switch">
 
                         <input
                             type="checkbox"
+                            id="notificationsToggle"
                             checked
                         >
 
@@ -1195,12 +1425,13 @@
 
                 </div>
 
-
                 <div class="setting-row">
 
                     <div>
 
-                        <h3>Auto Refresh</h3>
+                        <h3>
+                            Auto Refresh
+                        </h3>
 
                         <p>
                             Automatically refresh dashboard statistics.
@@ -1208,11 +1439,11 @@
 
                     </div>
 
-
                     <label class="switch">
 
                         <input
                             type="checkbox"
+                            id="autoRefreshToggle"
                             checked
                         >
 
@@ -1221,7 +1452,6 @@
                     </label>
 
                 </div>
-
 
                 <button
                     class="primary-btn"
@@ -1230,18 +1460,22 @@
                     💾 Save Settings
                 </button>
 
-
             </div>
 
         </section>
 
     </main>
 
+    <!-- =========================
+         TOAST
+    ========================== -->
 
-    <div id="toast" class="toast">
+    <div
+        id="toast"
+        class="toast"
+    >
         Settings saved successfully! ✓
     </div>
-
 
     <script src="script.js"></script>
 
