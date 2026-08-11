@@ -2,6 +2,8 @@
 
 const API = "http://localhost:8080";
 
+let autoRefreshEnabled = true;
+
 // =========================
 // PAGE TITLES
 // =========================
@@ -26,16 +28,18 @@ document.addEventListener("DOMContentLoaded", () => {
     loadStatus();
     loadStats();
 
-    const savedTheme = localStorage.getItem("shadowTheme");
+    const savedTheme =
+        localStorage.getItem("shadowTheme");
 
     if (savedTheme) {
-        const themeSelect = document.getElementById("themeSelect");
+        applyTheme(savedTheme);
+
+        const themeSelect =
+            document.getElementById("themeSelect");
 
         if (themeSelect) {
             themeSelect.value = savedTheme;
         }
-
-        changeTheme();
     }
 
 });
@@ -46,15 +50,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
 function showPage(page, button = null) {
 
-    document.querySelectorAll(".page").forEach(p => {
-        p.classList.remove("active");
+    document.querySelectorAll(".page").forEach(pageElement => {
+        pageElement.classList.remove("active");
     });
 
-    document.querySelectorAll(".nav-btn").forEach(n => {
-        n.classList.remove("active");
+    document.querySelectorAll(".nav-btn").forEach(nav => {
+        nav.classList.remove("active");
     });
 
-    const selectedPage = document.getElementById(page);
+    const selectedPage =
+        document.getElementById(page);
 
     if (selectedPage) {
         selectedPage.classList.add("active");
@@ -63,19 +68,23 @@ function showPage(page, button = null) {
     if (button) {
         button.classList.add("active");
     } else {
-        const selectedNav = document.querySelector(
-            `.nav-btn[onclick*="'${page}'"]`
-        );
 
-        if (selectedNav) {
-            selectedNav.classList.add("active");
+        const navButton =
+            document.querySelector(
+                `.nav-btn[onclick*="'${page}'"]`
+            );
+
+        if (navButton) {
+            navButton.classList.add("active");
         }
     }
 
-    const pageTitle = document.getElementById("pageTitle");
+    const title =
+        document.getElementById("pageTitle");
 
-    if (pageTitle && pageTitles[page]) {
-        pageTitle.innerText = pageTitles[page];
+    if (title && pageTitles[page]) {
+        title.innerText =
+            pageTitles[page];
     }
 
     window.scrollTo({
@@ -92,65 +101,69 @@ async function loadStatus() {
 
     try {
 
-        const res = await fetch(API + "/status");
+        const response =
+            await fetch(API + "/status");
 
-        if (!res.ok) {
-            throw new Error("API returned " + res.status);
+        if (!response.ok) {
+            throw new Error(
+                "Status request failed"
+            );
         }
 
-        const data = await res.json();
+        const data =
+            await response.json();
 
-        updateBotStatus(
-            data.online === true
-        );
+        const statusText =
+            document.getElementById("bot-status");
+
+        const statusDot =
+            document.getElementById("status-dot");
+
+        if (data.online) {
+
+            if (statusText) {
+                statusText.innerText = "ONLINE";
+            }
+
+            if (statusDot) {
+                statusDot.style.background =
+                    "#22c55e";
+            }
+
+        } else {
+
+            if (statusText) {
+                statusText.innerText = "OFFLINE";
+            }
+
+            if (statusDot) {
+                statusDot.style.background =
+                    "#ef4444";
+            }
+        }
 
     } catch (error) {
 
-        updateBotStatus(false);
+        const statusText =
+            document.getElementById("bot-status");
+
+        const statusDot =
+            document.getElementById("status-dot");
+
+        if (statusText) {
+            statusText.innerText = "OFFLINE";
+        }
+
+        if (statusDot) {
+            statusDot.style.background =
+                "#ef4444";
+        }
 
         console.log(
             "❌ Could not connect to ShadowBot API:",
             error
         );
     }
-}
-
-// =========================
-// UPDATE BOT STATUS
-// =========================
-
-function updateBotStatus(online) {
-
-    const statusTexts = document.querySelectorAll(
-        ".bot-status small"
-    );
-
-    const statusDots = document.querySelectorAll(
-        ".status-dot"
-    );
-
-    statusTexts.forEach(status => {
-
-        status.innerText = online
-            ? "ONLINE"
-            : "OFFLINE";
-
-        status.style.color = online
-            ? "var(--green)"
-            : "var(--red)";
-    });
-
-    statusDots.forEach(dot => {
-
-        dot.style.background = online
-            ? "var(--green)"
-            : "var(--red)";
-
-        dot.style.boxShadow = online
-            ? "0 0 12px var(--green)"
-            : "0 0 12px var(--red)";
-    });
-
 }
 
 // =========================
@@ -161,13 +174,17 @@ async function loadStats() {
 
     try {
 
-        const res = await fetch(API + "/stats");
+        const response =
+            await fetch(API + "/stats");
 
-        if (!res.ok) {
-            throw new Error("API returned " + res.status);
+        if (!response.ok) {
+            throw new Error(
+                "Stats request failed"
+            );
         }
 
-        const data = await res.json();
+        const data =
+            await response.json();
 
         const memberCount =
             document.getElementById("memberCount");
@@ -178,27 +195,26 @@ async function loadStats() {
         const gameCount =
             document.getElementById("gameCount");
 
-        if (
-            memberCount &&
-            data.members !== undefined
-        ) {
+        const gamesPlayed =
+            document.getElementById("gamesPlayed");
+
+        if (memberCount && data.members !== undefined) {
             memberCount.innerText =
                 Number(data.members).toLocaleString();
         }
 
-        if (
-            xpCount &&
-            data.xp !== undefined
-        ) {
+        if (xpCount && data.xp !== undefined) {
             xpCount.innerText =
                 Number(data.xp).toLocaleString();
         }
 
-        if (
-            gameCount &&
-            data.games !== undefined
-        ) {
+        if (gameCount && data.games !== undefined) {
             gameCount.innerText =
+                Number(data.games).toLocaleString();
+        }
+
+        if (gamesPlayed && data.games !== undefined) {
+            gamesPlayed.innerText =
                 Number(data.games).toLocaleString();
         }
 
@@ -220,112 +236,117 @@ async function saveSettings() {
     const xpToggle =
         document.getElementById("xpToggle");
 
-    const themeSelect =
-        document.getElementById("themeSelect");
+    const xpPerMessage =
+        document.getElementById("xpPerMessage");
 
-    // Save dashboard theme locally
-    if (themeSelect) {
+    const xpCooldown =
+        document.getElementById("xpCooldown");
 
-        localStorage.setItem(
-            "shadowTheme",
-            themeSelect.value
-        );
+    const rankCards =
+        document.getElementById("rankCards");
 
-    }
+    const verificationRole =
+        document.getElementById("verificationRole");
 
-    // Save XP setting if available
-    if (xpToggle) {
+    const verificationChannel =
+        document.getElementById("verificationChannel");
 
-        try {
+    const notificationsToggle =
+        document.getElementById("notificationsToggle");
 
-            const response = await fetch(
-                API + "/settings/xp",
+    const autoRefreshToggle =
+        document.getElementById("autoRefreshToggle");
+
+    const settings = {
+
+        xpEnabled:
+            xpToggle
+                ? xpToggle.checked
+                : true,
+
+        xpPerMessage:
+            xpPerMessage
+                ? Number(xpPerMessage.value)
+                : 10,
+
+        xpCooldown:
+            xpCooldown
+                ? Number(xpCooldown.value)
+                : 30,
+
+        rankCards:
+            rankCards
+                ? rankCards.checked
+                : true,
+
+        verificationRole:
+            verificationRole
+                ? verificationRole.value
+                : "Verified",
+
+        verificationChannel:
+            verificationChannel
+                ? verificationChannel.value
+                : "#verification",
+
+        notifications:
+            notificationsToggle
+                ? notificationsToggle.checked
+                : true,
+
+        autoRefresh:
+            autoRefreshToggle
+                ? autoRefreshToggle.checked
+                : true
+    };
+
+    autoRefreshEnabled =
+        settings.autoRefresh;
+
+    try {
+
+        const response =
+            await fetch(
+                API + "/settings",
                 {
                     method: "POST",
 
                     headers: {
-                        "Content-Type": "application/json"
+                        "Content-Type":
+                            "application/json"
                     },
 
-                    body: JSON.stringify({
-                        enabled: xpToggle.checked
-                    })
+                    body:
+                        JSON.stringify(settings)
                 }
             );
 
-            if (!response.ok) {
-                throw new Error(
-                    "XP settings API returned " +
-                    response.status
-                );
-            }
-
-        } catch (error) {
-
-            console.log(
-                "⚠️ Could not save XP settings:",
-                error
+        if (!response.ok) {
+            throw new Error(
+                "Settings request failed"
             );
         }
-    }
 
-    showToast(
-        "Settings saved successfully! ✓"
-    );
-}
-
-// =========================
-// THEME
-// =========================
-
-function changeTheme() {
-
-    const themeSelect =
-        document.getElementById("themeSelect");
-
-    if (!themeSelect) {
-        return;
-    }
-
-    const theme =
-        themeSelect.value;
-
-    localStorage.setItem(
-        "shadowTheme",
-        theme
-    );
-
-    if (theme === "midnight") {
-
-        document.body.style.background =
-            "#050509";
-
-        document.documentElement.style.setProperty(
-            "--bg",
-            "#050509"
+        showToast(
+            "Settings saved successfully! ✓"
         );
 
-        document.documentElement.style.setProperty(
-            "--sidebar",
-            "#08080f"
+    } catch (error) {
+
+        console.log(
+            "⚠️ ShadowBot API unavailable:",
+            error
         );
 
-    } else {
-
-        document.body.style.background =
-            "#08080d";
-
-        document.documentElement.style.setProperty(
-            "--bg",
-            "#08080d"
+        localStorage.setItem(
+            "shadowSettings",
+            JSON.stringify(settings)
         );
 
-        document.documentElement.style.setProperty(
-            "--sidebar",
-            "#0d0d14"
+        showToast(
+            "Settings saved locally ✓"
         );
     }
-
 }
 
 // =========================
@@ -338,11 +359,9 @@ async function createPoll() {
         document.getElementById("pollQuestion");
 
     const optionInputs =
-        document.querySelectorAll(
-            ".poll-options .text-input"
-        );
+        document.querySelectorAll(".poll-option");
 
-    const pollMessage =
+    const message =
         document.getElementById("pollMessage");
 
     if (!questionInput) {
@@ -352,24 +371,15 @@ async function createPoll() {
     const question =
         questionInput.value.trim();
 
-    const options = [];
-
-    optionInputs.forEach(input => {
-
-        const value =
-            input.value.trim();
-
-        if (value) {
-            options.push(value);
-        }
-
-    });
+    const options =
+        Array.from(optionInputs)
+            .map(input => input.value.trim())
+            .filter(option => option.length > 0);
 
     if (!question) {
 
-        showPollMessage(
-            "❌ Please enter a poll question.",
-            true
+        showToast(
+            "❌ Enter a poll question."
         );
 
         return;
@@ -377,9 +387,8 @@ async function createPoll() {
 
     if (options.length < 2) {
 
-        showPollMessage(
-            "❌ Please enter at least 2 options.",
-            true
+        showToast(
+            "❌ Add at least 2 options."
         );
 
         return;
@@ -387,33 +396,32 @@ async function createPoll() {
 
     try {
 
-        const response = await fetch(
-            API + "/poll",
-            {
-                method: "POST",
+        const response =
+            await fetch(
+                API + "/poll",
+                {
+                    method: "POST",
 
-                headers: {
-                    "Content-Type": "application/json"
-                },
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
 
-                body: JSON.stringify({
-                    question: question,
-                    options: options
-                })
-            }
-        );
+                    body:
+                        JSON.stringify({
+                            question:
+                                question,
+                            options:
+                                options
+                        })
+                }
+            );
 
         if (!response.ok) {
             throw new Error(
-                "Poll API returned " +
-                response.status
+                "Poll request failed"
             );
         }
-
-        showPollMessage(
-            "🗳️ Poll created successfully!",
-            false
-        );
 
         questionInput.value = "";
 
@@ -421,46 +429,33 @@ async function createPoll() {
             input.value = "";
         });
 
+        if (message) {
+            message.innerText =
+                "🗳️ Poll created successfully!";
+        }
+
+        showToast(
+            "🗳️ Poll created!"
+        );
+
     } catch (error) {
 
-        showPollMessage(
-            "❌ Failed to create poll. Make sure ShadowBot is running.",
-            true
-        );
-
         console.log(
-            "❌ Poll error:",
+            "❌ Could not create poll:",
             error
         );
+
+        showToast(
+            "❌ ShadowBot API is offline."
+        );
     }
-}
-
-// =========================
-// POLL MESSAGE
-// =========================
-
-function showPollMessage(message, error = false) {
-
-    const pollMessage =
-        document.getElementById("pollMessage");
-
-    if (!pollMessage) {
-        return;
-    }
-
-    pollMessage.innerText = message;
-
-    pollMessage.style.color =
-        error
-            ? "var(--red)"
-            : "var(--green)";
 }
 
 // =========================
 // TOAST
 // =========================
 
-function showToast(message) {
+function showToast(text) {
 
     const toast =
         document.getElementById("toast");
@@ -469,7 +464,7 @@ function showToast(message) {
         return;
     }
 
-    toast.innerText = message;
+    toast.innerText = text;
 
     toast.classList.add("show");
 
@@ -477,7 +472,56 @@ function showToast(message) {
 
         toast.classList.remove("show");
 
-    }, 2500);
+    }, 3000);
+}
+
+// =========================
+// THEME
+// =========================
+
+function changeTheme() {
+
+    const select =
+        document.getElementById("themeSelect");
+
+    if (!select) {
+        return;
+    }
+
+    const theme =
+        select.value;
+
+    applyTheme(theme);
+
+    localStorage.setItem(
+        "shadowTheme",
+        theme
+    );
+
+    showToast(
+        "Theme changed ✓"
+    );
+}
+
+function applyTheme(theme) {
+
+    document.body.classList.remove(
+        "theme-dark",
+        "theme-midnight"
+    );
+
+    if (theme === "midnight") {
+
+        document.body.classList.add(
+            "theme-midnight"
+        );
+
+    } else {
+
+        document.body.classList.add(
+            "theme-dark"
+        );
+    }
 }
 
 // =========================
@@ -485,6 +529,10 @@ function showToast(message) {
 // =========================
 
 setInterval(() => {
+
+    if (!autoRefreshEnabled) {
+        return;
+    }
 
     loadStatus();
     loadStats();
