@@ -7,16 +7,47 @@ const API = "https://node6.quaxly.com:25522";
 // START
 // =========================
 
-document.addEventListener("DOMContentLoaded", async () => {
-    await checkLogin();
+document.addEventListener("DOMContentLoaded", () => {
+    forceLoginScreen();
+    checkLogin();
 });
+
+// =========================
+// FORCE LOGIN SCREEN
+// =========================
+
+function forceLoginScreen() {
+    const loginScreen = document.getElementById("loginScreen");
+    const serverScreen = document.getElementById("serverScreen");
+
+    document.body.classList.add("dashboard-locked");
+
+    if (loginScreen) {
+        loginScreen.style.setProperty(
+            "display",
+            "flex",
+            "important"
+        );
+    }
+
+    if (serverScreen) {
+        serverScreen.style.setProperty(
+            "display",
+            "none",
+            "important"
+        );
+    }
+}
 
 // =========================
 // DISCORD LOGIN
 // =========================
 
 function loginWithDiscord() {
-    window.location.href = API + "/auth/discord";
+    console.log("🌑 Starting Discord login...");
+
+    window.location.href =
+        API + "/auth/discord";
 }
 
 // =========================
@@ -24,50 +55,77 @@ function loginWithDiscord() {
 // =========================
 
 async function checkLogin() {
-    const loginScreen = document.getElementById("loginScreen");
-    const serverScreen = document.getElementById("serverScreen");
-
-    if (loginScreen) loginScreen.style.display = "flex";
-    if (serverScreen) serverScreen.style.display = "none";
-
-    document.body.classList.add("dashboard-locked");
+    forceLoginScreen();
 
     try {
-        const response = await fetch(API + "/api/me", {
-            method: "GET",
-            credentials: "include",
-            headers: {
-                "Accept": "application/json"
+        const response = await fetch(
+            API + "/api/me",
+            {
+                method: "GET",
+                credentials: "include",
+                headers: {
+                    "Accept": "application/json"
+                },
+                cache: "no-store"
             }
-        });
+        );
 
         if (!response.ok) {
-            console.log("Not logged in.");
+            console.log("🔐 Not logged in.");
+            forceLoginScreen();
             return;
         }
 
         const data = await response.json();
 
-        if (!data.user) {
+        if (!data || !data.user) {
+            console.log("🔐 No user session.");
+            forceLoginScreen();
             return;
         }
 
+        console.log(
+            "✅ Logged in as:",
+            data.user.username
+        );
+
         updateUserProfile(data.user);
 
-        document.body.classList.remove("dashboard-locked");
+        const loginScreen =
+            document.getElementById("loginScreen");
 
-        if (loginScreen) loginScreen.style.display = "none";
-        if (serverScreen) serverScreen.style.display = "flex";
+        const serverScreen =
+            document.getElementById("serverScreen");
+
+        document.body.classList.remove(
+            "dashboard-locked"
+        );
+
+        if (loginScreen) {
+            loginScreen.style.setProperty(
+                "display",
+                "none",
+                "important"
+            );
+        }
+
+        if (serverScreen) {
+            serverScreen.style.setProperty(
+                "display",
+                "flex",
+                "important"
+            );
+        }
 
         await loadServers();
 
     } catch (error) {
-        console.error("Dashboard connection failed:", error);
+        console.error(
+            "❌ Dashboard connection failed:",
+            error
+        );
 
-        document.body.classList.add("dashboard-locked");
-
-        if (loginScreen) loginScreen.style.display = "flex";
-        if (serverScreen) serverScreen.style.display = "none";
+        forceLoginScreen();
     }
 }
 
@@ -82,17 +140,23 @@ function updateUserProfile(user) {
         "Admin";
 
     const dashboardUsername =
-        document.getElementById("dashboardUsername");
+        document.getElementById(
+            "dashboardUsername"
+        );
 
     const topUsername =
-        document.getElementById("topUsername");
+        document.getElementById(
+            "topUsername"
+        );
 
     if (dashboardUsername) {
-        dashboardUsername.innerText = username;
+        dashboardUsername.innerText =
+            username;
     }
 
     if (topUsername) {
-        topUsername.innerText = username;
+        topUsername.innerText =
+            username;
     }
 
     if (user.id && user.avatar) {
@@ -104,11 +168,14 @@ function updateUserProfile(user) {
             ".png?size=256";
 
         const userAvatar =
-            document.getElementById("userAvatar");
+            document.getElementById(
+                "userAvatar"
+            );
 
         if (userAvatar) {
             if (userAvatar.tagName === "IMG") {
-                userAvatar.src = avatarURL;
+                userAvatar.src =
+                    avatarURL;
             } else {
                 userAvatar.innerHTML = `
                     <img
@@ -138,7 +205,9 @@ function updateUserProfile(user) {
 
 async function loadServers() {
     const serverList =
-        document.getElementById("serverList");
+        document.getElementById(
+            "serverList"
+        );
 
     if (!serverList) {
         return;
@@ -164,11 +233,16 @@ async function loadServers() {
         );
 
         if (!response.ok) {
-            throw new Error("Could not load servers.");
+            throw new Error(
+                "Could not load servers."
+            );
         }
 
-        const data = await response.json();
-        const guilds = data.guilds || [];
+        const data =
+            await response.json();
+
+        const guilds =
+            data.guilds || [];
 
         if (guilds.length === 0) {
             serverList.innerHTML = `
@@ -186,9 +260,11 @@ async function loadServers() {
         serverList.innerHTML = "";
 
         guilds.forEach(guild => {
-            const card = document.createElement("div");
+            const card =
+                document.createElement("div");
 
-            card.className = "server-card";
+            card.className =
+                "server-card";
 
             let iconHTML =
                 `<span style="font-size:24px;">🌑</span>`;
@@ -223,7 +299,9 @@ async function loadServers() {
             `;
 
             const manageButton =
-                card.querySelector(".server-action");
+                card.querySelector(
+                    ".server-action"
+                );
 
             if (manageButton) {
                 manageButton.addEventListener(
@@ -244,7 +322,10 @@ async function loadServers() {
         });
 
     } catch (error) {
-        console.error("Server loading error:", error);
+        console.error(
+            "Server loading error:",
+            error
+        );
 
         serverList.innerHTML = `
             <div class="empty-servers">
@@ -265,7 +346,8 @@ async function loadServers() {
 async function selectServer(guild) {
     try {
         const response = await fetch(
-            API + "/api/guild/" +
+            API +
+            "/api/guild/" +
             encodeURIComponent(guild.id),
             {
                 method: "GET",
@@ -276,7 +358,8 @@ async function selectServer(guild) {
             }
         );
 
-        const data = await response.json();
+        const data =
+            await response.json();
 
         if (!response.ok) {
             alert(
@@ -286,6 +369,7 @@ async function selectServer(guild) {
                     "You cannot manage this server."
                 )
             );
+
             return;
         }
 
@@ -295,10 +379,16 @@ async function selectServer(guild) {
         );
 
         const serverScreen =
-            document.getElementById("serverScreen");
+            document.getElementById(
+                "serverScreen"
+            );
 
         if (serverScreen) {
-            serverScreen.style.display = "none";
+            serverScreen.style.setProperty(
+                "display",
+                "none",
+                "important"
+            );
         }
 
         document.body.classList.remove(
@@ -316,7 +406,9 @@ async function selectServer(guild) {
             error
         );
 
-        alert("❌ Could not select server.");
+        alert(
+            "❌ Could not select server."
+        );
     }
 }
 
@@ -326,11 +418,14 @@ async function selectServer(guild) {
 
 function updateSelectedServer(guild) {
     const pageTitle =
-        document.getElementById("pageTitle");
+        document.getElementById(
+            "pageTitle"
+        );
 
     if (pageTitle && guild.name) {
         pageTitle.innerText =
-            guild.name + " — Dashboard";
+            guild.name +
+            " — Dashboard";
     }
 }
 
@@ -348,7 +443,10 @@ async function logout() {
             }
         );
     } catch (error) {
-        console.log("Logout error:", error);
+        console.log(
+            "Logout error:",
+            error
+        );
     }
 
     localStorage.removeItem(
@@ -370,39 +468,64 @@ function showPage(page, button) {
     document
         .querySelectorAll(".page")
         .forEach(p => {
-            p.classList.remove("active");
+            p.classList.remove(
+                "active"
+            );
         });
 
     document
         .querySelectorAll(".nav-btn")
         .forEach(n => {
-            n.classList.remove("active");
+            n.classList.remove(
+                "active"
+            );
         });
 
     const selectedPage =
         document.getElementById(page);
 
     if (selectedPage) {
-        selectedPage.classList.add("active");
+        selectedPage.classList.add(
+            "active"
+        );
     }
 
     if (button) {
-        button.classList.add("active");
+        button.classList.add(
+            "active"
+        );
     }
 
     const titles = {
-        overview: "Dashboard Overview",
-        server: "Server Management",
-        xp: "XP & Levels",
-        games: "Games",
-        moderation: "Moderation",
-        verification: "Verification",
-        polls: "Polls",
-        settings: "Settings"
+        overview:
+            "Dashboard Overview",
+
+        server:
+            "Server Management",
+
+        xp:
+            "XP & Levels",
+
+        games:
+            "Games",
+
+        moderation:
+            "Moderation",
+
+        verification:
+            "Verification",
+
+        polls:
+            "Polls",
+
+        settings:
+            "Settings"
     };
 
     const title =
-        document.getElementById("pageTitle");
+        document.getElementById(
+            "pageTitle"
+        );
 
     if (title) {
         title.innerText =
@@ -423,22 +546,30 @@ async function loadStatus() {
                 method: "GET",
                 credentials: "include",
                 headers: {
-                    "Accept": "application/json"
+                    "Accept":
+                        "application/json"
                 }
             }
         );
 
         if (!response.ok) {
-            throw new Error("Status unavailable");
+            throw new Error(
+                "Status unavailable"
+            );
         }
 
-        const data = await response.json();
+        const data =
+            await response.json();
 
         const statusText =
-            document.getElementById("bot-status");
+            document.getElementById(
+                "bot-status"
+            );
 
         const statusDot =
-            document.getElementById("status-dot");
+            document.getElementById(
+                "status-dot"
+            );
 
         if (statusText) {
             statusText.innerText =
@@ -456,13 +587,18 @@ async function loadStatus() {
 
     } catch (error) {
         const statusText =
-            document.getElementById("bot-status");
+            document.getElementById(
+                "bot-status"
+            );
 
         const statusDot =
-            document.getElementById("status-dot");
+            document.getElementById(
+                "status-dot"
+            );
 
         if (statusText) {
-            statusText.innerText = "OFFLINE";
+            statusText.innerText =
+                "OFFLINE";
         }
 
         if (statusDot) {
@@ -483,31 +619,40 @@ async function loadStatus() {
 
 async function loadStats() {
     try {
-        const response = await fetch(
-            API + "/stats",
-            {
-                method: "GET",
-                credentials: "include",
-                headers: {
-                    "Accept": "application/json"
+        const response =
+            await fetch(
+                API + "/stats",
+                {
+                    method: "GET",
+                    credentials: "include",
+                    headers: {
+                        "Accept":
+                            "application/json"
+                    }
                 }
-            }
-        );
+            );
 
         if (!response.ok) {
             return;
         }
 
-        const data = await response.json();
+        const data =
+            await response.json();
 
         const members =
-            document.getElementById("memberCount");
+            document.getElementById(
+                "memberCount"
+            );
 
         const xp =
-            document.getElementById("xpCount");
+            document.getElementById(
+                "xpCount"
+            );
 
         const games =
-            document.getElementById("gameCount");
+            document.getElementById(
+                "gameCount"
+            );
 
         if (members) {
             members.innerText =
@@ -540,7 +685,9 @@ async function loadStats() {
 
 async function saveSettings() {
     const toast =
-        document.getElementById("toast");
+        document.getElementById(
+            "toast"
+        );
 
     if (!toast) {
         return;
@@ -552,7 +699,9 @@ async function saveSettings() {
     toast.classList.add("show");
 
     setTimeout(() => {
-        toast.classList.remove("show");
+        toast.classList.remove(
+            "show"
+        );
     }, 2500);
 }
 
@@ -562,7 +711,9 @@ async function saveSettings() {
 
 async function createPoll() {
     const questionInput =
-        document.getElementById("pollQuestion");
+        document.getElementById(
+            "pollQuestion"
+        );
 
     if (!questionInput) {
         return;
@@ -575,6 +726,7 @@ async function createPoll() {
         alert(
             "❌ Please enter a poll question."
         );
+
         return;
     }
 
@@ -589,16 +741,22 @@ async function createPoll() {
 
 function changeTheme() {
     const select =
-        document.getElementById("themeSelect");
+        document.getElementById(
+            "themeSelect"
+        );
 
     if (!select) {
         return;
     }
 
     if (select.value === "midnight") {
-        document.body.classList.add("midnight");
+        document.body.classList.add(
+            "midnight"
+        );
     } else {
-        document.body.classList.remove("midnight");
+        document.body.classList.remove(
+            "midnight"
+        );
     }
 }
 
@@ -608,11 +766,26 @@ function changeTheme() {
 
 function escapeHTML(value) {
     return String(value)
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
+        .replaceAll(
+            "&",
+            "&amp;"
+        )
+        .replaceAll(
+            "<",
+            "&lt;"
+        )
+        .replaceAll(
+            ">",
+            "&gt;"
+        )
+        .replaceAll(
+            '"',
+            "&quot;"
+        )
+        .replaceAll(
+            "'",
+            "&#039;"
+        );
 }
 
 // =========================
