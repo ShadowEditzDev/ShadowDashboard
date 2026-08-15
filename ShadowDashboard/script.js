@@ -1,4 +1,3 @@
-```javascript
 // 🌑 ShadowBot Dashboard
 // Discord OAuth + Server Selector + Profile
 
@@ -906,4 +905,3 @@ setInterval(
     },
     5000
 );
-```
