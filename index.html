@@ -1,22 +1,16 @@
-<!DOCTYPE html> 
+```html
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <!-- =========================
-         SEO
-    ========================== -->
-
-    <title>𝑆𝘩𝑎𝑑𝑜𝑤 • 影-Bot | Discord Dashboard</title>
+    <title>𝑆𝘩𝑎𝘥𝑜𝘸 • 影-Bot | Discord Dashboard</title>
 
     <meta
         name="description"
-        content="𝑆𝘩𝑎𝑑𝑜𝘸 • 影-Bot Discord dashboard. Manage your server, XP, levels, games, moderation, verification and polls."
+        content="𝑆𝘩𝑎𝘥𝘰𝘸 • 影-Bot Discord dashboard. Manage your server, XP, levels, games, moderation, verification and polls."
     >
 
     <meta
@@ -26,19 +20,14 @@
 
     <meta name="author" content="ShadowEditzDev">
 
-    <meta
-        name="robots"
-        content="index, follow"
-    >
+    <meta name="robots" content="index, follow">
 
     <link
         rel="canonical"
         href="https://shadoweditzdev.github.io/ShadowDashboard/"
     >
 
-    <!-- =========================
-         FAVICON
-    ========================== -->
+    <!-- FAVICON -->
 
     <link
         rel="icon"
@@ -51,23 +40,18 @@
         href="logo.png"
     >
 
-    <!-- =========================
-         OPEN GRAPH
-    ========================== -->
+    <!-- OPEN GRAPH -->
 
-    <meta
-        property="og:type"
-        content="website"
-    >
+    <meta property="og:type" content="website">
 
     <meta
         property="og:title"
-        content="𝑆𝘩𝑎𝘥𝑜𝘸 • 影-Bot | Discord Dashboard"
+        content="𝑆𝘩𝑎𝘥𝘰𝘸 • 影-Bot | Discord Dashboard"
     >
 
     <meta
         property="og:description"
-        content="Manage your Discord server, XP system, games, moderation, verification and polls with the 𝑆𝘩𝑎𝘥𝑜𝘸 • 影-Bot dashboard."
+        content="Manage your Discord server, XP system, games, moderation, verification and polls with the 𝑆𝘩𝑎𝘥𝘰𝘸 • 影-Bot dashboard."
     >
 
     <meta
@@ -77,7 +61,7 @@
 
     <meta
         property="og:site_name"
-        content="𝑆𝘩𝑎𝘥𝑜𝘸 • 影-Bot"
+        content="𝑆𝘩𝑎𝘥𝘰𝘸 • 影-Bot"
     >
 
     <meta
@@ -87,7 +71,7 @@
 
     <meta
         property="og:image:alt"
-        content="𝑆𝘩𝑎𝘥𝑜𝘸 • 影-Bot Dashboard"
+        content="𝑆𝘩𝑎𝘥𝘰𝘸 • 影-Bot Dashboard"
     >
 
     <meta
@@ -95,9 +79,7 @@
         content="image/png"
     >
 
-    <!-- =========================
-         TWITTER / DISCORD PREVIEW
-    ========================== -->
+    <!-- TWITTER -->
 
     <meta
         name="twitter:card"
@@ -106,12 +88,12 @@
 
     <meta
         name="twitter:title"
-        content="𝑆𝘩𝑎𝘥𝑜𝘸 • 影-Bot | Discord Dashboard"
+        content="𝑆𝘩𝑎𝘥𝘰𝘸 • 影-Bot | Discord Dashboard"
     >
 
     <meta
         name="twitter:description"
-        content="The official 𝑆𝘩𝑎𝘥𝑜𝘸 • 影-Bot Discord dashboard."
+        content="The official 𝑆𝘩𝑎𝘥𝘰𝘸 • 影-Bot Discord dashboard."
     >
 
     <meta
@@ -119,17 +101,246 @@
         content="https://shadoweditzdev.github.io/ShadowDashboard/banner.png"
     >
 
-    <!-- =========================
-         STYLESHEET
-    ========================== -->
+    <!-- STYLESHEET -->
 
     <link
         rel="stylesheet"
         href="style.css"
     >
+
+    <!-- LOGIN SCREEN STYLE -->
+
+    <style>
+
+        #loginScreen {
+            position: fixed;
+            inset: 0;
+            z-index: 99999;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            background:
+                radial-gradient(
+                    circle at center,
+                    rgba(70, 70, 90, 0.18),
+                    transparent 45%
+                ),
+                #08080c;
+        }
+
+        .login-card {
+            width: min(420px, calc(100% - 40px));
+
+            padding: 40px 32px;
+
+            text-align: center;
+
+            border-radius: 22px;
+
+            background:
+                rgba(20, 20, 28, 0.96);
+
+            border:
+                1px solid rgba(255, 255, 255, 0.08);
+
+            box-shadow:
+                0 25px 80px rgba(0, 0, 0, 0.55);
+        }
+
+        .login-logo {
+            width: 96px;
+            height: 96px;
+
+            object-fit: contain;
+
+            border-radius: 24px;
+
+            margin-bottom: 20px;
+        }
+
+        .login-card h1 {
+            margin: 0 0 10px;
+
+            color: white;
+
+            font-size: 28px;
+        }
+
+        .login-card p {
+            margin: 0 0 28px;
+
+            color: #a1a1aa;
+
+            line-height: 1.6;
+        }
+
+        .discord-login-btn {
+            width: 100%;
+
+            border: none;
+
+            border-radius: 12px;
+
+            padding: 14px 18px;
+
+            background: #5865f2;
+
+            color: white;
+
+            font-size: 16px;
+
+            font-weight: 700;
+
+            cursor: pointer;
+
+            transition:
+                transform 0.15s ease,
+                filter 0.15s ease;
+        }
+
+        .discord-login-btn:hover {
+            filter: brightness(1.1);
+
+            transform: translateY(-1px);
+        }
+
+        .login-small {
+            display: block;
+
+            margin-top: 18px;
+
+            color: #71717a;
+
+            font-size: 12px;
+        }
+
+    </style>
+
 </head>
 
 <body>
+
+    <!-- =========================
+         LOGIN SCREEN
+    ========================== -->
+
+    <div id="loginScreen">
+
+        <div class="login-card">
+
+            <img
+                class="login-logo"
+                src="logo.png"
+                alt="ShadowBot Logo"
+            >
+
+            <h1>
+                𝑆𝘩𝑎𝘥𝑜𝘸 • 影-Bot
+            </h1>
+
+            <p>
+                Connect your Discord account to access
+                the ShadowBot dashboard.
+            </p>
+
+            <button
+                class="discord-login-btn"
+                onclick="loginWithDiscord()"
+            >
+                Continue with Discord
+            </button>
+
+            <span class="login-small">
+                Secure Discord OAuth2 login
+            </span>
+
+        </div>
+
+    </div>
+
+
+    <!-- =========================
+         SERVER SCREEN
+    ========================== -->
+
+    <div
+        id="serverScreen"
+        style="
+            display:none;
+            position:fixed;
+            inset:0;
+            z-index:99998;
+            align-items:center;
+            justify-content:center;
+            background:#08080c;
+            padding:30px;
+            overflow:auto;
+        "
+    >
+
+        <div
+            style="
+                width:min(800px,100%);
+                background:#14141c;
+                border:1px solid rgba(255,255,255,.08);
+                border-radius:22px;
+                padding:30px;
+                box-shadow:0 25px 80px rgba(0,0,0,.5);
+            "
+        >
+
+            <div
+                style="
+                    display:flex;
+                    align-items:center;
+                    gap:15px;
+                    margin-bottom:25px;
+                "
+            >
+
+                <img
+                    src="logo.png"
+                    alt="ShadowBot"
+                    style="
+                        width:60px;
+                        height:60px;
+                        object-fit:contain;
+                        border-radius:16px;
+                    "
+                >
+
+                <div>
+
+                    <h1
+                        style="
+                            margin:0;
+                            color:white;
+                        "
+                    >
+                        Select a Server
+                    </h1>
+
+                    <p
+                        style="
+                            margin:5px 0 0;
+                            color:#a1a1aa;
+                        "
+                    >
+                        Choose a server to manage with ShadowBot.
+                    </p>
+
+                </div>
+
+            </div>
+
+            <div id="serverList"></div>
+
+        </div>
+
+    </div>
+
 
     <!-- =========================
          SIDEBAR
@@ -146,8 +357,15 @@
             >
 
             <div>
-                <h1>𝑆𝘩𝑎𝘥𝑜𝘸 • 影-Bot</h1>
-                <span>Control Panel</span>
+
+                <h1>
+                    𝑆𝘩𝑎𝘥𝑜𝘸 • 影-Bot
+                </h1>
+
+                <span>
+                    Control Panel
+                </span>
+
             </div>
 
         </div>
@@ -162,14 +380,12 @@
                 🏠 <span>Overview</span>
             </button>
 
-
             <button
                 class="nav-btn"
                 onclick="showPage('server', this)"
             >
                 🛡️ <span>Server</span>
             </button>
-
 
             <button
                 class="nav-btn"
@@ -178,14 +394,12 @@
                 ⭐ <span>XP & Levels</span>
             </button>
 
-
             <button
                 class="nav-btn"
                 onclick="showPage('games', this)"
             >
                 🎮 <span>Games</span>
             </button>
-
 
             <button
                 class="nav-btn"
@@ -194,7 +408,6 @@
                 🔨 <span>Moderation</span>
             </button>
 
-
             <button
                 class="nav-btn"
                 onclick="showPage('verification', this)"
@@ -202,14 +415,12 @@
                 🔐 <span>Verification</span>
             </button>
 
-
             <button
                 class="nav-btn"
                 onclick="showPage('polls', this)"
             >
                 🗳️ <span>Polls</span>
             </button>
-
 
             <button
                 class="nav-btn"
@@ -234,8 +445,15 @@
                 <span class="status-dot"></span>
 
                 <div>
-                    <strong>𝑆𝘩𝑎𝘥𝑜𝘸 • 影-Bot</strong>
-                    <small>ONLINE</small>
+
+                    <strong>
+                        𝑆𝘩𝑎𝘥𝘰𝘸 • 影-Bot
+                    </strong>
+
+                    <small id="bot-status">
+                        ONLINE
+                    </small>
+
                 </div>
 
             </div>
@@ -270,13 +488,23 @@
 
             <div class="user-area">
 
-                <div class="avatar">
+                <div
+                    class="avatar"
+                    id="userAvatar"
+                >
                     👤
                 </div>
 
                 <div>
-                    <strong>Admin</strong>
-                    <small>Server Manager</small>
+
+                    <strong id="topUsername">
+                        Admin
+                    </strong>
+
+                    <small>
+                        Server Manager
+                    </small>
+
                 </div>
 
             </div>
@@ -308,7 +536,9 @@
 
                     <h1>
                         Welcome back,
-                        <span>Shadow.</span>
+                        <span id="dashboardUsername">
+                            Shadow.
+                        </span>
                     </h1>
 
                     <p>
@@ -349,10 +579,15 @@
                     </div>
 
                     <div>
-                        <span>Members</span>
+
+                        <span>
+                            Members
+                        </span>
+
                         <strong id="memberCount">
                             1,248
                         </strong>
+
                     </div>
 
                 </div>
@@ -365,11 +600,15 @@
                     </div>
 
                     <div>
-                        <span>Total XP</span>
+
+                        <span>
+                            Total XP
+                        </span>
 
                         <strong id="xpCount">
                             84,520
                         </strong>
+
                     </div>
 
                 </div>
@@ -382,11 +621,15 @@
                     </div>
 
                     <div>
-                        <span>Games Played</span>
+
+                        <span>
+                            Games Played
+                        </span>
 
                         <strong id="gameCount">
                             2,431
                         </strong>
+
                     </div>
 
                 </div>
@@ -399,11 +642,15 @@
                     </div>
 
                     <div>
-                        <span>Moderation</span>
+
+                        <span>
+                            Moderation
+                        </span>
 
                         <strong>
                             Protected
                         </strong>
+
                     </div>
 
                 </div>
@@ -414,7 +661,6 @@
             <!-- CONTENT -->
 
             <div class="content-grid">
-
 
                 <!-- FEATURES -->
 
@@ -438,7 +684,6 @@
 
 
                     <div class="feature-list">
-
 
                         <div class="feature">
 
@@ -554,7 +799,6 @@
 
                         </div>
 
-
                     </div>
 
                 </div>
@@ -583,30 +827,19 @@
 
                     <div class="quick-actions">
 
-                        <button
-                            onclick="showPage('xp')"
-                        >
+                        <button onclick="showPage('xp')">
                             ⭐ XP Settings
                         </button>
 
-
-                        <button
-                            onclick="showPage('games')"
-                        >
+                        <button onclick="showPage('games')">
                             🎮 Game Settings
                         </button>
 
-
-                        <button
-                            onclick="showPage('verification')"
-                        >
+                        <button onclick="showPage('verification')">
                             🔐 Verification
                         </button>
 
-
-                        <button
-                            onclick="showPage('moderation')"
-                        >
+                        <button onclick="showPage('moderation')">
                             🔨 Moderation
                         </button>
 
@@ -623,10 +856,7 @@
              SERVER
         ========================== -->
 
-        <section
-            id="server"
-            class="page"
-        >
+        <section id="server" class="page">
 
             <div class="section-title">
 
@@ -642,7 +872,6 @@
 
 
             <div class="settings-grid">
-
 
                 <div class="panel setting-card">
 
@@ -757,10 +986,7 @@
              XP
         ========================== -->
 
-        <section
-            id="xp"
-            class="page"
-        >
+        <section id="xp" class="page">
 
             <div class="section-title">
 
@@ -777,7 +1003,6 @@
 
             <div class="panel">
 
-
                 <div class="setting-row">
 
                     <div>
@@ -791,7 +1016,6 @@
                         </p>
 
                     </div>
-
 
                     <label class="switch">
 
@@ -822,7 +1046,6 @@
 
                     </div>
 
-
                     <input
                         class="number-input"
                         type="number"
@@ -846,7 +1069,6 @@
 
                     </div>
 
-
                     <input
                         class="number-input"
                         type="number"
@@ -869,7 +1091,6 @@
                         </p>
 
                     </div>
-
 
                     <label class="switch">
 
@@ -901,10 +1122,7 @@
              GAMES
         ========================== -->
 
-        <section
-            id="games"
-            class="page"
-        >
+        <section id="games" class="page">
 
             <div class="section-title">
 
@@ -920,7 +1138,6 @@
 
 
             <div class="stats-grid">
-
 
                 <div class="stat-card">
 
@@ -984,12 +1201,10 @@
 
                 </div>
 
-
             </div>
 
 
             <div class="panel game-panel">
-
 
                 <div class="game-row">
 
@@ -1101,7 +1316,6 @@
 
                 </div>
 
-
             </div>
 
         </section>
@@ -1111,10 +1325,7 @@
              MODERATION
         ========================== -->
 
-        <section
-            id="moderation"
-            class="page"
-        >
+        <section id="moderation" class="page">
 
             <div class="section-title">
 
@@ -1130,7 +1341,6 @@
 
 
             <div class="settings-grid">
-
 
                 <div class="panel setting-card">
 
@@ -1252,10 +1462,7 @@
              VERIFICATION
         ========================== -->
 
-        <section
-            id="verification"
-            class="page"
-        >
+        <section id="verification" class="page">
 
             <div class="section-title">
 
@@ -1271,7 +1478,6 @@
 
 
             <div class="panel">
-
 
                 <div class="setting-row">
 
@@ -1386,10 +1592,7 @@
              POLLS
         ========================== -->
 
-        <section
-            id="polls"
-            class="page"
-        >
+        <section id="polls" class="page">
 
             <div class="section-title">
 
@@ -1452,10 +1655,7 @@
              SETTINGS
         ========================== -->
 
-        <section
-            id="settings"
-            class="page"
-        >
+        <section id="settings" class="page">
 
             <div class="section-title">
 
@@ -1471,7 +1671,6 @@
 
 
             <div class="panel">
-
 
                 <div class="setting-row">
 
@@ -1578,9 +1777,7 @@
     </main>
 
 
-    <!-- =========================
-         TOAST
-    ========================== -->
+    <!-- TOAST -->
 
     <div
         id="toast"
@@ -1590,11 +1787,10 @@
     </div>
 
 
-    <!-- =========================
-         JAVASCRIPT
-    ========================== -->
+    <!-- JAVASCRIPT -->
 
     <script src="script.js"></script>
 
 </body>
 </html>
+```
