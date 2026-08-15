@@ -2,148 +2,76 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>𝑆𝘩𝑎𝘥𝑜𝘸 • 影-Bot | Discord Dashboard</title>
 
-    <meta
-        name="description"
-        content="𝑆𝘩𝑎𝘥𝑜𝘸 • 影-Bot Discord dashboard. Manage your server, XP, levels, games, moderation, verification and polls."
-    >
-
+    <meta name="description" content="𝑆𝘩𝑎𝘥𝑜𝘸 • 影-Bot Discord dashboard. Manage your server, XP, levels, games, moderation, verification and polls.">
     <meta name="keywords" content="ShadowBot, Discord Bot, Discord Dashboard, Shadow, 影, XP, Levels, Moderation, Discord Games">
     <meta name="author" content="ShadowEditzDev">
     <meta name="robots" content="index, follow">
 
-    <link
-        rel="canonical"
-        href="https://shadoweditzdev.github.io/ShadowDashboard/"
-    >
-
-    <link
-        rel="icon"
-        type="image/png"
-        href="logo.png"
-    >
-
-    <link
-        rel="apple-touch-icon"
-        href="logo.png"
-    >
+    <link rel="canonical" href="https://shadoweditzdev.github.io/ShadowDashboard/">
+    <link rel="icon" type="image/png" href="logo.png">
+    <link rel="apple-touch-icon" href="logo.png">
 
     <meta property="og:type" content="website">
+    <meta property="og:title" content="𝑆𝘩𝑎𝘥𝑜𝘸 • 影-Bot | Discord Dashboard">
+    <meta property="og:description" content="Manage your Discord server, XP system, games, moderation, verification and polls with the 𝑆𝘩𝑎𝘥𝑜𝘸 • 影-Bot dashboard.">
+    <meta property="og:url" content="https://shadoweditzdev.github.io/ShadowDashboard/">
+    <meta property="og:site_name" content="𝑆𝘩𝑎𝘥𝑜𝘸 • 影-Bot">
+    <meta property="og:image" content="https://shadoweditzdev.github.io/ShadowDashboard/banner.png">
 
-    <meta
-        property="og:title"
-        content="𝑆𝘩𝑎𝘥𝑜𝘸 • 影-Bot | Discord Dashboard"
-    >
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="𝑆𝘩𝑎𝘥𝑜𝘸 • 影-Bot | Discord Dashboard">
+    <meta name="twitter:description" content="The official 𝑆𝘩𝑎𝘥𝑜𝘸 • 影-Bot Discord dashboard.">
+    <meta name="twitter:image" content="https://shadoweditzdev.github.io/ShadowDashboard/banner.png">
 
-    <meta
-        property="og:description"
-        content="Manage your Discord server, XP system, games, moderation, verification and polls with the 𝑆𝘩𝑎𝘥𝑜𝘸 • 影-Bot dashboard."
-    >
-
-    <meta
-        property="og:url"
-        content="https://shadoweditzdev.github.io/ShadowDashboard/"
-    >
-
-    <meta
-        property="og:site_name"
-        content="𝑆𝘩𝑎𝘥𝑜𝘸 • 影-Bot"
-    >
-
-    <meta
-        property="og:image"
-        content="https://shadoweditzdev.github.io/ShadowDashboard/banner.png"
-    >
-
-    <meta
-        property="og:image:alt"
-        content="𝑆𝘩𝑎𝘥𝑜𝘸 • 影-Bot Dashboard"
-    >
-
-    <meta
-        property="og:image:type"
-        content="image/png"
-    >
-
-    <meta
-        name="twitter:card"
-        content="summary_large_image"
-    >
-
-    <meta
-        name="twitter:title"
-        content="𝑆𝘩𝑎𝘥𝑜𝘸 • 影-Bot | Discord Dashboard"
-    >
-
-    <meta
-        name="twitter:description"
-        content="The official 𝑆𝘩𝑎𝘥𝑜𝘸 • 影-Bot Discord dashboard."
-    >
-
-    <meta
-        name="twitter:image"
-        content="https://shadoweditzdev.github.io/ShadowDashboard/banner.png"
-    >
-
-    <link
-        rel="stylesheet"
-        href="style.css"
-    >
+    <link rel="stylesheet" href="style.css">
 
     <style>
 
         /* =========================
            LOGIN SCREEN
-        ========================== */
+        ========================= */
 
         #loginScreen {
-            position: fixed;
-            inset: 0;
-            z-index: 99999;
+            position: fixed !important;
+            inset: 0 !important;
+            z-index: 99999 !important;
 
-            display: flex;
+            display: flex !important;
+
             align-items: center;
             justify-content: center;
-
-            padding: 20px;
 
             background:
                 radial-gradient(
                     circle at top,
-                    rgba(88, 101, 242, 0.20),
-                    transparent 45%
+                    rgba(88, 101, 242, 0.16),
+                    transparent 40%
                 ),
                 #08080c;
         }
 
         .login-box {
-            width: min(440px, 100%);
-
+            width: min(440px, calc(100% - 40px));
             padding: 42px 34px;
-
-            text-align: center;
 
             border: 1px solid rgba(255,255,255,0.08);
             border-radius: 24px;
 
-            background: rgba(18,18,24,0.96);
+            background: rgba(18,18,24,0.94);
 
             box-shadow:
                 0 25px 80px rgba(0,0,0,0.55);
 
-            backdrop-filter: blur(14px);
+            text-align: center;
         }
 
         .login-logo {
-            width: 95px;
-            height: 95px;
+            width: 90px;
+            height: 90px;
 
             object-fit: contain;
 
@@ -152,16 +80,13 @@
             filter:
                 drop-shadow(
                     0 0 25px
-                    rgba(255,255,255,0.15)
+                    rgba(255,255,255,0.12)
                 );
         }
 
         .login-box h1 {
             margin: 0;
-
             font-size: 30px;
-
-            color: white;
         }
 
         .login-box h1 span {
@@ -193,24 +118,12 @@
 
             cursor: pointer;
 
-            transition:
-                transform 0.2s ease,
-                filter 0.2s ease,
-                box-shadow 0.2s ease;
+            transition: 0.2s ease;
         }
 
         .discord-login-btn:hover {
             transform: translateY(-2px);
-
             filter: brightness(1.08);
-
-            box-shadow:
-                0 10px 30px
-                rgba(88,101,242,0.30);
-        }
-
-        .discord-login-btn:active {
-            transform: translateY(0);
         }
 
         .login-note {
@@ -221,16 +134,16 @@
             color: #666675;
 
             font-size: 12px;
-
-            line-height: 1.5;
         }
+
 
         /* =========================
            SERVER SCREEN
-        ========================== */
+        ========================= */
 
         #serverScreen {
             position: fixed;
+
             inset: 0;
 
             z-index: 99998;
@@ -276,8 +189,6 @@
             margin: 0;
 
             font-size: 30px;
-
-            color: white;
         }
 
         .server-header p {
@@ -378,6 +289,7 @@
             margin-left: auto;
 
             border: 0;
+
             border-radius: 9px;
 
             padding: 9px 13px;
@@ -416,22 +328,26 @@
 
         .empty-servers h2 {
             margin-top: 0;
-
-            color: white;
         }
 
         .empty-servers p {
             color: #888896;
         }
 
+
         /* =========================
            LOCK DASHBOARD
-        ========================== */
+        ========================= */
 
         body.dashboard-locked > .sidebar,
         body.dashboard-locked > .main {
             display: none !important;
         }
+
+
+        /* =========================
+           MOBILE
+        ========================= */
 
         @media (max-width: 600px) {
 
@@ -439,26 +355,30 @@
                 padding: 34px 22px;
             }
 
-            .login-box h1 {
-                font-size: 26px;
-            }
-
             .server-header h1 {
                 font-size: 25px;
             }
+
         }
 
     </style>
-
 </head>
 
-<body class="dashboard-locked">
+
+<body
+    class="dashboard-locked"
+    style="overflow:hidden;"
+>
+
 
     <!-- =========================
-         DISCORD LOGIN SCREEN
-    ========================== -->
+         LOGIN SCREEN
+    ========================= -->
 
-    <div id="loginScreen">
+    <div
+        id="loginScreen"
+        style="display:flex !important;"
+    >
 
         <div class="login-box">
 
@@ -474,8 +394,8 @@
             </h1>
 
             <p>
-                Sign in with Discord to access
-                the ShadowBot control panel.
+                Sign in with Discord to access the
+                ShadowBot control panel.
             </p>
 
             <button
@@ -498,7 +418,7 @@
 
     <!-- =========================
          SERVER SELECTOR
-    ========================== -->
+    ========================= -->
 
     <div id="serverScreen">
 
@@ -548,7 +468,7 @@
 
     <!-- =========================
          SIDEBAR
-    ========================== -->
+    ========================= -->
 
     <aside class="sidebar">
 
@@ -573,6 +493,7 @@
             </div>
 
         </div>
+
 
         <nav>
 
@@ -634,6 +555,7 @@
 
         </nav>
 
+
         <div class="sidebar-bottom">
 
             <div class="bot-status">
@@ -645,8 +567,8 @@
                 >
 
                 <span
-                    id="status-dot"
                     class="status-dot"
+                    id="status-dot"
                 ></span>
 
                 <div>
@@ -656,7 +578,7 @@
                     </strong>
 
                     <small id="bot-status">
-                        CHECKING...
+                        ONLINE
                     </small>
 
                 </div>
@@ -670,11 +592,9 @@
 
     <!-- =========================
          MAIN DASHBOARD
-    ========================== -->
+    ========================= -->
 
     <main class="main">
-
-        <!-- TOPBAR -->
 
         <header class="topbar">
 
@@ -689,6 +609,7 @@
                 </h2>
 
             </div>
+
 
             <div class="user-area">
 
@@ -712,6 +633,7 @@
                 </div>
 
                 <button
+                    type="button"
                     onclick="logout()"
                     style="
                         margin-left:15px;
@@ -733,7 +655,7 @@
 
         <!-- =========================
              OVERVIEW
-        ========================== -->
+        ========================= -->
 
         <section
             id="overview"
@@ -742,7 +664,7 @@
 
             <div
                 class="hero"
-                style="background-image: url('banner.png');"
+                style="background-image:url('banner.png');"
             >
 
                 <div class="hero-overlay"></div>
@@ -759,18 +681,22 @@
                     </h1>
 
                     <p>
-                        Manage your Discord server, XP system,
-                        games, moderation and verification from one place.
+                        Manage your Discord server,
+                        XP system, games,
+                        moderation and verification
+                        from one place.
                     </p>
 
                     <button
+                        type="button"
                         class="primary-btn"
-                        onclick="showPage('server')"
+                        onclick="showPage('server', this)"
                     >
                         ⚡ Manage Server
                     </button>
 
                 </div>
+
 
                 <div class="hero-symbol">
 
@@ -783,8 +709,6 @@
 
             </div>
 
-
-            <!-- STATS -->
 
             <div class="stats-grid">
 
@@ -801,7 +725,7 @@
                         </span>
 
                         <strong id="memberCount">
-                            1,248
+                            0
                         </strong>
 
                     </div>
@@ -822,7 +746,7 @@
                         </span>
 
                         <strong id="xpCount">
-                            84,520
+                            0
                         </strong>
 
                     </div>
@@ -843,7 +767,7 @@
                         </span>
 
                         <strong id="gameCount">
-                            2,431
+                            0
                         </strong>
 
                     </div>
@@ -874,8 +798,6 @@
             </div>
 
 
-            <!-- CONTENT -->
-
             <div class="content-grid">
 
                 <div class="panel">
@@ -895,6 +817,7 @@
                         </div>
 
                     </div>
+
 
                     <div class="feature-list">
 
@@ -1035,21 +958,22 @@
 
                     </div>
 
+
                     <div class="quick-actions">
 
-                        <button onclick="showPage('xp')">
+                        <button onclick="showPage('xp', this)">
                             ⭐ XP Settings
                         </button>
 
-                        <button onclick="showPage('games')">
+                        <button onclick="showPage('games', this)">
                             🎮 Game Settings
                         </button>
 
-                        <button onclick="showPage('verification')">
+                        <button onclick="showPage('verification', this)">
                             🔐 Verification
                         </button>
 
-                        <button onclick="showPage('moderation')">
+                        <button onclick="showPage('moderation', this)">
                             🔨 Moderation
                         </button>
 
@@ -1064,7 +988,7 @@
 
         <!-- =========================
              SERVER
-        ========================== -->
+        ========================= -->
 
         <section
             id="server"
@@ -1083,6 +1007,7 @@
 
             </div>
 
+
             <div class="settings-grid">
 
                 <div class="panel setting-card">
@@ -1100,14 +1025,8 @@
                     </p>
 
                     <label class="switch">
-
-                        <input
-                            type="checkbox"
-                            checked
-                        >
-
+                        <input type="checkbox" checked>
                         <span></span>
-
                     </label>
 
                 </div>
@@ -1128,14 +1047,8 @@
                     </p>
 
                     <label class="switch">
-
-                        <input
-                            type="checkbox"
-                            checked
-                        >
-
+                        <input type="checkbox" checked>
                         <span></span>
-
                     </label>
 
                 </div>
@@ -1156,14 +1069,8 @@
                     </p>
 
                     <label class="switch">
-
-                        <input
-                            type="checkbox"
-                            checked
-                        >
-
+                        <input type="checkbox" checked>
                         <span></span>
-
                     </label>
 
                 </div>
@@ -1196,7 +1103,7 @@
 
         <!-- =========================
              XP
-        ========================== -->
+        ========================= -->
 
         <section
             id="xp"
@@ -1214,6 +1121,7 @@
                 </p>
 
             </div>
+
 
             <div class="panel">
 
@@ -1262,7 +1170,6 @@
 
                     <input
                         class="number-input"
-                        id="xpPerMessage"
                         type="number"
                         value="10"
                     >
@@ -1286,7 +1193,6 @@
 
                     <input
                         class="number-input"
-                        id="xpCooldown"
                         type="number"
                         value="30"
                     >
@@ -1312,7 +1218,6 @@
 
                         <input
                             type="checkbox"
-                            id="rankCards"
                             checked
                         >
 
@@ -1337,7 +1242,7 @@
 
         <!-- =========================
              GAMES
-        ========================== -->
+        ========================= -->
 
         <section
             id="games"
@@ -1356,6 +1261,7 @@
 
             </div>
 
+
             <div class="stats-grid">
 
                 <div class="stat-card">
@@ -1370,7 +1276,7 @@
                             Games Played
                         </span>
 
-                        <strong id="gamesPlayed">
+                        <strong>
                             2,431
                         </strong>
 
@@ -1539,7 +1445,7 @@
 
         <!-- =========================
              MODERATION
-        ========================== -->
+        ========================= -->
 
         <section
             id="moderation"
@@ -1557,6 +1463,7 @@
                 </p>
 
             </div>
+
 
             <div class="settings-grid">
 
@@ -1678,7 +1585,7 @@
 
         <!-- =========================
              VERIFICATION
-        ========================== -->
+        ========================= -->
 
         <section
             id="verification"
@@ -1696,6 +1603,7 @@
                 </p>
 
             </div>
+
 
             <div class="panel">
 
@@ -1741,7 +1649,7 @@
 
                     </div>
 
-                    <select id="verificationRole">
+                    <select>
 
                         <option>
                             Verified
@@ -1774,7 +1682,7 @@
 
                     </div>
 
-                    <select id="verificationChannel">
+                    <select>
 
                         <option>
                             #verification
@@ -1807,7 +1715,7 @@
 
         <!-- =========================
              POLLS
-        ========================== -->
+        ========================= -->
 
         <section
             id="polls"
@@ -1826,6 +1734,7 @@
 
             </div>
 
+
             <div class="panel">
 
                 <h3>
@@ -1835,22 +1744,24 @@
                 <input
                     class="text-input"
                     id="pollQuestion"
-                    placeholder="Enter your poll question..."
+                    placeholder="Enter your poll question"
                 >
+
 
                 <div class="poll-options">
 
                     <input
-                        class="text-input poll-option"
+                        class="text-input"
                         placeholder="Option 1"
                     >
 
                     <input
-                        class="text-input poll-option"
+                        class="text-input"
                         placeholder="Option 2"
                     >
 
                 </div>
+
 
                 <button
                     class="primary-btn"
@@ -1858,6 +1769,7 @@
                 >
                     🗳️ Create Poll
                 </button>
+
 
                 <div id="pollMessage"></div>
 
@@ -1868,7 +1780,7 @@
 
         <!-- =========================
              SETTINGS
-        ========================== -->
+        ========================= -->
 
         <section
             id="settings"
@@ -1887,6 +1799,7 @@
 
             </div>
 
+
             <div class="panel">
 
                 <div class="setting-row">
@@ -1902,6 +1815,7 @@
                         </p>
 
                     </div>
+
 
                     <select
                         id="themeSelect"
@@ -1935,11 +1849,11 @@
 
                     </div>
 
+
                     <label class="switch">
 
                         <input
                             type="checkbox"
-                            id="notificationsToggle"
                             checked
                         >
 
@@ -1964,11 +1878,11 @@
 
                     </div>
 
+
                     <label class="switch">
 
                         <input
                             type="checkbox"
-                            id="autoRefreshToggle"
                             checked
                         >
 
@@ -1995,7 +1909,7 @@
 
     <!-- =========================
          TOAST
-    ========================== -->
+    ========================= -->
 
     <div
         id="toast"
@@ -2006,8 +1920,8 @@
 
 
     <!-- =========================
-         JAVASCRIPT
-    ========================== -->
+         SCRIPT
+    ========================= -->
 
     <script src="script.js"></script>
 
