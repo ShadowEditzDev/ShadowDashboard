@@ -15,17 +15,9 @@
         content="𝑆𝘩𝑎𝘥𝑜𝘸 • 影-Bot Discord dashboard. Manage your server, XP, levels, games, moderation, verification and polls."
     >
 
-    <meta
-        name="keywords"
-        content="ShadowBot, Discord Bot, Discord Dashboard, Shadow, 影, XP, Levels, Moderation, Discord Games"
-    >
-
+    <meta name="keywords" content="ShadowBot, Discord Bot, Discord Dashboard, Shadow, 影, XP, Levels, Moderation, Discord Games">
     <meta name="author" content="ShadowEditzDev">
-
-    <meta
-        name="robots"
-        content="index, follow"
-    >
+    <meta name="robots" content="index, follow">
 
     <link
         rel="canonical"
@@ -43,10 +35,7 @@
         href="logo.png"
     >
 
-    <meta
-        property="og:type"
-        content="website"
-    >
+    <meta property="og:type" content="website">
 
     <meta
         property="og:title"
@@ -107,9 +96,455 @@
         rel="stylesheet"
         href="style.css"
     >
+
+    <style>
+
+        /* =========================
+           LOGIN SCREEN
+        ========================== */
+
+        #loginScreen {
+            position: fixed;
+            inset: 0;
+            z-index: 99999;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            padding: 20px;
+
+            background:
+                radial-gradient(
+                    circle at top,
+                    rgba(88, 101, 242, 0.20),
+                    transparent 45%
+                ),
+                #08080c;
+        }
+
+        .login-box {
+            width: min(440px, 100%);
+
+            padding: 42px 34px;
+
+            text-align: center;
+
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 24px;
+
+            background: rgba(18,18,24,0.96);
+
+            box-shadow:
+                0 25px 80px rgba(0,0,0,0.55);
+
+            backdrop-filter: blur(14px);
+        }
+
+        .login-logo {
+            width: 95px;
+            height: 95px;
+
+            object-fit: contain;
+
+            margin-bottom: 18px;
+
+            filter:
+                drop-shadow(
+                    0 0 25px
+                    rgba(255,255,255,0.15)
+                );
+        }
+
+        .login-box h1 {
+            margin: 0;
+
+            font-size: 30px;
+
+            color: white;
+        }
+
+        .login-box h1 span {
+            opacity: 0.55;
+        }
+
+        .login-box p {
+            margin: 14px 0 28px;
+
+            color: #9999a8;
+
+            line-height: 1.6;
+        }
+
+        .discord-login-btn {
+            width: 100%;
+
+            border: 0;
+            border-radius: 12px;
+
+            padding: 15px 20px;
+
+            background: #5865F2;
+
+            color: white;
+
+            font-size: 16px;
+            font-weight: 700;
+
+            cursor: pointer;
+
+            transition:
+                transform 0.2s ease,
+                filter 0.2s ease,
+                box-shadow 0.2s ease;
+        }
+
+        .discord-login-btn:hover {
+            transform: translateY(-2px);
+
+            filter: brightness(1.08);
+
+            box-shadow:
+                0 10px 30px
+                rgba(88,101,242,0.30);
+        }
+
+        .discord-login-btn:active {
+            transform: translateY(0);
+        }
+
+        .login-note {
+            display: block;
+
+            margin-top: 18px;
+
+            color: #666675;
+
+            font-size: 12px;
+
+            line-height: 1.5;
+        }
+
+        /* =========================
+           SERVER SCREEN
+        ========================== */
+
+        #serverScreen {
+            position: fixed;
+            inset: 0;
+
+            z-index: 99998;
+
+            display: none;
+
+            align-items: center;
+            justify-content: center;
+
+            overflow-y: auto;
+
+            padding: 40px 20px;
+
+            background:
+                radial-gradient(
+                    circle at top,
+                    rgba(255,255,255,0.06),
+                    transparent 40%
+                ),
+                #08080c;
+        }
+
+        .server-box {
+            width: min(900px, 100%);
+        }
+
+        .server-header {
+            text-align: center;
+
+            margin-bottom: 28px;
+        }
+
+        .server-header img {
+            width: 70px;
+            height: 70px;
+
+            object-fit: contain;
+
+            margin-bottom: 12px;
+        }
+
+        .server-header h1 {
+            margin: 0;
+
+            font-size: 30px;
+
+            color: white;
+        }
+
+        .server-header p {
+            color: #888896;
+
+            margin-top: 10px;
+        }
+
+        .server-header strong {
+            color: white;
+        }
+
+        #serverList {
+            display: grid;
+
+            grid-template-columns:
+                repeat(
+                    auto-fit,
+                    minmax(280px, 1fr)
+                );
+
+            gap: 14px;
+        }
+
+        .server-card {
+            display: flex;
+
+            align-items: center;
+
+            gap: 14px;
+
+            padding: 18px;
+
+            border:
+                1px solid
+                rgba(255,255,255,0.07);
+
+            border-radius: 16px;
+
+            background:
+                rgba(20,20,27,0.92);
+
+            cursor: pointer;
+
+            transition: 0.2s ease;
+        }
+
+        .server-card:hover {
+            transform: translateY(-2px);
+
+            border-color:
+                rgba(255,255,255,0.16);
+
+            background:
+                rgba(28,28,37,0.96);
+        }
+
+        .server-icon {
+            width: 54px;
+            height: 54px;
+
+            min-width: 54px;
+
+            display: flex;
+
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 16px;
+
+            overflow: hidden;
+
+            background: #111118;
+        }
+
+        .server-icon img {
+            width: 100%;
+            height: 100%;
+
+            object-fit: cover;
+        }
+
+        .server-name {
+            font-weight: 700;
+
+            color: white;
+
+            margin-bottom: 5px;
+        }
+
+        .server-permission {
+            color: #67e8a5;
+
+            font-size: 12px;
+        }
+
+        .server-action {
+            margin-left: auto;
+
+            border: 0;
+            border-radius: 9px;
+
+            padding: 9px 13px;
+
+            background:
+                rgba(255,255,255,0.08);
+
+            color: white;
+
+            cursor: pointer;
+
+            font-weight: 600;
+        }
+
+        .server-action:hover {
+            background:
+                rgba(255,255,255,0.14);
+        }
+
+        .empty-servers {
+            grid-column: 1 / -1;
+
+            padding: 40px;
+
+            text-align: center;
+
+            border-radius: 18px;
+
+            background:
+                rgba(20,20,27,0.9);
+
+            border:
+                1px solid
+                rgba(255,255,255,0.07);
+        }
+
+        .empty-servers h2 {
+            margin-top: 0;
+
+            color: white;
+        }
+
+        .empty-servers p {
+            color: #888896;
+        }
+
+        /* =========================
+           LOCK DASHBOARD
+        ========================== */
+
+        body.dashboard-locked > .sidebar,
+        body.dashboard-locked > .main {
+            display: none !important;
+        }
+
+        @media (max-width: 600px) {
+
+            .login-box {
+                padding: 34px 22px;
+            }
+
+            .login-box h1 {
+                font-size: 26px;
+            }
+
+            .server-header h1 {
+                font-size: 25px;
+            }
+        }
+
+    </style>
+
 </head>
 
-<body>
+<body class="dashboard-locked">
+
+    <!-- =========================
+         DISCORD LOGIN SCREEN
+    ========================== -->
+
+    <div id="loginScreen">
+
+        <div class="login-box">
+
+            <img
+                class="login-logo"
+                src="logo.png"
+                alt="ShadowBot"
+            >
+
+            <h1>
+                𝑆𝘩𝑎𝘥𝑜𝘸
+                <span>• 影</span>
+            </h1>
+
+            <p>
+                Sign in with Discord to access
+                the ShadowBot control panel.
+            </p>
+
+            <button
+                type="button"
+                class="discord-login-btn"
+                onclick="loginWithDiscord()"
+            >
+                💬 Continue with Discord
+            </button>
+
+            <small class="login-note">
+                You must have Administrator permission
+                in a server to manage ShadowBot.
+            </small>
+
+        </div>
+
+    </div>
+
+
+    <!-- =========================
+         SERVER SELECTOR
+    ========================== -->
+
+    <div id="serverScreen">
+
+        <div class="server-box">
+
+            <div class="server-header">
+
+                <img
+                    src="logo.png"
+                    alt="ShadowBot"
+                >
+
+                <h1>
+                    Choose a Server
+                </h1>
+
+                <p>
+                    Welcome,
+                    <strong id="dashboardUsername">
+                        Admin
+                    </strong>.
+                    Select a server to continue.
+                </p>
+
+            </div>
+
+            <div id="serverList">
+
+                <div class="empty-servers">
+
+                    <h2>
+                        Loading your servers...
+                    </h2>
+
+                    <p>
+                        Please wait.
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
 
     <!-- =========================
          SIDEBAR
@@ -126,8 +561,15 @@
             >
 
             <div>
-                <h1>𝑆𝘩𝑎𝘥𝑜𝘸 • 影-Bot</h1>
-                <span>Control Panel</span>
+
+                <h1>
+                    𝑆𝘩𝑎𝘥𝑜𝘸 • 影-Bot
+                </h1>
+
+                <span>
+                    Control Panel
+                </span>
+
             </div>
 
         </div>
@@ -208,8 +650,15 @@
                 ></span>
 
                 <div>
-                    <strong>𝑆𝘩𝑎𝘥𝑜𝘸 • 影-Bot</strong>
-                    <small id="bot-status">CHECKING...</small>
+
+                    <strong>
+                        𝑆𝘩𝑎𝘥𝑜𝘸 • 影-Bot
+                    </strong>
+
+                    <small id="bot-status">
+                        CHECKING...
+                    </small>
+
                 </div>
 
             </div>
@@ -218,8 +667,9 @@
 
     </aside>
 
+
     <!-- =========================
-         MAIN
+         MAIN DASHBOARD
     ========================== -->
 
     <main class="main">
@@ -242,18 +692,44 @@
 
             <div class="user-area">
 
-                <div class="avatar">
+                <div
+                    class="avatar"
+                    id="userAvatar"
+                >
                     👤
                 </div>
 
                 <div>
-                    <strong>Admin</strong>
-                    <small>Server Manager</small>
+
+                    <strong id="topUsername">
+                        Admin
+                    </strong>
+
+                    <small>
+                        Server Manager
+                    </small>
+
                 </div>
+
+                <button
+                    onclick="logout()"
+                    style="
+                        margin-left:15px;
+                        border:0;
+                        border-radius:8px;
+                        padding:8px 12px;
+                        background:rgba(255,255,255,0.08);
+                        color:white;
+                        cursor:pointer;
+                    "
+                >
+                    Logout
+                </button>
 
             </div>
 
         </header>
+
 
         <!-- =========================
              OVERVIEW
@@ -283,8 +759,8 @@
                     </h1>
 
                     <p>
-                        Manage your Discord server, XP system, games,
-                        moderation and verification from one place.
+                        Manage your Discord server, XP system,
+                        games, moderation and verification from one place.
                     </p>
 
                     <button
@@ -307,6 +783,7 @@
 
             </div>
 
+
             <!-- STATS -->
 
             <div class="stats-grid">
@@ -318,14 +795,19 @@
                     </div>
 
                     <div>
-                        <span>Members</span>
+
+                        <span>
+                            Members
+                        </span>
 
                         <strong id="memberCount">
                             1,248
                         </strong>
+
                     </div>
 
                 </div>
+
 
                 <div class="stat-card">
 
@@ -334,14 +816,19 @@
                     </div>
 
                     <div>
-                        <span>Total XP</span>
+
+                        <span>
+                            Total XP
+                        </span>
 
                         <strong id="xpCount">
                             84,520
                         </strong>
+
                     </div>
 
                 </div>
+
 
                 <div class="stat-card">
 
@@ -350,14 +837,19 @@
                     </div>
 
                     <div>
-                        <span>Games Played</span>
+
+                        <span>
+                            Games Played
+                        </span>
 
                         <strong id="gameCount">
                             2,431
                         </strong>
+
                     </div>
 
                 </div>
+
 
                 <div class="stat-card">
 
@@ -366,22 +858,25 @@
                     </div>
 
                     <div>
-                        <span>Moderation</span>
+
+                        <span>
+                            Moderation
+                        </span>
 
                         <strong>
                             Protected
                         </strong>
+
                     </div>
 
                 </div>
 
             </div>
 
+
             <!-- CONTENT -->
 
             <div class="content-grid">
-
-                <!-- FEATURES -->
 
                 <div class="panel">
 
@@ -425,6 +920,7 @@
 
                         </div>
 
+
                         <div class="feature">
 
                             <span>🎮</span>
@@ -446,6 +942,7 @@
                             </b>
 
                         </div>
+
 
                         <div class="feature">
 
@@ -469,6 +966,7 @@
 
                         </div>
 
+
                         <div class="feature">
 
                             <span>🔐</span>
@@ -490,6 +988,7 @@
                             </b>
 
                         </div>
+
 
                         <div class="feature">
 
@@ -517,7 +1016,6 @@
 
                 </div>
 
-                <!-- QUICK ACTIONS -->
 
                 <div class="panel">
 
@@ -562,6 +1060,7 @@
             </div>
 
         </section>
+
 
         <!-- =========================
              SERVER
@@ -613,6 +1112,7 @@
 
                 </div>
 
+
                 <div class="panel setting-card">
 
                     <span class="big-icon">
@@ -639,6 +1139,7 @@
                     </label>
 
                 </div>
+
 
                 <div class="panel setting-card">
 
@@ -667,6 +1168,7 @@
 
                 </div>
 
+
                 <div class="panel setting-card">
 
                     <span class="big-icon">
@@ -690,6 +1192,7 @@
             </div>
 
         </section>
+
 
         <!-- =========================
              XP
@@ -742,6 +1245,7 @@
 
                 </div>
 
+
                 <div class="setting-row">
 
                     <div>
@@ -765,6 +1269,7 @@
 
                 </div>
 
+
                 <div class="setting-row">
 
                     <div>
@@ -787,6 +1292,7 @@
                     >
 
                 </div>
+
 
                 <div class="setting-row">
 
@@ -816,6 +1322,7 @@
 
                 </div>
 
+
                 <button
                     class="primary-btn"
                     onclick="saveSettings()"
@@ -826,6 +1333,7 @@
             </div>
 
         </section>
+
 
         <!-- =========================
              GAMES
@@ -870,6 +1378,7 @@
 
                 </div>
 
+
                 <div class="stat-card">
 
                     <div class="stat-icon">
@@ -889,6 +1398,7 @@
                     </div>
 
                 </div>
+
 
                 <div class="stat-card">
 
@@ -911,6 +1421,7 @@
                 </div>
 
             </div>
+
 
             <div class="panel game-panel">
 
@@ -949,6 +1460,7 @@
 
                 </div>
 
+
                 <div class="game-row">
 
                     <div>
@@ -983,6 +1495,7 @@
                     </label>
 
                 </div>
+
 
                 <div class="game-row">
 
@@ -1022,6 +1535,7 @@
             </div>
 
         </section>
+
 
         <!-- =========================
              MODERATION
@@ -1073,6 +1587,7 @@
 
                 </div>
 
+
                 <div class="panel setting-card">
 
                     <span class="big-icon">
@@ -1100,6 +1615,7 @@
 
                 </div>
 
+
                 <div class="panel setting-card">
 
                     <span class="big-icon">
@@ -1126,6 +1642,7 @@
                     </label>
 
                 </div>
+
 
                 <div class="panel setting-card">
 
@@ -1157,6 +1674,7 @@
             </div>
 
         </section>
+
 
         <!-- =========================
              VERIFICATION
@@ -1208,6 +1726,7 @@
 
                 </div>
 
+
                 <div class="setting-row">
 
                     <div>
@@ -1239,6 +1758,7 @@
                     </select>
 
                 </div>
+
 
                 <div class="setting-row">
 
@@ -1272,6 +1792,7 @@
 
                 </div>
 
+
                 <button
                     class="primary-btn"
                     onclick="saveSettings()"
@@ -1282,6 +1803,7 @@
             </div>
 
         </section>
+
 
         <!-- =========================
              POLLS
@@ -1343,6 +1865,7 @@
 
         </section>
 
+
         <!-- =========================
              SETTINGS
         ========================== -->
@@ -1397,6 +1920,7 @@
 
                 </div>
 
+
                 <div class="setting-row">
 
                     <div>
@@ -1424,6 +1948,7 @@
                     </label>
 
                 </div>
+
 
                 <div class="setting-row">
 
@@ -1453,6 +1978,7 @@
 
                 </div>
 
+
                 <button
                     class="primary-btn"
                     onclick="saveSettings()"
@@ -1466,6 +1992,7 @@
 
     </main>
 
+
     <!-- =========================
          TOAST
     ========================== -->
@@ -1476,6 +2003,11 @@
     >
         Settings saved successfully! ✓
     </div>
+
+
+    <!-- =========================
+         JAVASCRIPT
+    ========================== -->
 
     <script src="script.js"></script>
 
