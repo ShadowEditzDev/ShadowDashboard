@@ -1,58 +1,31 @@
 // 🌑 ShadowDashboard
-// Discord OAuth + Navigation + Animations + Ripple Effects + Toasts
+// Navigation + Login + Animations + Toasts + Backend
 
-// ============================================================
-// BACKEND CONFIG
-// ============================================================
-
-// Put your PUBLIC HTTPS Quaxly backend URL here.
-//
-// Example:
-const BACKEND_URL = "https://shadoweditzdev.github.io/ShadowDashboard/";
-//
-// Do NOT use:
-// http://localhost:8080
-// 192.168.x.x
-//
-// GitHub Pages needs a public HTTPS backend.
-
-const BACKEND_URL = "https://YOUR-BACKEND-URL-HERE.com";
+const BACKEND_URL = "YOUR_BACKEND_URL_HERE";
 
 
-// ============================================================
+// =========================
 // DISCORD LOGIN
-// ============================================================
+// =========================
 
 function loginWithDiscord() {
 
     if (
         !BACKEND_URL ||
-        BACKEND_URL.includes("YOUR-BACKEND-URL-HERE")
+        BACKEND_URL === "YOUR_BACKEND_URL_HERE"
     ) {
-
-        alert(
-            "⚠️ Backend URL is not configured yet.\n\n" +
-            "Open script.js and replace BACKEND_URL with your public HTTPS Quaxly backend URL."
-        );
-
+        alert("❌ BACKEND_URL is not configured yet.");
         return;
     }
 
-    const loginUrl =
+    window.location.href =
         `${BACKEND_URL}/auth/discord`;
-
-    console.log(
-        "🌑 Redirecting to Discord OAuth:",
-        loginUrl
-    );
-
-    window.location.href = loginUrl;
 }
 
 
-// ============================================================
+// =========================
 // PAGE NAVIGATION
-// ============================================================
+// =========================
 
 function showPage(pageId, button = null) {
 
@@ -62,8 +35,6 @@ function showPage(pageId, button = null) {
     const navButtons =
         document.querySelectorAll(".nav-btn");
 
-    // Remove active state
-
     pages.forEach(page => {
         page.classList.remove("active");
     });
@@ -72,178 +43,122 @@ function showPage(pageId, button = null) {
         btn.classList.remove("active");
     });
 
-
-    // Activate requested page
-
-    const targetPage =
+    const page =
         document.getElementById(pageId);
 
-    if (!targetPage) {
-
-        console.warn(
-            `⚠️ Page "${pageId}" was not found.`
-        );
-
-        return;
+    if (page) {
+        page.classList.add("active");
     }
-
-    targetPage.classList.add("active");
-
-
-    // Activate clicked navigation button
 
     if (button) {
-
         button.classList.add("active");
-
     } else {
 
-        const matchingButton =
-            document.querySelector(
-                `.nav-btn[onclick*="'${pageId}'"]`
-            );
+        navButtons.forEach(btn => {
 
-        if (matchingButton) {
-            matchingButton.classList.add("active");
-        }
+            const onclick =
+                btn.getAttribute("onclick") || "";
+
+            if (
+                onclick.includes(
+                    `showPage('${pageId}'`
+                )
+            ) {
+                btn.classList.add("active");
+            }
+
+        });
 
     }
-
-
-    // Update page title
 
     const pageTitle =
         document.getElementById("pageTitle");
 
     const titles = {
-
-        overview:
-            "Dashboard Overview",
-
-        server:
-            "Server Management",
-
-        xp:
-            "XP & Levels",
-
-        games:
-            "Games",
-
-        moderation:
-            "Moderation",
-
-        verification:
-            "Verification",
-
-        polls:
-            "Polls",
-
-        settings:
-            "Settings"
-
+        overview: "Dashboard Overview",
+        server: "Server Management",
+        xp: "XP & Levels",
+        games: "Games",
+        moderation: "Moderation",
+        verification: "Verification",
+        polls: "Polls",
+        settings: "Settings"
     };
 
-    if (pageTitle) {
-
+    if (pageTitle && titles[pageId]) {
         pageTitle.textContent =
-            titles[pageId] ||
-            "ShadowBot Dashboard";
-
+            titles[pageId];
     }
-
-
-    // Scroll to top
 
     window.scrollTo({
         top: 0,
         behavior: "smooth"
     });
 
-
-    // Ripple
-
-    if (button) {
-        createRipple(button);
-    }
-
+    createRipple(
+        button || page
+    );
 }
 
 
-// ============================================================
+// =========================
 // DOM READY
-// ============================================================
+// =========================
 
 document.addEventListener(
     "DOMContentLoaded",
     () => {
 
-        // ====================================================
-        // RIPPLE EFFECT
-        // ====================================================
+        // =========================
+        // NAV BUTTONS
+        // =========================
 
-        window.createRipple =
-            function(element, event = null) {
+        const navButtons =
+            document.querySelectorAll(".nav-btn");
 
-                if (!element) return;
+        navButtons.forEach(button => {
 
-                const ripple =
-                    document.createElement("span");
+            button.addEventListener(
+                "click",
+                () => {
 
-                ripple.className =
-                    "click-ripple";
+                    const onclick =
+                        button.getAttribute("onclick") || "";
 
+                    const match =
+                        onclick.match(
+                            /showPage\(['"]([^'"]+)/
+                        );
 
-                if (event) {
-
-                    const rect =
-                        element.getBoundingClientRect();
-
-                    ripple.style.left =
-                        `${event.clientX - rect.left}px`;
-
-                    ripple.style.top =
-                        `${event.clientY - rect.top}px`;
-
-                } else {
-
-                    ripple.style.left =
-                        "50%";
-
-                    ripple.style.top =
-                        "50%";
+                    if (match) {
+                        showPage(
+                            match[1],
+                            button
+                        );
+                    }
 
                 }
+            );
+
+        });
 
 
-                element.appendChild(ripple);
-
-
-                setTimeout(() => {
-
-                    ripple.remove();
-
-                }, 600);
-
-            };
-
-
-        // ====================================================
-        // BUTTON RIPPLE
-        // ====================================================
+        // =========================
+        // RIPPLE EFFECTS
+        // =========================
 
         const buttons =
             document.querySelectorAll(
                 "button"
             );
 
-
         buttons.forEach(button => {
 
             button.addEventListener(
                 "click",
-                function(event) {
+                function (event) {
 
-                    createRipple(
+                    createButtonRipple(
                         this,
                         event
                     );
@@ -254,15 +169,14 @@ document.addEventListener(
         });
 
 
-        // ====================================================
+        // =========================
         // QUICK ACTIONS
-        // ====================================================
+        // =========================
 
         const quickButtons =
             document.querySelectorAll(
                 ".quick-actions button"
             );
-
 
         quickButtons.forEach(button => {
 
@@ -283,48 +197,14 @@ document.addEventListener(
         });
 
 
-        // ====================================================
-        // PRIMARY BUTTON FEEDBACK
-        // ====================================================
-
-        const primaryButtons =
-            document.querySelectorAll(
-                ".primary-btn"
-            );
-
-
-        primaryButtons.forEach(button => {
-
-            button.addEventListener(
-                "click",
-                () => {
-
-                    if (
-                        button.dataset.noToast ===
-                        "true"
-                    ) {
-                        return;
-                    }
-
-                    showToast(
-                        "🌑 Shadow action activated"
-                    );
-
-                }
-            );
-
-        });
-
-
-        // ====================================================
-        // SWITCH FEEDBACK
-        // ====================================================
+        // =========================
+        // SWITCHES
+        // =========================
 
         const switches =
             document.querySelectorAll(
                 ".switch input"
             );
-
 
         switches.forEach(toggle => {
 
@@ -352,82 +232,14 @@ document.addEventListener(
         });
 
 
-        // ====================================================
-        // TOAST SYSTEM
-        // ====================================================
-
-        window.showToast =
-            function(message) {
-
-                let toast =
-                    document.querySelector(
-                        ".toast"
-                    );
-
-
-                if (!toast) {
-
-                    toast =
-                        document.createElement(
-                            "div"
-                        );
-
-                    toast.className =
-                        "toast";
-
-                    document.body.appendChild(
-                        toast
-                    );
-
-                }
-
-
-                toast.textContent =
-                    message;
-
-
-                toast.classList.remove(
-                    "show"
-                );
-
-
-                void toast.offsetWidth;
-
-
-                toast.classList.add(
-                    "show"
-                );
-
-
-                clearTimeout(
-                    toast.hideTimer
-                );
-
-
-                toast.hideTimer =
-                    setTimeout(
-                        () => {
-
-                            toast.classList.remove(
-                                "show"
-                            );
-
-                        },
-                        2500
-                    );
-
-            };
-
-
-        // ====================================================
-        // CARD HOVER TILT
-        // ====================================================
+        // =========================
+        // CARD TILT
+        // =========================
 
         const cards =
             document.querySelectorAll(
                 ".stat-card, .setting-card, .game-panel"
             );
-
 
         cards.forEach(card => {
 
@@ -438,26 +250,21 @@ document.addEventListener(
                     const rect =
                         card.getBoundingClientRect();
 
-
                     const x =
                         event.clientX -
                         rect.left;
-
 
                     const y =
                         event.clientY -
                         rect.top;
 
-
                     const rotateX =
                         ((y / rect.height) - 0.5) *
                         -3;
 
-
                     const rotateY =
                         ((x / rect.width) - 0.5) *
                         3;
-
 
                     card.style.transform =
                         `perspective(700px)
@@ -468,13 +275,11 @@ document.addEventListener(
                 }
             );
 
-
             card.addEventListener(
                 "mouseleave",
                 () => {
 
-                    card.style.transform =
-                        "";
+                    card.style.transform = "";
 
                 }
             );
@@ -482,15 +287,12 @@ document.addEventListener(
         });
 
 
-        // ====================================================
+        // =========================
         // HERO PARALLAX
-        // ====================================================
+        // =========================
 
         const hero =
-            document.querySelector(
-                ".hero"
-            );
-
+            document.querySelector(".hero");
 
         if (hero) {
 
@@ -501,33 +303,27 @@ document.addEventListener(
                     const rect =
                         hero.getBoundingClientRect();
 
-
                     const x =
                         (event.clientX -
                             rect.left) /
                         rect.width;
-
 
                     const y =
                         (event.clientY -
                             rect.top) /
                         rect.height;
 
-
                     const moveX =
                         (x - 0.5) * 8;
 
-
                     const moveY =
                         (y - 0.5) * 8;
-
 
                     hero.style.backgroundPosition =
                         `${50 + moveX}% ${50 + moveY}%`;
 
                 }
             );
-
 
             hero.addEventListener(
                 "mouseleave",
@@ -542,15 +338,14 @@ document.addEventListener(
         }
 
 
-        // ====================================================
-        // ONLINE STATUS ANIMATION
-        // ====================================================
+        // =========================
+        // ONLINE ANIMATION
+        // =========================
 
         const online =
             document.querySelector(
                 ".online-badge"
             );
-
 
         if (online) {
 
@@ -559,7 +354,6 @@ document.addEventListener(
 
                     online.style.transform =
                         "scale(1.03)";
-
 
                     setTimeout(
                         () => {
@@ -578,51 +372,38 @@ document.addEventListener(
         }
 
 
-        // ====================================================
+        // =========================
         // NUMBER COUNTERS
-        // ====================================================
+        // =========================
 
         const statNumbers =
             document.querySelectorAll(
                 ".stat-card strong"
             );
 
-
         statNumbers.forEach(number => {
 
             const text =
                 number.textContent.trim();
 
-
             const match =
-                text.match(/^(\d+)$/);
+                text.match(/^([\d,]+)$/);
 
-
-            if (!match) {
-                return;
-            }
-
+            if (!match) return;
 
             const target =
-                Number(match[1]);
+                Number(
+                    match[1].replace(/,/g, "")
+                );
 
+            if (!target) return;
 
-            if (target === 0) {
-                return;
-            }
+            number.textContent = "0";
 
-
-            number.textContent =
-                "0";
-
-
-            const duration =
-                800;
-
+            const duration = 800;
 
             const start =
                 performance.now();
-
 
             function animateCounter(time) {
 
@@ -633,8 +414,7 @@ document.addEventListener(
                         1
                     );
 
-
-                const current =
+                const value =
                     Math.floor(
                         target *
                         (
@@ -646,10 +426,8 @@ document.addEventListener(
                         )
                     );
 
-
                 number.textContent =
-                    current;
-
+                    value.toLocaleString();
 
                 if (progress < 1) {
 
@@ -660,12 +438,11 @@ document.addEventListener(
                 } else {
 
                     number.textContent =
-                        target;
+                        target.toLocaleString();
 
                 }
 
             }
-
 
             requestAnimationFrame(
                 animateCounter
@@ -674,15 +451,14 @@ document.addEventListener(
         });
 
 
-        // ====================================================
+        // =========================
         // INPUT GLOW
-        // ====================================================
+        // =========================
 
         const inputs =
             document.querySelectorAll(
                 ".text-input, .number-input, select"
             );
-
 
         inputs.forEach(input => {
 
@@ -695,7 +471,6 @@ document.addEventListener(
 
                 }
             );
-
 
             input.addEventListener(
                 "blur",
@@ -710,124 +485,9 @@ document.addEventListener(
         });
 
 
-        // ====================================================
-        // SAVE SETTINGS
-        // ====================================================
-
-        window.saveSettings =
-            function() {
-
-                showToast(
-                    "💾 Settings saved successfully!"
-                );
-
-            };
-
-
-        // ====================================================
-        // CREATE POLL
-        // ====================================================
-
-        window.createPoll =
-            function() {
-
-                const question =
-                    document.getElementById(
-                        "pollQuestion"
-                    );
-
-
-                const message =
-                    document.getElementById(
-                        "pollMessage"
-                    );
-
-
-                if (
-                    !question ||
-                    !question.value.trim()
-                ) {
-
-                    showToast(
-                        "⚠️ Enter a poll question first."
-                    );
-
-                    return;
-                }
-
-
-                if (message) {
-
-                    message.textContent =
-                        "✓ Poll created successfully.";
-
-                }
-
-
-                showToast(
-                    "🗳️ Poll created!"
-                );
-
-            };
-
-
-        // ====================================================
-        // THEME
-        // ====================================================
-
-        window.changeTheme =
-            function() {
-
-                const select =
-                    document.getElementById(
-                        "themeSelect"
-                    );
-
-
-                if (!select) {
-                    return;
-                }
-
-
-                const theme =
-                    select.value;
-
-
-                document.body.dataset.theme =
-                    theme;
-
-
-                if (theme === "midnight") {
-
-                    document.documentElement
-                        .style
-                        .setProperty(
-                            "--bg",
-                            "#03030a"
-                        );
-
-                } else {
-
-                    document.documentElement
-                        .style
-                        .setProperty(
-                            "--bg",
-                            "#08080d"
-                        );
-
-                }
-
-
-                showToast(
-                    `🌑 ${theme} theme selected`
-                );
-
-            };
-
-
-        // ====================================================
+        // =========================
         // PAGE LOAD
-        // ====================================================
+        // =========================
 
         setTimeout(
             () => {
@@ -841,17 +501,203 @@ document.addEventListener(
         );
 
 
-        // ====================================================
-        // CONSOLE
-        // ====================================================
-
         console.log(
-            "🌑 ShadowDashboard loaded."
-        );
-
-        console.log(
-            "🔐 Discord OAuth ready."
+            "🌑 ShadowDashboard loaded successfully."
         );
 
     }
 );
+
+
+// =========================
+// RIPPLE
+// =========================
+
+function createRipple(element) {
+
+    if (!element) return;
+
+    const ripple =
+        document.createElement("span");
+
+    ripple.className =
+        "click-ripple";
+
+    element.appendChild(ripple);
+
+    setTimeout(
+        () => {
+
+            ripple.remove();
+
+        },
+        600
+    );
+}
+
+
+function createButtonRipple(
+    element,
+    event
+) {
+
+    if (!element) return;
+
+    const rect =
+        element.getBoundingClientRect();
+
+    const ripple =
+        document.createElement("span");
+
+    ripple.className =
+        "click-ripple";
+
+    ripple.style.left =
+        `${event.clientX - rect.left}px`;
+
+    ripple.style.top =
+        `${event.clientY - rect.top}px`;
+
+    element.appendChild(ripple);
+
+    setTimeout(
+        () => {
+
+            ripple.remove();
+
+        },
+        600
+    );
+}
+
+
+// =========================
+// TOAST
+// =========================
+
+function showToast(message) {
+
+    let toast =
+        document.querySelector(".toast");
+
+    if (!toast) {
+
+        toast =
+            document.createElement("div");
+
+        toast.className =
+            "toast";
+
+        document.body.appendChild(toast);
+
+    }
+
+    toast.textContent =
+        message;
+
+    toast.classList.remove(
+        "show"
+    );
+
+    void toast.offsetWidth;
+
+    toast.classList.add(
+        "show"
+    );
+
+    clearTimeout(
+        toast.hideTimer
+    );
+
+    toast.hideTimer =
+        setTimeout(
+            () => {
+
+                toast.classList.remove(
+                    "show"
+                );
+
+            },
+            2500
+        );
+}
+
+
+// =========================
+// SAVE SETTINGS
+// =========================
+
+function saveSettings() {
+
+    showToast(
+        "💾 Settings saved successfully!"
+    );
+
+}
+
+
+// =========================
+// CREATE POLL
+// =========================
+
+function createPoll() {
+
+    const question =
+        document.getElementById(
+            "pollQuestion"
+        );
+
+    const message =
+        document.getElementById(
+            "pollMessage"
+        );
+
+    if (!question) return;
+
+    if (!question.value.trim()) {
+
+        showToast(
+            "⚠️ Enter a poll question first."
+        );
+
+        return;
+    }
+
+    if (message) {
+
+        message.textContent =
+            "🗳️ Poll created successfully!";
+
+    }
+
+    showToast(
+        "🗳️ Poll created!"
+    );
+
+}
+
+
+// =========================
+// THEME
+// =========================
+
+function changeTheme() {
+
+    const select =
+        document.getElementById(
+            "themeSelect"
+        );
+
+    if (!select) return;
+
+    const theme =
+        select.value;
+
+    document.body.dataset.theme =
+        theme;
+
+    showToast(
+        `🎨 Theme changed to ${theme}`
+    );
+
+}
