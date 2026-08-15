@@ -8,7 +8,7 @@
 // Put your PUBLIC HTTPS Quaxly backend URL here.
 //
 // Example:
-// const BACKEND_URL = "https://your-backend-url.com";
+const BACKEND_URL = "https://shadoweditzdev.github.io/ShadowDashboard/";
 //
 // Do NOT use:
 // http://localhost:8080
