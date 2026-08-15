@@ -1,7 +1,7 @@
 // 🌑 ShadowBot Dashboard
 // Discord OAuth + Server Selector + Profile
 
-const API = "http://node6.quaxly.com:25522";
+const API = "https://shadowbot.hatenna.com";
 
 // =========================
 // START
