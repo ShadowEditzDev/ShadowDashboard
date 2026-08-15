@@ -1,8 +1,7 @@
 // 🌑 ShadowDashboard
 // Navigation + Login + Animations + Toasts + Backend
 
-const BACKEND_URL = "YOUR_BACKEND_URL_HERE";
-
+const BACKEND_URL = "https://shadoweditzdev.github.io/ShadowDashboard/";
 
 // =========================
 // DISCORD LOGIN
