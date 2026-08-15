@@ -1,31 +1,26 @@
+```javascript
 // 🌑 ShadowBot Dashboard
 // Discord OAuth + Server Selector + Profile
 
-const API = "https://node6.quaxly.com:25522";
+const API = "http://node6.quaxly.com:25522";
 
 // =========================
 // START
 // =========================
 
-document.addEventListener("DOMContentLoaded", async () => {
-    console.log("🌑 ShadowDashboard started.");
-    console.log("🔗 Backend:", API);
-
-    await checkLogin();
-});
+document.addEventListener(
+    "DOMContentLoaded",
+    async () => {
+        await checkLogin();
+    }
+);
 
 // =========================
 // DISCORD LOGIN
 // =========================
 
 function loginWithDiscord() {
-    console.log("🔐 Starting Discord OAuth...");
-
-    const loginURL = API + "/auth/discord";
-
-    console.log("➡️ Redirecting to:", loginURL);
-
-    window.location.assign(loginURL);
+    window.location.href = API + "/auth/discord";
 }
 
 // =========================
@@ -48,49 +43,48 @@ async function checkLogin() {
         serverScreen.style.display = "none";
     }
 
-    document.body.classList.add("dashboard-locked");
+    document.body.classList.add(
+        "dashboard-locked"
+    );
 
     try {
 
-        console.log("🔎 Checking Discord login...");
-
-        const response = await fetch(
-            API + "/api/me",
-            {
-                method: "GET",
-                credentials: "include",
-                headers: {
-                    "Accept": "application/json"
+        const response =
+            await fetch(
+                API + "/api/me",
+                {
+                    method: "GET",
+                    credentials: "include",
+                    headers: {
+                        "Accept": "application/json"
+                    }
                 }
-            }
-        );
-
-        console.log(
-            "📡 /api/me status:",
-            response.status
-        );
+            );
 
         if (!response.ok) {
 
-            console.log("❌ User is not logged in.");
-
-            return;
-        }
-
-        const data = await response.json();
-
-        console.log("👤 Discord user:", data);
-
-        if (!data.user) {
-
             console.log(
-                "❌ Backend did not return a Discord user."
+                "Not logged in."
             );
 
             return;
         }
 
-        updateUserProfile(data.user);
+        const data =
+            await response.json();
+
+        console.log(
+            "Discord user:",
+            data
+        );
+
+        if (!data.user) {
+            return;
+        }
+
+        updateUserProfile(
+            data.user
+        );
 
         document.body.classList.remove(
             "dashboard-locked"
@@ -109,7 +103,7 @@ async function checkLogin() {
     } catch (error) {
 
         console.error(
-            "❌ Dashboard connection failed:",
+            "Dashboard connection failed:",
             error
         );
 
@@ -149,13 +143,11 @@ function updateUserProfile(user) {
         );
 
     if (dashboardUsername) {
-
         dashboardUsername.innerText =
             username;
     }
 
     if (topUsername) {
-
         topUsername.innerText =
             username;
     }
@@ -176,7 +168,10 @@ function updateUserProfile(user) {
 
         if (userAvatar) {
 
-            if (userAvatar.tagName === "IMG") {
+            if (
+                userAvatar.tagName ===
+                "IMG"
+            ) {
 
                 userAvatar.src =
                     avatarURL;
@@ -229,23 +224,17 @@ async function loadServers() {
 
     try {
 
-        console.log("📡 Loading Discord servers...");
-
-        const response = await fetch(
-            API + "/api/guilds",
-            {
-                method: "GET",
-                credentials: "include",
-                headers: {
-                    "Accept": "application/json"
+        const response =
+            await fetch(
+                API + "/api/guilds",
+                {
+                    method: "GET",
+                    credentials: "include",
+                    headers: {
+                        "Accept": "application/json"
+                    }
                 }
-            }
-        );
-
-        console.log(
-            "📡 /api/guilds status:",
-            response.status
-        );
+            );
 
         if (!response.ok) {
 
@@ -257,15 +246,12 @@ async function loadServers() {
         const data =
             await response.json();
 
-        console.log(
-            "🏠 Guilds:",
-            data
-        );
-
         const guilds =
             data.guilds || [];
 
-        if (guilds.length === 0) {
+        if (
+            guilds.length === 0
+        ) {
 
             serverList.innerHTML = `
                 <div class="empty-servers">
@@ -282,83 +268,92 @@ async function loadServers() {
 
         serverList.innerHTML = "";
 
-        guilds.forEach(guild => {
+        guilds.forEach(
+            guild => {
 
-            const card =
-                document.createElement("div");
+                const card =
+                    document.createElement(
+                        "div"
+                    );
 
-            card.className =
-                "server-card";
+                card.className =
+                    "server-card";
 
-            let iconHTML =
-                `<span style="font-size:24px;">🌑</span>`;
+                let iconHTML =
+                    `<span style="font-size:24px;">🌑</span>`;
 
-            if (guild.icon) {
+                if (guild.icon) {
 
-                iconHTML = `
-                    <img
-                        src="https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png?size=128"
-                        alt=""
+                    iconHTML = `
+                        <img
+                            src="https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png?size=128"
+                            alt=""
+                        >
+                    `;
+                }
+
+                card.innerHTML = `
+                    <div class="server-icon">
+                        ${iconHTML}
+                    </div>
+
+                    <div>
+                        <div class="server-name">
+                            ${escapeHTML(guild.name)}
+                        </div>
+
+                        <div class="server-permission">
+                            ✓ Administrator
+                        </div>
+                    </div>
+
+                    <button
+                        class="server-action"
                     >
+                        Manage
+                    </button>
                 `;
-            }
 
-            card.innerHTML = `
-                <div class="server-icon">
-                    ${iconHTML}
-                </div>
+                const manageButton =
+                    card.querySelector(
+                        ".server-action"
+                    );
 
-                <div>
-                    <div class="server-name">
-                        ${escapeHTML(guild.name)}
-                    </div>
+                if (manageButton) {
 
-                    <div class="server-permission">
-                        ✓ Administrator
-                    </div>
-                </div>
+                    manageButton.addEventListener(
+                        "click",
+                        event => {
 
-                <button
-                    class="server-action"
-                    type="button"
-                >
-                    Manage
-                </button>
-            `;
+                            event.stopPropagation();
 
-            const manageButton =
-                card.querySelector(
-                    ".server-action"
-                );
+                            selectServer(
+                                guild
+                            );
+                        }
+                    );
+                }
 
-            if (manageButton) {
-
-                manageButton.addEventListener(
+                card.addEventListener(
                     "click",
-                    event => {
+                    () => {
 
-                        event.stopPropagation();
-
-                        selectServer(guild);
+                        selectServer(
+                            guild
+                        );
                     }
                 );
+
+                serverList.appendChild(
+                    card
+                );
             }
-
-            card.addEventListener(
-                "click",
-                () => {
-
-                    selectServer(guild);
-                }
-            );
-
-            serverList.appendChild(card);
-        });
+        );
 
     } catch (error) {
 
         console.error(
-            "❌ Server loading error:",
+            "Server loading error:",
             error
         );
 
@@ -378,27 +373,27 @@ async function loadServers() {
 // SELECT SERVER
 // =========================
 
-async function selectServer(guild) {
+async function selectServer(
+    guild
+) {
 
     try {
 
-        console.log(
-            "🛡️ Selecting server:",
-            guild.name
-        );
-
-        const response = await fetch(
-            API +
-            "/api/guild/" +
-            encodeURIComponent(guild.id),
-            {
-                method: "GET",
-                credentials: "include",
-                headers: {
-                    "Accept": "application/json"
+        const response =
+            await fetch(
+                API +
+                "/api/guild/" +
+                encodeURIComponent(
+                    guild.id
+                ),
+                {
+                    method: "GET",
+                    credentials: "include",
+                    headers: {
+                        "Accept": "application/json"
+                    }
                 }
-            }
-        );
+            );
 
         const data =
             await response.json();
@@ -436,7 +431,9 @@ async function selectServer(guild) {
             "dashboard-locked"
         );
 
-        updateSelectedServer(data);
+        updateSelectedServer(
+            data
+        );
 
         loadStatus();
         loadStats();
@@ -444,7 +441,7 @@ async function selectServer(guild) {
     } catch (error) {
 
         console.error(
-            "❌ Server selection error:",
+            "Server selection error:",
             error
         );
 
@@ -458,7 +455,9 @@ async function selectServer(guild) {
 // UPDATE SELECTED SERVER
 // =========================
 
-function updateSelectedServer(guild) {
+function updateSelectedServer(
+    guild
+) {
 
     const pageTitle =
         document.getElementById(
@@ -515,33 +514,54 @@ async function logout() {
 // PAGE SWITCH
 // =========================
 
-function showPage(page, button) {
+function showPage(
+    page,
+    button
+) {
 
     document
-        .querySelectorAll(".page")
-        .forEach(p => {
+        .querySelectorAll(
+            ".page"
+        )
+        .forEach(
+            p => {
 
-            p.classList.remove("active");
-        });
+                p.classList.remove(
+                    "active"
+                );
+            }
+        );
 
     document
-        .querySelectorAll(".nav-btn")
-        .forEach(n => {
+        .querySelectorAll(
+            ".nav-btn"
+        )
+        .forEach(
+            n => {
 
-            n.classList.remove("active");
-        });
+                n.classList.remove(
+                    "active"
+                );
+            }
+        );
 
     const selectedPage =
-        document.getElementById(page);
+        document.getElementById(
+            page
+        );
 
     if (selectedPage) {
 
-        selectedPage.classList.add("active");
+        selectedPage.classList.add(
+            "active"
+        );
     }
 
     if (button) {
 
-        button.classList.add("active");
+        button.classList.add(
+            "active"
+        );
     }
 
     const titles = {
@@ -753,12 +773,16 @@ async function saveSettings() {
     toast.innerText =
         "Settings saved successfully! ✓";
 
-    toast.classList.add("show");
+    toast.classList.add(
+        "show"
+    );
 
     setTimeout(
         () => {
 
-            toast.classList.remove("show");
+            toast.classList.remove(
+                "show"
+            );
 
         },
         2500
@@ -812,7 +836,10 @@ function changeTheme() {
         return;
     }
 
-    if (select.value === "midnight") {
+    if (
+        select.value ===
+        "midnight"
+    ) {
 
         document.body.classList.add(
             "midnight"
@@ -830,14 +857,31 @@ function changeTheme() {
 // HTML ESCAPE
 // =========================
 
-function escapeHTML(value) {
+function escapeHTML(
+    value
+) {
 
     return String(value)
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
+        .replaceAll(
+            "&",
+            "&amp;"
+        )
+        .replaceAll(
+            "<",
+            "&lt;"
+        )
+        .replaceAll(
+            ">",
+            "&gt;"
+        )
+        .replaceAll(
+            '"',
+            "&quot;"
+        )
+        .replaceAll(
+            "'",
+            "&#039;"
+        );
 }
 
 // =========================
@@ -855,9 +899,11 @@ setInterval(
         if (loggedIn) {
 
             loadStatus();
+
             loadStats();
         }
 
     },
     5000
 );
+```
