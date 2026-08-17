@@ -1,7 +1,7 @@
 // 🌑 ShadowDashboard
 // Navigation + Login + Animations + Toasts + Backend
 
-var BACKEND_URL = "https://shadoweditzdev.github.io/ShadowDashboard/";
+var BACKEND_URL = "http://node6.quaxly.com:25522";
 
 // =========================
 // DISCORD LOGIN
@@ -50,7 +50,9 @@ function showPage(pageId, button = null) {
     }
 
     if (button) {
+
         button.classList.add("active");
+
     } else {
 
         navButtons.forEach(btn => {
@@ -84,7 +86,10 @@ function showPage(pageId, button = null) {
         settings: "Settings"
     };
 
-    if (pageTitle && titles[pageId]) {
+    if (
+        pageTitle &&
+        titles[pageId]
+    ) {
         pageTitle.textContent =
             titles[pageId];
     }
@@ -130,10 +135,12 @@ document.addEventListener(
                         );
 
                     if (match) {
+
                         showPage(
                             match[1],
                             button
                         );
+
                     }
 
                 }
