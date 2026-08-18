@@ -3,6 +3,7 @@
 
 var BACKEND_URL = "http://node6.quaxly.com:25522";
 
+
 // =========================
 // DISCORD LOGIN
 // =========================
@@ -12,7 +13,105 @@ function loginWithDiscord() {
     console.log("🔐 Opening Discord OAuth...");
 
     window.location.href =
-        "http://node6.quaxly.com:25522/auth/discord";
+        BACKEND_URL + "/auth/discord";
+}
+
+
+// =========================
+// CHECK DISCORD LOGIN
+// =========================
+
+async function checkDiscordLogin() {
+
+    try {
+
+        const response =
+            await fetch(
+                BACKEND_URL + "/api/me",
+                {
+                    method: "GET",
+                    credentials: "include"
+                }
+            );
+
+        if (!response.ok) {
+
+            console.log("🔒 Not logged in.");
+
+            return;
+        }
+
+        const data =
+            await response.json();
+
+        if (
+            data.loggedIn &&
+            data.user
+        ) {
+
+            console.log(
+                "✅ Logged in as:",
+                data.user.username
+            );
+
+            const loginScreen =
+                document.getElementById(
+                    "loginScreen"
+                );
+
+            if (loginScreen) {
+
+                loginScreen.style.display =
+                    "none";
+            }
+
+            showToast(
+                `👋 Welcome, ${data.user.username}!`
+            );
+
+        }
+
+    } catch (error) {
+
+        console.error(
+            "❌ Login check failed:",
+            error
+        );
+
+    }
+}
+
+
+// =========================
+// LOGOUT
+// =========================
+
+async function logout() {
+
+    try {
+
+        await fetch(
+            BACKEND_URL + "/auth/logout",
+            {
+                method: "POST",
+                credentials: "include"
+            }
+        );
+
+        console.log(
+            "👋 Logged out."
+        );
+
+        window.location.reload();
+
+    } catch (error) {
+
+        console.error(
+            "❌ Logout failed:",
+            error
+        );
+
+    }
 }
 
 
@@ -29,18 +128,24 @@ function showPage(pageId, button = null) {
         document.querySelectorAll(".nav-btn");
 
     pages.forEach(page => {
+
         page.classList.remove("active");
+
     });
 
     navButtons.forEach(btn => {
+
         btn.classList.remove("active");
+
     });
 
     const page =
         document.getElementById(pageId);
 
     if (page) {
+
         page.classList.add("active");
+
     }
 
     if (button) {
@@ -59,7 +164,9 @@ function showPage(pageId, button = null) {
                     `showPage('${pageId}'`
                 )
             ) {
+
                 btn.classList.add("active");
+
             }
 
         });
@@ -67,30 +174,54 @@ function showPage(pageId, button = null) {
     }
 
     const pageTitle =
-        document.getElementById("pageTitle");
+        document.getElementById(
+            "pageTitle"
+        );
 
     const titles = {
-        overview: "Dashboard Overview",
-        server: "Server Management",
-        xp: "XP & Levels",
-        games: "Games",
-        moderation: "Moderation",
-        verification: "Verification",
-        polls: "Polls",
-        settings: "Settings"
+
+        overview:
+            "Dashboard Overview",
+
+        server:
+            "Server Management",
+
+        xp:
+            "XP & Levels",
+
+        games:
+            "Games",
+
+        moderation:
+            "Moderation",
+
+        verification:
+            "Verification",
+
+        polls:
+            "Polls",
+
+        settings:
+            "Settings"
+
     };
 
     if (
         pageTitle &&
         titles[pageId]
     ) {
+
         pageTitle.textContent =
             titles[pageId];
+
     }
 
     window.scrollTo({
+
         top: 0,
+
         behavior: "smooth"
+
     });
 
     createRipple(
@@ -108,11 +239,20 @@ document.addEventListener(
     () => {
 
         // =========================
+        // CHECK DISCORD LOGIN
+        // =========================
+
+        checkDiscordLogin();
+
+
+        // =========================
         // NAV BUTTONS
         // =========================
 
         const navButtons =
-            document.querySelectorAll(".nav-btn");
+            document.querySelectorAll(
+                ".nav-btn"
+            );
 
         navButtons.forEach(button => {
 
@@ -121,7 +261,9 @@ document.addEventListener(
                 () => {
 
                     const onclick =
-                        button.getAttribute("onclick") || "";
+                        button.getAttribute(
+                            "onclick"
+                        ) || "";
 
                     const match =
                         onclick.match(
@@ -156,7 +298,7 @@ document.addEventListener(
 
             button.addEventListener(
                 "click",
-                function (event) {
+                function(event) {
 
                     createButtonRipple(
                         this,
@@ -279,7 +421,8 @@ document.addEventListener(
                 "mouseleave",
                 () => {
 
-                    card.style.transform = "";
+                    card.style.transform =
+                        "";
 
                 }
             );
@@ -292,7 +435,9 @@ document.addEventListener(
         // =========================
 
         const hero =
-            document.querySelector(".hero");
+            document.querySelector(
+                ".hero"
+            );
 
         if (hero) {
 
@@ -304,13 +449,17 @@ document.addEventListener(
                         hero.getBoundingClientRect();
 
                     const x =
-                        (event.clientX -
-                            rect.left) /
+                        (
+                            event.clientX -
+                            rect.left
+                        ) /
                         rect.width;
 
                     const y =
-                        (event.clientY -
-                            rect.top) /
+                        (
+                            event.clientY -
+                            rect.top
+                        ) /
                         rect.height;
 
                     const moveX =
@@ -387,20 +536,25 @@ document.addEventListener(
                 number.textContent.trim();
 
             const match =
-                text.match(/^([\d,]+)$/);
+                text.match(
+                    /^([\d,]+)$/
+                );
 
             if (!match) return;
 
             const target =
                 Number(
-                    match[1].replace(/,/g, "")
+                    match[1]
+                        .replace(/,/g, "")
                 );
 
             if (!target) return;
 
-            number.textContent = "0";
+            number.textContent =
+                "0";
 
-            const duration = 800;
+            const duration =
+                800;
 
             const start =
                 performance.now();
@@ -409,7 +563,9 @@ document.addEventListener(
 
                 const progress =
                     Math.min(
-                        (time - start) /
+                        (
+                            time - start
+                        ) /
                         duration,
                         1
                     );
@@ -429,7 +585,9 @@ document.addEventListener(
                 number.textContent =
                     value.toLocaleString();
 
-                if (progress < 1) {
+                if (
+                    progress < 1
+                ) {
 
                     requestAnimationFrame(
                         animateCounter
@@ -518,12 +676,16 @@ function createRipple(element) {
     if (!element) return;
 
     const ripple =
-        document.createElement("span");
+        document.createElement(
+            "span"
+        );
 
     ripple.className =
         "click-ripple";
 
-    element.appendChild(ripple);
+    element.appendChild(
+        ripple
+    );
 
     setTimeout(
         () => {
@@ -547,7 +709,9 @@ function createButtonRipple(
         element.getBoundingClientRect();
 
     const ripple =
-        document.createElement("span");
+        document.createElement(
+            "span"
+        );
 
     ripple.className =
         "click-ripple";
@@ -558,7 +722,9 @@ function createButtonRipple(
     ripple.style.top =
         `${event.clientY - rect.top}px`;
 
-    element.appendChild(ripple);
+    element.appendChild(
+        ripple
+    );
 
     setTimeout(
         () => {
@@ -578,17 +744,23 @@ function createButtonRipple(
 function showToast(message) {
 
     let toast =
-        document.querySelector(".toast");
+        document.querySelector(
+            ".toast"
+        );
 
     if (!toast) {
 
         toast =
-            document.createElement("div");
+            document.createElement(
+                "div"
+            );
 
         toast.className =
             "toast";
 
-        document.body.appendChild(toast);
+        document.body.appendChild(
+            toast
+        );
 
     }
 
@@ -654,7 +826,9 @@ function createPoll() {
 
     if (!question) return;
 
-    if (!question.value.trim()) {
+    if (
+        !question.value.trim()
+    ) {
 
         showToast(
             "⚠️ Enter a poll question first."
