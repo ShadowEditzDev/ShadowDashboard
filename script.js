@@ -1,8 +1,7 @@
 // 🌑 ShadowDashboard
 // Navigation + Login + Animations + Toasts + Backend
 
-var BACKEND_URL = "https://shadowbot.hatenna.com";
-
+var BACKEND_URL = "https://punctured-aide-yogurt.ngrok-free.dev";
 
 // =========================
 // DISCORD LOGIN
