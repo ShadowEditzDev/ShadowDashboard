@@ -1,7 +1,7 @@
 // 🌑 ShadowDashboard
 // Navigation + Login + Animations + Toasts + Backend
 
-var BACKEND_URL = "http://node6.quaxly.com:25522";
+var BACKEND_URL = "https://shadowbot.hatenna.com";
 
 
 // =========================
@@ -68,7 +68,6 @@ async function checkDiscordLogin() {
             showToast(
                 `👋 Welcome, ${data.user.username}!`
             );
-
         }
 
     } catch (error) {
@@ -77,7 +76,6 @@ async function checkDiscordLogin() {
             "❌ Login check failed:",
             error
         );
-
     }
 }
 
@@ -110,7 +108,6 @@ async function logout() {
             "❌ Logout failed:",
             error
         );
-
     }
 }
 
@@ -168,15 +165,11 @@ function showPage(pageId, button = null) {
                 btn.classList.add("active");
 
             }
-
         });
-
     }
 
     const pageTitle =
-        document.getElementById(
-            "pageTitle"
-        );
+        document.getElementById("pageTitle");
 
     const titles = {
 
@@ -203,7 +196,6 @@ function showPage(pageId, button = null) {
 
         settings:
             "Settings"
-
     };
 
     if (
@@ -213,15 +205,11 @@ function showPage(pageId, button = null) {
 
         pageTitle.textContent =
             titles[pageId];
-
     }
 
     window.scrollTo({
-
         top: 0,
-
         behavior: "smooth"
-
     });
 
     createRipple(
@@ -238,10 +226,6 @@ document.addEventListener(
     "DOMContentLoaded",
     () => {
 
-        // =========================
-        // CHECK DISCORD LOGIN
-        // =========================
-
         checkDiscordLogin();
 
 
@@ -250,9 +234,7 @@ document.addEventListener(
         // =========================
 
         const navButtons =
-            document.querySelectorAll(
-                ".nav-btn"
-            );
+            document.querySelectorAll(".nav-btn");
 
         navButtons.forEach(button => {
 
@@ -276,12 +258,9 @@ document.addEventListener(
                             match[1],
                             button
                         );
-
                     }
-
                 }
             );
-
         });
 
 
@@ -290,9 +269,7 @@ document.addEventListener(
         // =========================
 
         const buttons =
-            document.querySelectorAll(
-                "button"
-            );
+            document.querySelectorAll("button");
 
         buttons.forEach(button => {
 
@@ -304,10 +281,8 @@ document.addEventListener(
                         this,
                         event
                     );
-
                 }
             );
-
         });
 
 
@@ -332,10 +307,8 @@ document.addEventListener(
                     showToast(
                         `⚡ ${text} selected`
                     );
-
                 }
             );
-
         });
 
 
@@ -365,12 +338,9 @@ document.addEventListener(
                         showToast(
                             "⚫ Feature disabled"
                         );
-
                     }
-
                 }
             );
-
         });
 
 
@@ -413,7 +383,6 @@ document.addEventListener(
                          rotateX(${rotateX}deg)
                          rotateY(${rotateY}deg)
                          translateY(-4px)`;
-
                 }
             );
 
@@ -421,12 +390,10 @@ document.addEventListener(
                 "mouseleave",
                 () => {
 
-                    card.style.transform =
-                        "";
+                    card.style.transform = "";
 
                 }
             );
-
         });
 
 
@@ -435,9 +402,7 @@ document.addEventListener(
         // =========================
 
         const hero =
-            document.querySelector(
-                ".hero"
-            );
+            document.querySelector(".hero");
 
         if (hero) {
 
@@ -470,7 +435,6 @@ document.addEventListener(
 
                     hero.style.backgroundPosition =
                         `${50 + moveX}% ${50 + moveY}%`;
-
                 }
             );
 
@@ -480,10 +444,8 @@ document.addEventListener(
 
                     hero.style.backgroundPosition =
                         "center";
-
                 }
             );
-
         }
 
 
@@ -517,7 +479,6 @@ document.addEventListener(
                 },
                 2500
             );
-
         }
 
 
@@ -536,25 +497,20 @@ document.addEventListener(
                 number.textContent.trim();
 
             const match =
-                text.match(
-                    /^([\d,]+)$/
-                );
+                text.match(/^([\d,]+)$/);
 
             if (!match) return;
 
             const target =
                 Number(
-                    match[1]
-                        .replace(/,/g, "")
+                    match[1].replace(/,/g, "")
                 );
 
             if (!target) return;
 
-            number.textContent =
-                "0";
+            number.textContent = "0";
 
-            const duration =
-                800;
+            const duration = 800;
 
             const start =
                 performance.now();
@@ -563,9 +519,7 @@ document.addEventListener(
 
                 const progress =
                     Math.min(
-                        (
-                            time - start
-                        ) /
+                        (time - start) /
                         duration,
                         1
                     );
@@ -585,9 +539,7 @@ document.addEventListener(
                 number.textContent =
                     value.toLocaleString();
 
-                if (
-                    progress < 1
-                ) {
+                if (progress < 1) {
 
                     requestAnimationFrame(
                         animateCounter
@@ -597,15 +549,12 @@ document.addEventListener(
 
                     number.textContent =
                         target.toLocaleString();
-
                 }
-
             }
 
             requestAnimationFrame(
                 animateCounter
             );
-
         });
 
 
@@ -626,7 +575,6 @@ document.addEventListener(
 
                     input.style.boxShadow =
                         "0 0 20px rgba(139,92,246,0.15)";
-
                 }
             );
 
@@ -634,12 +582,10 @@ document.addEventListener(
                 "blur",
                 () => {
 
-                    input.style.boxShadow =
-                        "";
+                    input.style.boxShadow = "";
 
                 }
             );
-
         });
 
 
@@ -658,7 +604,6 @@ document.addEventListener(
             100
         );
 
-
         console.log(
             "🌑 ShadowDashboard loaded successfully."
         );
@@ -676,16 +621,12 @@ function createRipple(element) {
     if (!element) return;
 
     const ripple =
-        document.createElement(
-            "span"
-        );
+        document.createElement("span");
 
     ripple.className =
         "click-ripple";
 
-    element.appendChild(
-        ripple
-    );
+    element.appendChild(ripple);
 
     setTimeout(
         () => {
@@ -709,9 +650,7 @@ function createButtonRipple(
         element.getBoundingClientRect();
 
     const ripple =
-        document.createElement(
-            "span"
-        );
+        document.createElement("span");
 
     ripple.className =
         "click-ripple";
@@ -722,9 +661,7 @@ function createButtonRipple(
     ripple.style.top =
         `${event.clientY - rect.top}px`;
 
-    element.appendChild(
-        ripple
-    );
+    element.appendChild(ripple);
 
     setTimeout(
         () => {
@@ -744,38 +681,27 @@ function createButtonRipple(
 function showToast(message) {
 
     let toast =
-        document.querySelector(
-            ".toast"
-        );
+        document.querySelector(".toast");
 
     if (!toast) {
 
         toast =
-            document.createElement(
-                "div"
-            );
+            document.createElement("div");
 
         toast.className =
             "toast";
 
-        document.body.appendChild(
-            toast
-        );
-
+        document.body.appendChild(toast);
     }
 
     toast.textContent =
         message;
 
-    toast.classList.remove(
-        "show"
-    );
+    toast.classList.remove("show");
 
     void toast.offsetWidth;
 
-    toast.classList.add(
-        "show"
-    );
+    toast.classList.add("show");
 
     clearTimeout(
         toast.hideTimer
@@ -804,7 +730,6 @@ function saveSettings() {
     showToast(
         "💾 Settings saved successfully!"
     );
-
 }
 
 
@@ -826,9 +751,7 @@ function createPoll() {
 
     if (!question) return;
 
-    if (
-        !question.value.trim()
-    ) {
+    if (!question.value.trim()) {
 
         showToast(
             "⚠️ Enter a poll question first."
@@ -841,13 +764,11 @@ function createPoll() {
 
         message.textContent =
             "🗳️ Poll created successfully!";
-
     }
 
     showToast(
         "🗳️ Poll created!"
     );
-
 }
 
 
@@ -873,5 +794,4 @@ function changeTheme() {
     showToast(
         `🎨 Theme changed to ${theme}`
     );
-
 }
