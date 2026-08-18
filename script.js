@@ -9,16 +9,10 @@ var BACKEND_URL = "http://node6.quaxly.com:25522";
 
 function loginWithDiscord() {
 
-    if (
-        !BACKEND_URL ||
-        BACKEND_URL === "YOUR_BACKEND_URL_HERE"
-    ) {
-        alert("❌ BACKEND_URL is not configured yet.");
-        return;
-    }
+    console.log("🔐 Opening Discord OAuth...");
 
     window.location.href =
-        `${BACKEND_URL}/auth/discord`;
+        "http://node6.quaxly.com:25522/auth/discord";
 }
 
 
