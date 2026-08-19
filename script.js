@@ -1,7 +1,16 @@
 // 🌑 ShadowDashboard
-// Navigation + Login + Animations + Toasts + Backend
+// Navigation + Login + Token Sessions + Animations + Toasts
 
-var BACKEND_URL = "https://punctured-aide-yogurt.ngrok-free.dev";
+var BACKEND_URL =
+    "https://punctured-aide-yogurt.ngrok-free.dev";
+
+
+// =========================
+// SESSION TOKEN
+// =========================
+
+var SHADOW_SESSION =
+    localStorage.getItem("shadow_session");
 
 
 // =========================
@@ -10,7 +19,9 @@ var BACKEND_URL = "https://punctured-aide-yogurt.ngrok-free.dev";
 
 function loginWithDiscord() {
 
-    console.log("🔐 Opening Discord OAuth...");
+    console.log(
+        "🔐 Opening Discord OAuth..."
+    );
 
     window.location.href =
         BACKEND_URL + "/auth/discord";
@@ -25,24 +36,117 @@ async function checkDiscordLogin() {
 
     try {
 
-        const response =
-            await fetch(
-                BACKEND_URL + "/api/me",
-                {
-                    method: "GET",
-                    credentials: "include"
-                }
+        // =========================
+        // GET SESSION FROM URL
+        // =========================
+
+        const params =
+            new URLSearchParams(
+                window.location.search
             );
 
-        if (!response.ok) {
+        const session =
+            params.get("session");
 
-            console.log("🔒 Not logged in.");
+        const login =
+            params.get("login");
+
+
+        // =========================
+        // SAVE NEW SESSION
+        // =========================
+
+        if (
+            login === "success" &&
+            session
+        ) {
+
+            localStorage.setItem(
+                "shadow_session",
+                session
+            );
+
+            SHADOW_SESSION =
+                session;
+
+            console.log(
+                "✅ Dashboard session received."
+            );
+
+
+            // Remove session from URL
+            window.history.replaceState(
+                {},
+                document.title,
+                window.location.pathname
+            );
+        }
+
+
+        // =========================
+        // NO SESSION
+        // =========================
+
+        if (!SHADOW_SESSION) {
+
+            console.log(
+                "🔒 No dashboard session."
+            );
 
             return;
         }
 
+
+        // =========================
+        // CHECK SESSION
+        // =========================
+
+        const response =
+            await fetch(
+                BACKEND_URL + "/api/me",
+                {
+
+                    method:
+                        "GET",
+
+                    headers: {
+
+                        "Authorization":
+                            "Bearer " +
+                            SHADOW_SESSION
+                    }
+                }
+            );
+
+
+        // =========================
+        // SESSION INVALID
+        // =========================
+
+        if (!response.ok) {
+
+            console.log(
+                "🔒 Session invalid or expired."
+            );
+
+            localStorage.removeItem(
+                "shadow_session"
+            );
+
+            SHADOW_SESSION =
+                null;
+
+            return;
+        }
+
+
+        // =========================
+        // USER DATA
+        // =========================
+
         const data =
             await response.json();
+
 
         if (
             data.loggedIn &&
@@ -54,16 +158,19 @@ async function checkDiscordLogin() {
                 data.user.username
             );
 
+
             const loginScreen =
                 document.getElementById(
                     "loginScreen"
                 );
+
 
             if (loginScreen) {
 
                 loginScreen.style.display =
                     "none";
             }
+
 
             showToast(
                 `👋 Welcome, ${data.user.username}!`
@@ -88,17 +195,39 @@ async function logout() {
 
     try {
 
-        await fetch(
-            BACKEND_URL + "/auth/logout",
-            {
-                method: "POST",
-                credentials: "include"
-            }
+        if (SHADOW_SESSION) {
+
+            await fetch(
+                BACKEND_URL +
+                "/auth/logout",
+                {
+
+                    method:
+                        "POST",
+
+                    headers: {
+
+                        "Authorization":
+                            "Bearer " +
+                            SHADOW_SESSION
+                    }
+                }
+            );
+        }
+
+
+        localStorage.removeItem(
+            "shadow_session"
         );
+
+        SHADOW_SESSION =
+            null;
+
 
         console.log(
             "👋 Logged out."
         );
+
 
         window.location.reload();
 
@@ -113,65 +242,131 @@ async function logout() {
 
 
 // =========================
+// API HELPER
+// =========================
+
+async function apiFetch(
+    endpoint,
+    options = {}
+) {
+
+    const headers =
+        options.headers || {};
+
+
+    if (SHADOW_SESSION) {
+
+        headers.Authorization =
+            "Bearer " +
+            SHADOW_SESSION;
+    }
+
+
+    options.headers =
+        headers;
+
+
+    return fetch(
+        BACKEND_URL + endpoint,
+        options
+    );
+}
+
+
+// =========================
 // PAGE NAVIGATION
 // =========================
 
-function showPage(pageId, button = null) {
+function showPage(
+    pageId,
+    button = null
+) {
 
     const pages =
-        document.querySelectorAll(".page");
+        document.querySelectorAll(
+            ".page"
+        );
 
     const navButtons =
-        document.querySelectorAll(".nav-btn");
+        document.querySelectorAll(
+            ".nav-btn"
+        );
 
-    pages.forEach(page => {
 
-        page.classList.remove("active");
+    pages.forEach(
+        page => {
 
-    });
+            page.classList.remove(
+                "active"
+            );
 
-    navButtons.forEach(btn => {
+        }
+    );
 
-        btn.classList.remove("active");
 
-    });
+    navButtons.forEach(
+        btn => {
+
+            btn.classList.remove(
+                "active"
+            );
+
+        }
+    );
+
 
     const page =
-        document.getElementById(pageId);
+        document.getElementById(
+            pageId
+        );
+
 
     if (page) {
 
-        page.classList.add("active");
-
+        page.classList.add(
+            "active"
+        );
     }
+
 
     if (button) {
 
-        button.classList.add("active");
+        button.classList.add(
+            "active"
+        );
 
     } else {
 
-        navButtons.forEach(btn => {
+        navButtons.forEach(
+            btn => {
 
-            const onclick =
-                btn.getAttribute("onclick") || "";
+                const onclick =
+                    btn.getAttribute(
+                        "onclick"
+                    ) || "";
 
-            if (
-                onclick.includes(
-                    `showPage('${pageId}'`
-                )
-            ) {
 
-                btn.classList.add("active");
+                if (
+                    onclick.includes(
+                        `showPage('${pageId}'`
+                    )
+                ) {
+
+                    btn.classList.add(
+                        "active"
+                    );
+                }
 
             }
-        });
+        );
     }
+
 
     const pageTitle =
         document.getElementById(
             "pageTitle"
         );
+
 
     const titles = {
 
@@ -200,6 +395,7 @@ function showPage(pageId, button = null) {
             "Settings"
     };
 
+
     if (
         pageTitle &&
         titles[pageId]
@@ -207,16 +403,18 @@ function showPage(pageId, button = null) {
 
         pageTitle.textContent =
             titles[pageId];
-
     }
+
 
     window.scrollTo({
 
-        top: 0,
+        top:
+            0,
 
-        behavior: "smooth"
-
+        behavior:
+            "smooth"
     });
+
 
     createRipple(
         button || page
@@ -232,8 +430,9 @@ document.addEventListener(
     "DOMContentLoaded",
     () => {
 
+
         // =========================
-        // CHECK DISCORD LOGIN
+        // CHECK LOGIN
         // =========================
 
         checkDiscordLogin();
@@ -248,33 +447,39 @@ document.addEventListener(
                 ".nav-btn"
             );
 
-        navButtons.forEach(button => {
 
-            button.addEventListener(
-                "click",
-                () => {
+        navButtons.forEach(
+            button => {
 
-                    const onclick =
-                        button.getAttribute(
-                            "onclick"
-                        ) || "";
+                button.addEventListener(
+                    "click",
+                    () => {
 
-                    const match =
-                        onclick.match(
-                            /showPage\(['"]([^'"]+)/
-                        );
+                        const onclick =
+                            button.getAttribute(
+                                "onclick"
+                            ) || "";
 
-                    if (match) {
 
-                        showPage(
-                            match[1],
-                            button
-                        );
+                        const match =
+                            onclick.match(
+                                /showPage\(['"]([^'"]+)/
+                            );
+
+
+                        if (match) {
+
+                            showPage(
+                                match[1],
+                                button
+                            );
+                        }
+
                     }
-                }
-            );
+                );
 
-        });
+            }
+        );
 
 
         // =========================
@@ -286,21 +491,24 @@ document.addEventListener(
                 "button"
             );
 
-        buttons.forEach(button => {
 
-            button.addEventListener(
-                "click",
-                function(event) {
+        buttons.forEach(
+            button => {
 
-                    createButtonRipple(
-                        this,
-                        event
-                    );
+                button.addEventListener(
+                    "click",
+                    function(event) {
 
-                }
-            );
+                        createButtonRipple(
+                            this,
+                            event
+                        );
 
-        });
+                    }
+                );
+
+            }
+        );
 
 
         // =========================
@@ -312,23 +520,27 @@ document.addEventListener(
                 ".quick-actions button"
             );
 
-        quickButtons.forEach(button => {
 
-            button.addEventListener(
-                "click",
-                () => {
+        quickButtons.forEach(
+            button => {
 
-                    const text =
-                        button.innerText.trim();
+                button.addEventListener(
+                    "click",
+                    () => {
 
-                    showToast(
-                        `⚡ ${text} selected`
-                    );
+                        const text =
+                            button.innerText.trim();
 
-                }
-            );
 
-        });
+                        showToast(
+                            `⚡ ${text} selected`
+                        );
+
+                    }
+                );
+
+            }
+        );
 
 
         // =========================
@@ -340,30 +552,34 @@ document.addEventListener(
                 ".switch input"
             );
 
-        switches.forEach(toggle => {
 
-            toggle.addEventListener(
-                "change",
-                () => {
+        switches.forEach(
+            toggle => {
 
-                    if (toggle.checked) {
+                toggle.addEventListener(
+                    "change",
+                    () => {
 
-                        showToast(
-                            "🟣 Feature enabled"
-                        );
+                        if (
+                            toggle.checked
+                        ) {
 
-                    } else {
+                            showToast(
+                                "🟣 Feature enabled"
+                            );
 
-                        showToast(
-                            "⚫ Feature disabled"
-                        );
+                        } else {
+
+                            showToast(
+                                "⚫ Feature disabled"
+                            );
+                        }
 
                     }
+                );
 
-                }
-            );
-
-        });
+            }
+        );
 
 
         // =========================
@@ -375,50 +591,64 @@ document.addEventListener(
                 ".stat-card, .setting-card, .game-panel"
             );
 
-        cards.forEach(card => {
 
-            card.addEventListener(
-                "mousemove",
-                event => {
+        cards.forEach(
+            card => {
 
-                    const rect =
-                        card.getBoundingClientRect();
+                card.addEventListener(
+                    "mousemove",
+                    event => {
 
-                    const x =
-                        event.clientX -
-                        rect.left;
+                        const rect =
+                            card.getBoundingClientRect();
 
-                    const y =
-                        event.clientY -
-                        rect.top;
 
-                    const rotateX =
-                        ((y / rect.height) - 0.5) *
-                        -3;
+                        const x =
+                            event.clientX -
+                            rect.left;
 
-                    const rotateY =
-                        ((x / rect.width) - 0.5) *
-                        3;
 
-                    card.style.transform =
-                        `perspective(700px)
-                         rotateX(${rotateX}deg)
-                         rotateY(${rotateY}deg)
-                         translateY(-4px)`;
+                        const y =
+                            event.clientY -
+                            rect.top;
 
-                }
-            );
 
-            card.addEventListener(
-                "mouseleave",
-                () => {
+                        const rotateX =
+                            (
+                                (y / rect.height) -
+                                0.5
+                            ) * -3;
 
-                    card.style.transform = "";
 
-                }
-            );
+                        const rotateY =
+                            (
+                                (x / rect.width) -
+                                0.5
+                            ) * 3;
 
-        });
+
+                        card.style.transform =
+                            `perspective(700px)
+                             rotateX(${rotateX}deg)
+                             rotateY(${rotateY}deg)
+                             translateY(-4px)`;
+
+                    }
+                );
+
+
+                card.addEventListener(
+                    "mouseleave",
+                    () => {
+
+                        card.style.transform =
+                            "";
+
+                    }
+                );
+
+            }
+        );
 
 
         // =========================
@@ -430,6 +660,7 @@ document.addEventListener(
                 ".hero"
             );
 
+
         if (hero) {
 
             hero.addEventListener(
@@ -439,12 +670,14 @@ document.addEventListener(
                     const rect =
                         hero.getBoundingClientRect();
 
+
                     const x =
                         (
                             event.clientX -
                             rect.left
                         ) /
                         rect.width;
+
 
                     const y =
                         (
@@ -453,17 +686,21 @@ document.addEventListener(
                         ) /
                         rect.height;
 
+
                     const moveX =
                         (x - 0.5) * 8;
 
+
                     const moveY =
                         (y - 0.5) * 8;
+
 
                     hero.style.backgroundPosition =
                         `${50 + moveX}% ${50 + moveY}%`;
 
                 }
             );
+
 
             hero.addEventListener(
                 "mouseleave",
@@ -487,6 +724,7 @@ document.addEventListener(
                 ".online-badge"
             );
 
+
         if (online) {
 
             setInterval(
@@ -494,6 +732,7 @@ document.addEventListener(
 
                     online.style.transform =
                         "scale(1.03)";
+
 
                     setTimeout(
                         () => {
@@ -521,80 +760,105 @@ document.addEventListener(
                 ".stat-card strong"
             );
 
-        statNumbers.forEach(number => {
 
-            const text =
-                number.textContent.trim();
+        statNumbers.forEach(
+            number => {
 
-            const match =
-                text.match(/^([\d,]+)$/);
+                const text =
+                    number.textContent.trim();
 
-            if (!match) return;
 
-            const target =
-                Number(
-                    match[1].replace(/,/g, "")
-                );
-
-            if (!target) return;
-
-            number.textContent =
-                "0";
-
-            const duration =
-                800;
-
-            const start =
-                performance.now();
-
-            function animateCounter(time) {
-
-                const progress =
-                    Math.min(
-                        (
-                            time - start
-                        ) /
-                        duration,
-                        1
+                const match =
+                    text.match(
+                        /^([\d,]+)$/
                     );
 
-                const value =
-                    Math.floor(
-                        target *
-                        (
-                            1 -
-                            Math.pow(
-                                1 - progress,
-                                3
+
+                if (!match)
+                    return;
+
+
+                const target =
+                    Number(
+                        match[1]
+                            .replace(
+                                /,/g,
+                                ""
                             )
-                        )
                     );
+
+
+                if (!target)
+                    return;
+
 
                 number.textContent =
-                    value.toLocaleString();
+                    "0";
 
-                if (
-                    progress < 1
+
+                const duration =
+                    800;
+
+
+                const start =
+                    performance.now();
+
+
+                function animateCounter(
+                    time
                 ) {
 
-                    requestAnimationFrame(
-                        animateCounter
-                    );
+                    const progress =
+                        Math.min(
+                            (
+                                time -
+                                start
+                            ) /
+                            duration,
+                            1
+                        );
 
-                } else {
+
+                    const value =
+                        Math.floor(
+                            target *
+                            (
+                                1 -
+                                Math.pow(
+                                    1 -
+                                    progress,
+                                    3
+                                )
+                            )
+                        );
+
 
                     number.textContent =
-                        target.toLocaleString();
+                        value.toLocaleString();
 
+
+                    if (
+                        progress < 1
+                    ) {
+
+                        requestAnimationFrame(
+                            animateCounter
+                        );
+
+                    } else {
+
+                        number.textContent =
+                            target.toLocaleString();
+                    }
                 }
 
+
+                requestAnimationFrame(
+                    animateCounter
+                );
+
             }
-
-            requestAnimationFrame(
-                animateCounter
-            );
-
-        });
+        );
 
 
         // =========================
@@ -606,29 +870,33 @@ document.addEventListener(
                 ".text-input, .number-input, select"
             );
 
-        inputs.forEach(input => {
 
-            input.addEventListener(
-                "focus",
-                () => {
+        inputs.forEach(
+            input => {
 
-                    input.style.boxShadow =
-                        "0 0 20px rgba(139,92,246,0.15)";
+                input.addEventListener(
+                    "focus",
+                    () => {
 
-                }
-            );
+                        input.style.boxShadow =
+                            "0 0 20px rgba(139,92,246,0.15)";
 
-            input.addEventListener(
-                "blur",
-                () => {
+                    }
+                );
 
-                    input.style.boxShadow =
-                        "";
 
-                }
-            );
+                input.addEventListener(
+                    "blur",
+                    () => {
 
-        });
+                        input.style.boxShadow =
+                            "";
+
+                    }
+                );
+
+            }
+        );
 
 
         // =========================
@@ -659,21 +927,28 @@ document.addEventListener(
 // RIPPLE
 // =========================
 
-function createRipple(element) {
+function createRipple(
+    element
+) {
 
-    if (!element) return;
+    if (!element)
+        return;
+
 
     const ripple =
         document.createElement(
             "span"
         );
 
+
     ripple.className =
         "click-ripple";
+
 
     element.appendChild(
         ripple
     );
+
 
     setTimeout(
         () => {
@@ -686,33 +961,45 @@ function createRipple(element) {
 }
 
 
+// =========================
+// BUTTON RIPPLE
+// =========================
+
 function createButtonRipple(
     element,
     event
 ) {
 
-    if (!element) return;
+    if (!element)
+        return;
+
 
     const rect =
         element.getBoundingClientRect();
+
 
     const ripple =
         document.createElement(
             "span"
         );
 
+
     ripple.className =
         "click-ripple";
+
 
     ripple.style.left =
         `${event.clientX - rect.left}px`;
 
+
     ripple.style.top =
         `${event.clientY - rect.top}px`;
+
 
     element.appendChild(
         ripple
     );
+
 
     setTimeout(
         () => {
@@ -729,12 +1016,15 @@ function createButtonRipple(
 // TOAST
 // =========================
 
-function showToast(message) {
+function showToast(
+    message
+) {
 
     let toast =
         document.querySelector(
             ".toast"
         );
+
 
     if (!toast) {
 
@@ -743,31 +1033,38 @@ function showToast(message) {
                 "div"
             );
 
+
         toast.className =
             "toast";
+
 
         document.body.appendChild(
             toast
         );
-
     }
+
 
     toast.textContent =
         message;
+
 
     toast.classList.remove(
         "show"
     );
 
+
     void toast.offsetWidth;
+
 
     toast.classList.add(
         "show"
     );
 
+
     clearTimeout(
         toast.hideTimer
     );
+
 
     toast.hideTimer =
         setTimeout(
@@ -792,7 +1089,6 @@ function saveSettings() {
     showToast(
         "💾 Settings saved successfully!"
     );
-
 }
 
 
@@ -807,14 +1103,20 @@ function createPoll() {
             "pollQuestion"
         );
 
+
     const message =
         document.getElementById(
             "pollMessage"
         );
 
-    if (!question) return;
 
-    if (!question.value.trim()) {
+    if (!question)
+        return;
+
+
+    if (
+        !question.value.trim()
+    ) {
 
         showToast(
             "⚠️ Enter a poll question first."
@@ -823,17 +1125,17 @@ function createPoll() {
         return;
     }
 
+
     if (message) {
 
         message.textContent =
             "🗳️ Poll created successfully!";
-
     }
+
 
     showToast(
         "🗳️ Poll created!"
     );
-
 }
 
 
@@ -848,16 +1150,20 @@ function changeTheme() {
             "themeSelect"
         );
 
-    if (!select) return;
+
+    if (!select)
+        return;
+
 
     const theme =
         select.value;
 
+
     document.body.dataset.theme =
         theme;
+
 
     showToast(
         `🎨 Theme changed to ${theme}`
     );
-
 }
