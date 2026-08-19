@@ -1,16 +1,8 @@
 // 🌑 ShadowDashboard
-// Navigation + Login + Token Sessions + Animations + Toasts
+// Navigation + Login + Animations + Toasts + Backend
 
 var BACKEND_URL =
     "https://punctured-aide-yogurt.ngrok-free.dev";
-
-
-// =========================
-// SESSION TOKEN
-// =========================
-
-var SHADOW_SESSION =
-    localStorage.getItem("shadow_session");
 
 
 // =========================
@@ -36,10 +28,7 @@ async function checkDiscordLogin() {
 
     try {
 
-        // =========================
-        // GET SESSION FROM URL
-        // =========================
-
+        // Check URL for session returned by Discord OAuth
         const params =
             new URLSearchParams(
                 window.location.search
@@ -48,29 +37,20 @@ async function checkDiscordLogin() {
         const session =
             params.get("session");
 
-        const login =
-            params.get("login");
-
 
         // =========================
         // SAVE NEW SESSION
         // =========================
 
-        if (
-            login === "success" &&
-            session
-        ) {
+        if (session) {
+
+            console.log(
+                "🔐 Session received."
+            );
 
             localStorage.setItem(
                 "shadow_session",
                 session
-            );
-
-            SHADOW_SESSION =
-                session;
-
-            console.log(
-                "✅ Dashboard session received."
             );
 
 
@@ -84,10 +64,16 @@ async function checkDiscordLogin() {
 
 
         // =========================
-        // NO SESSION
+        // GET SAVED SESSION
         // =========================
 
-        if (!SHADOW_SESSION) {
+        const savedSession =
+            localStorage.getItem(
+                "shadow_session"
+            );
+
+
+        if (!savedSession) {
 
             console.log(
                 "🔒 No dashboard session."
@@ -111,42 +97,34 @@ async function checkDiscordLogin() {
 
                     headers: {
 
-                        "Authorization":
-                            "Bearer " +
-                            SHADOW_SESSION
+                        Authorization:
+                            `Bearer ${savedSession}`
                     }
                 }
             );
 
 
-        // =========================
-        // SESSION INVALID
-        // =========================
-
         if (!response.ok) {
 
             console.log(
-                "🔒 Session invalid or expired."
+                "🔒 Dashboard session invalid."
             );
 
             localStorage.removeItem(
                 "shadow_session"
             );
 
-            SHADOW_SESSION =
-                null;
-
             return;
         }
 
 
-        // =========================
-        // USER DATA
-        // =========================
-
         const data =
             await response.json();
 
+
+        // =========================
+        // LOGIN SUCCESS
+        // =========================
 
         if (
             data.loggedIn &&
@@ -177,6 +155,7 @@ async function checkDiscordLogin() {
             );
         }
 
+
     } catch (error) {
 
         console.error(
@@ -195,33 +174,31 @@ async function logout() {
 
     try {
 
-        if (SHADOW_SESSION) {
-
-            await fetch(
-                BACKEND_URL +
-                "/auth/logout",
-                {
-
-                    method:
-                        "POST",
-
-                    headers: {
-
-                        "Authorization":
-                            "Bearer " +
-                            SHADOW_SESSION
-                    }
-                }
+        const session =
+            localStorage.getItem(
+                "shadow_session"
             );
-        }
+
+
+        await fetch(
+            BACKEND_URL + "/auth/logout",
+            {
+
+                method:
+                    "POST",
+
+                headers: {
+
+                    Authorization:
+                        `Bearer ${session || ""}`
+                }
+            }
+        );
 
 
         localStorage.removeItem(
             "shadow_session"
         );
-
-        SHADOW_SESSION =
-            null;
 
 
         console.log(
@@ -231,6 +208,7 @@ async function logout() {
 
         window.location.reload();
 
+
     } catch (error) {
 
         console.error(
@@ -238,38 +216,6 @@ async function logout() {
             error
         );
     }
-}
-
-
-// =========================
-// API HELPER
-// =========================
-
-async function apiFetch(
-    endpoint,
-    options = {}
-) {
-
-    const headers =
-        options.headers || {};
-
-
-    if (SHADOW_SESSION) {
-
-        headers.Authorization =
-            "Bearer " +
-            SHADOW_SESSION;
-    }
-
-
-    options.headers =
-        headers;
-
-
-    return fetch(
-        BACKEND_URL + endpoint,
-        options
-    );
 }
 
 
@@ -413,6 +359,7 @@ function showPage(
 
         behavior:
             "smooth"
+
     });
 
 
@@ -432,7 +379,7 @@ document.addEventListener(
 
 
         // =========================
-        // CHECK LOGIN
+        // CHECK DISCORD LOGIN
         // =========================
 
         checkDiscordLogin();
@@ -615,16 +562,20 @@ document.addEventListener(
 
                         const rotateX =
                             (
-                                (y / rect.height) -
+                                (y /
+                                    rect.height) -
                                 0.5
-                            ) * -3;
+                            ) *
+                            -3;
 
 
                         const rotateY =
                             (
-                                (x / rect.width) -
+                                (x /
+                                    rect.width) -
                                 0.5
-                            ) * 3;
+                            ) *
+                            3;
 
 
                         card.style.transform =
@@ -838,7 +789,8 @@ document.addEventListener(
 
 
                     if (
-                        progress < 1
+                        progress <
+                        1
                     ) {
 
                         requestAnimationFrame(
@@ -850,6 +802,7 @@ document.addEventListener(
                         number.textContent =
                             target.toLocaleString();
                     }
+
                 }
 
 
@@ -960,10 +913,6 @@ function createRipple(
     );
 }
 
-
-// =========================
-// BUTTON RIPPLE
-// =========================
 
 function createButtonRipple(
     element,
@@ -1089,6 +1038,7 @@ function saveSettings() {
     showToast(
         "💾 Settings saved successfully!"
     );
+
 }
 
 
