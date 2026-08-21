@@ -18,8 +18,7 @@ function loginWithDiscord() {
     console.log("🔐 Opening Discord OAuth...");
 
     window.location.href =
-        BACKEND_URL +
-        "/auth/discord?ngrok-skip-browser-warning=true";
+        BACKEND_URL + "/auth/discord";
 }
 
 
@@ -96,7 +95,7 @@ async function apiFetch(
         {
             ...options,
             headers,
-            credentials: "omit"
+            credentials: "include"
         }
     );
 }
@@ -152,6 +151,7 @@ async function checkDiscordLogin() {
             );
 
             clearSession();
+
             cleanURL();
 
             showToast(
@@ -176,16 +176,16 @@ async function checkDiscordLogin() {
             );
 
 
+        // =========================
+        // NOT LOGGED IN
+        // =========================
+
         if (!response.ok) {
 
             console.log(
                 "🔒 No valid dashboard session:",
                 response.status
             );
-
-            if (session) {
-                clearSession();
-            }
 
             cleanURL();
 
@@ -219,7 +219,7 @@ async function checkDiscordLogin() {
 
 
             // =========================
-            // HIDE LOGIN
+            // HIDE LOGIN SCREEN
             // =========================
 
             const loginScreen =
@@ -291,6 +291,18 @@ async function checkDiscordLogin() {
                 img.alt =
                     username;
 
+                img.style.width =
+                    "100%";
+
+                img.style.height =
+                    "100%";
+
+                img.style.objectFit =
+                    "cover";
+
+                img.style.borderRadius =
+                    "inherit";
+
                 userAvatar.appendChild(
                     img
                 );
@@ -298,7 +310,7 @@ async function checkDiscordLogin() {
 
 
             // =========================
-            // WELCOME TOAST
+            // WELCOME MESSAGE
             // =========================
 
             if (
@@ -310,6 +322,7 @@ async function checkDiscordLogin() {
                     `👋 Welcome, ${username}!`
                 );
             }
+
 
             cleanURL();
 
@@ -356,8 +369,7 @@ async function logout() {
         await apiFetch(
             "/auth/logout",
             {
-                method:
-                    "POST"
+                method: "POST"
             }
         );
 
