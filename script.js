@@ -1,5 +1,5 @@
 // 🌑 ShadowDashboard
-// Navigation + Discord OAuth + Animations + Toasts + Backend
+// Navigation + Discord OAuth + Session + Animations + Toasts + Backend
 
 var BACKEND_URL =
     "https://punctured-aide-yogurt.ngrok-free.dev";
@@ -31,28 +31,28 @@ async function checkDiscordLogin() {
                 window.location.search
             );
 
-        /*
-         * Backend should redirect here after OAuth:
-         *
-         * ?login=success
-         *
-         * We DO NOT start OAuth again here.
-         */
-
-        const loginStatus =
-            params.get("login");
-
 
         // =========================
-        // OAUTH SUCCESS
+        // GET SESSION FROM OAUTH
         // =========================
 
-        if (loginStatus === "success") {
+        const session =
+            params.get("session");
+
+
+        if (session) {
 
             console.log(
-                "✅ Discord OAuth successful."
+                "🔐 New Discord session received."
             );
 
+            localStorage.setItem(
+                "shadow_session",
+                session
+            );
+
+
+            // REMOVE ?session= FROM URL
             window.history.replaceState(
                 {},
                 document.title,
@@ -65,10 +65,19 @@ async function checkDiscordLogin() {
         // OAUTH ERROR
         // =========================
 
-        if (loginStatus === "error") {
+        const loginStatus =
+            params.get("login");
+
+
+        if (
+            loginStatus === "failed" ||
+            loginStatus === "error" ||
+            loginStatus === "cancelled"
+        ) {
 
             console.error(
-                "❌ Discord OAuth failed."
+                "❌ Discord OAuth failed:",
+                loginStatus
             );
 
             window.history.replaceState(
@@ -86,7 +95,27 @@ async function checkDiscordLogin() {
 
 
         // =========================
-        // CHECK BACKEND SESSION
+        // GET SAVED SESSION
+        // =========================
+
+        const savedSession =
+            localStorage.getItem(
+                "shadow_session"
+            );
+
+
+        if (!savedSession) {
+
+            console.log(
+                "🔒 No dashboard session."
+            );
+
+            return;
+        }
+
+
+        // =========================
+        // CHECK SESSION
         // =========================
 
         console.log(
@@ -99,46 +128,32 @@ async function checkDiscordLogin() {
                 BACKEND_URL + "/api/me",
                 {
                     method: "GET",
-                    credentials: "include",
+
                     headers: {
                         "Accept":
-                            "application/json"
-                    },
-                    redirect: "manual"
+                            "application/json",
+
+                        "Authorization":
+                            `Bearer ${savedSession}`
+                    }
                 }
             );
 
 
-        /*
-         * IMPORTANT:
-         *
-         * If /api/me redirects to Discord,
-         * DO NOT follow it.
-         *
-         * This prevents the OAuth loop.
-         */
-
-        if (
-            response.type === "opaqueredirect" ||
-            response.status === 0 ||
-            response.status === 302 ||
-            response.status === 301 ||
-            response.status === 303
-        ) {
-
-            console.log(
-                "🔒 No active dashboard session."
-            );
-
-            return;
-        }
-
+        // =========================
+        // INVALID SESSION
+        // =========================
 
         if (!response.ok) {
 
             console.log(
-                "🔒 No active dashboard session:",
+                "🔒 Dashboard session invalid:",
                 response.status
+            );
+
+
+            localStorage.removeItem(
+                "shadow_session"
             );
 
             return;
@@ -164,7 +179,9 @@ async function checkDiscordLogin() {
             );
 
 
-            // Hide login screen
+            // =========================
+            // HIDE LOGIN SCREEN
+            // =========================
 
             const loginScreen =
                 document.getElementById(
@@ -179,7 +196,9 @@ async function checkDiscordLogin() {
             }
 
 
-            // Update username
+            // =========================
+            // UPDATE USERNAME
+            // =========================
 
             const username =
                 data.user.username;
@@ -211,7 +230,9 @@ async function checkDiscordLogin() {
             }
 
 
-            // Update avatar
+            // =========================
+            // UPDATE AVATAR
+            // =========================
 
             const userAvatar =
                 document.getElementById(
@@ -226,16 +247,20 @@ async function checkDiscordLogin() {
 
                 userAvatar.innerHTML = "";
 
+
                 const img =
                     document.createElement(
                         "img"
                     );
 
+
                 img.src =
                     data.user.avatar;
 
+
                 img.alt =
                     username;
+
 
                 userAvatar.appendChild(
                     img
@@ -255,6 +280,7 @@ async function checkDiscordLogin() {
             "🔒 Not logged in."
         );
 
+
     } catch (error) {
 
         console.error(
@@ -273,17 +299,30 @@ async function logout() {
 
     try {
 
-        await fetch(
-            BACKEND_URL + "/auth/logout",
-            {
-                method: "POST",
-                credentials: "include",
-                headers: {
-                    "Accept":
-                        "application/json"
+        const session =
+            localStorage.getItem(
+                "shadow_session"
+            );
+
+
+        if (session) {
+
+            await fetch(
+                BACKEND_URL + "/auth/logout",
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Accept":
+                            "application/json",
+
+                        "Authorization":
+                            `Bearer ${session}`
+                    }
                 }
-            }
-        );
+            );
+        }
+
 
     } catch (error) {
 
@@ -292,11 +331,18 @@ async function logout() {
             error
         );
 
+
     } finally {
 
         localStorage.removeItem(
             "shadow_session"
         );
+
+
+        console.log(
+            "👋 Logged out."
+        );
+
 
         window.location.reload();
     }
@@ -316,6 +362,7 @@ function showPage(
         document.querySelectorAll(
             ".page"
         );
+
 
     const navButtons =
         document.querySelectorAll(
@@ -438,9 +485,11 @@ function showPage(
 
     window.scrollTo({
 
-        top: 0,
+        top:
+            0,
 
-        behavior: "smooth"
+        behavior:
+            "smooth"
 
     });
 
@@ -459,7 +508,9 @@ document.addEventListener(
     "DOMContentLoaded",
     () => {
 
-        // Check Discord login
+        // =========================
+        // CHECK DISCORD LOGIN
+        // =========================
 
         checkDiscordLogin();
 
