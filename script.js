@@ -4,6 +4,10 @@
 const BACKEND_URL =
     "https://punctured-aide-yogurt.ngrok-free.dev";
 
+const NGROK_HEADER = {
+    "ngrok-skip-browser-warning": "true"
+};
+
 
 // =========================
 // DISCORD LOGIN
@@ -14,7 +18,87 @@ function loginWithDiscord() {
     console.log("🔐 Opening Discord OAuth...");
 
     window.location.href =
-        BACKEND_URL + "/auth/discord";
+        BACKEND_URL +
+        "/auth/discord?ngrok-skip-browser-warning=true";
+}
+
+
+// =========================
+// GET SESSION
+// =========================
+
+function getSession() {
+
+    return localStorage.getItem(
+        "shadowbot_session"
+    );
+}
+
+
+// =========================
+// SAVE SESSION
+// =========================
+
+function saveSession(session) {
+
+    if (!session)
+        return;
+
+    localStorage.setItem(
+        "shadowbot_session",
+        session
+    );
+}
+
+
+// =========================
+// CLEAR SESSION
+// =========================
+
+function clearSession() {
+
+    localStorage.removeItem(
+        "shadowbot_session"
+    );
+}
+
+
+// =========================
+// API REQUEST
+// =========================
+
+async function apiFetch(
+    endpoint,
+    options = {}
+) {
+
+    const session =
+        getSession();
+
+    const headers = {
+
+        "Accept":
+            "application/json",
+
+        ...NGROK_HEADER,
+
+        ...(options.headers || {})
+    };
+
+    if (session) {
+
+        headers.Authorization =
+            `Bearer ${session}`;
+    }
+
+    return fetch(
+        BACKEND_URL + endpoint,
+        {
+            ...options,
+            headers,
+            credentials: "omit"
+        }
+    );
 }
 
 
@@ -34,6 +118,23 @@ async function checkDiscordLogin() {
         const loginStatus =
             params.get("login");
 
+        const session =
+            params.get("session");
+
+
+        // =========================
+        // SAVE OAUTH SESSION
+        // =========================
+
+        if (session) {
+
+            console.log(
+                "🔑 OAuth session received."
+            );
+
+            saveSession(session);
+        }
+
 
         // =========================
         // OAUTH FAILED
@@ -50,6 +151,7 @@ async function checkDiscordLogin() {
                 loginStatus
             );
 
+            clearSession();
             cleanURL();
 
             showToast(
@@ -61,20 +163,6 @@ async function checkDiscordLogin() {
 
 
         // =========================
-        // OAUTH SUCCESS
-        // =========================
-
-        if (loginStatus === "success") {
-
-            console.log(
-                "✅ Discord OAuth successful."
-            );
-
-            cleanURL();
-        }
-
-
-        // =========================
         // CHECK BACKEND SESSION
         // =========================
 
@@ -82,20 +170,9 @@ async function checkDiscordLogin() {
             "🔍 Checking Discord session..."
         );
 
-
         const response =
-            await fetch(
-                BACKEND_URL + "/api/me",
-                {
-                    method: "GET",
-
-                    credentials: "include",
-
-                    headers: {
-                        "Accept":
-                            "application/json"
-                    }
-                }
+            await apiFetch(
+                "/api/me"
             );
 
 
@@ -105,6 +182,12 @@ async function checkDiscordLogin() {
                 "🔒 No valid dashboard session:",
                 response.status
             );
+
+            if (session) {
+                clearSession();
+            }
+
+            cleanURL();
 
             return;
         }
@@ -144,7 +227,6 @@ async function checkDiscordLogin() {
                     "loginScreen"
                 );
 
-
             if (loginScreen) {
 
                 loginScreen.style.display =
@@ -159,25 +241,21 @@ async function checkDiscordLogin() {
             const username =
                 data.user.username;
 
-
             const topUsername =
                 document.getElementById(
                     "topUsername"
                 );
-
 
             const dashboardUsername =
                 document.getElementById(
                     "dashboardUsername"
                 );
 
-
             if (topUsername) {
 
                 topUsername.textContent =
                     username;
             }
-
 
             if (dashboardUsername) {
 
@@ -195,7 +273,6 @@ async function checkDiscordLogin() {
                     "userAvatar"
                 );
 
-
             if (
                 userAvatar &&
                 data.user.avatar
@@ -203,20 +280,16 @@ async function checkDiscordLogin() {
 
                 userAvatar.innerHTML = "";
 
-
                 const img =
                     document.createElement(
                         "img"
                     );
 
-
                 img.src =
                     data.user.avatar;
 
-
                 img.alt =
                     username;
-
 
                 userAvatar.appendChild(
                     img
@@ -225,16 +298,20 @@ async function checkDiscordLogin() {
 
 
             // =========================
-            // SHOW WELCOME ONLY AFTER OAUTH
+            // WELCOME TOAST
             // =========================
 
-            if (loginStatus === "success") {
+            if (
+                loginStatus === "success" ||
+                session
+            ) {
 
                 showToast(
                     `👋 Welcome, ${username}!`
                 );
             }
 
+            cleanURL();
 
             return;
         }
@@ -276,17 +353,11 @@ async function logout() {
 
     try {
 
-        await fetch(
-            BACKEND_URL + "/auth/logout",
+        await apiFetch(
+            "/auth/logout",
             {
-                method: "POST",
-
-                credentials: "include",
-
-                headers: {
-                    "Accept":
-                        "application/json"
-                }
+                method:
+                    "POST"
             }
         );
 
@@ -298,6 +369,8 @@ async function logout() {
         );
 
     } finally {
+
+        clearSession();
 
         console.log(
             "👋 Logged out."
@@ -322,12 +395,10 @@ function showPage(
             ".page"
         );
 
-
     const navButtons =
         document.querySelectorAll(
             ".nav-btn"
         );
-
 
     pages.forEach(
         page => {
@@ -339,7 +410,6 @@ function showPage(
         }
     );
 
-
     navButtons.forEach(
         btn => {
 
@@ -350,12 +420,10 @@ function showPage(
         }
     );
 
-
     const page =
         document.getElementById(
             pageId
         );
-
 
     if (page) {
 
@@ -363,7 +431,6 @@ function showPage(
             "active"
         );
     }
-
 
     if (button) {
 
@@ -380,7 +447,6 @@ function showPage(
                     btn.getAttribute(
                         "onclick"
                     ) || "";
-
 
                 if (
                     onclick.includes(
@@ -400,12 +466,10 @@ function showPage(
         );
     }
 
-
     const pageTitle =
         document.getElementById(
             "pageTitle"
         );
-
 
     const titles = {
 
@@ -434,7 +498,6 @@ function showPage(
             "Settings"
     };
 
-
     if (
         pageTitle &&
         titles[pageId]
@@ -443,7 +506,6 @@ function showPage(
         pageTitle.textContent =
             titles[pageId];
     }
-
 
     window.scrollTo({
         top: 0,
@@ -460,10 +522,6 @@ document.addEventListener(
     "DOMContentLoaded",
     () => {
 
-        // =========================
-        // CHECK LOGIN
-        // =========================
-
         checkDiscordLogin();
 
 
@@ -475,7 +533,6 @@ document.addEventListener(
             document.querySelectorAll(
                 "button"
             );
-
 
         buttons.forEach(
             button => {
@@ -505,7 +562,6 @@ document.addEventListener(
                 ".quick-actions button"
             );
 
-
         quickButtons.forEach(
             button => {
 
@@ -515,7 +571,6 @@ document.addEventListener(
 
                         const text =
                             button.innerText.trim();
-
 
                         showToast(
                             `⚡ ${text} selected`
@@ -536,7 +591,6 @@ document.addEventListener(
             document.querySelectorAll(
                 ".switch input"
             );
-
 
         switches.forEach(
             toggle => {
@@ -577,7 +631,6 @@ document.addEventListener(
                 ".stat-card, .setting-card, .game-panel"
             );
 
-
         cards.forEach(
             card => {
 
@@ -588,32 +641,31 @@ document.addEventListener(
                         const rect =
                             card.getBoundingClientRect();
 
-
                         const x =
                             event.clientX -
                             rect.left;
-
 
                         const y =
                             event.clientY -
                             rect.top;
 
-
                         const rotateX =
                             (
-                                (y /
-                                    rect.height) -
+                                (
+                                    y /
+                                    rect.height
+                                ) -
                                 0.5
                             ) * -3;
 
-
                         const rotateY =
                             (
-                                (x /
-                                    rect.width) -
+                                (
+                                    x /
+                                    rect.width
+                                ) -
                                 0.5
                             ) * 3;
-
 
                         card.style.transform =
                             `perspective(700px)
@@ -623,7 +675,6 @@ document.addEventListener(
 
                     }
                 );
-
 
                 card.addEventListener(
                     "mouseleave",
@@ -648,7 +699,6 @@ document.addEventListener(
                 ".hero"
             );
 
-
         if (hero) {
 
             hero.addEventListener(
@@ -658,14 +708,12 @@ document.addEventListener(
                     const rect =
                         hero.getBoundingClientRect();
 
-
                     const x =
                         (
                             event.clientX -
                             rect.left
                         ) /
                         rect.width;
-
 
                     const y =
                         (
@@ -674,21 +722,17 @@ document.addEventListener(
                         ) /
                         rect.height;
 
-
                     const moveX =
                         (x - 0.5) * 8;
 
-
                     const moveY =
                         (y - 0.5) * 8;
-
 
                     hero.style.backgroundPosition =
                         `${50 + moveX}% ${50 + moveY}%`;
 
                 }
             );
-
 
             hero.addEventListener(
                 "mouseleave",
@@ -699,7 +743,6 @@ document.addEventListener(
 
                 }
             );
-
         }
 
 
@@ -712,7 +755,6 @@ document.addEventListener(
                 ".online-badge"
             );
 
-
         if (online) {
 
             setInterval(
@@ -720,7 +762,6 @@ document.addEventListener(
 
                     online.style.transform =
                         "scale(1.03)";
-
 
                     setTimeout(
                         () => {
@@ -735,7 +776,6 @@ document.addEventListener(
                 },
                 2500
             );
-
         }
 
 
@@ -748,23 +788,19 @@ document.addEventListener(
                 ".stat-card strong"
             );
 
-
         statNumbers.forEach(
             number => {
 
                 const text =
                     number.textContent.trim();
 
-
                 const match =
                     text.match(
                         /^([\d,]+)$/
                     );
 
-
                 if (!match)
                     return;
-
 
                 const target =
                     Number(
@@ -774,22 +810,17 @@ document.addEventListener(
                         )
                     );
 
-
                 if (!target)
                     return;
-
 
                 number.textContent =
                     "0";
 
-
                 const duration =
                     800;
 
-
                 const start =
                     performance.now();
-
 
                 function animateCounter(
                     time
@@ -805,24 +836,20 @@ document.addEventListener(
                             1
                         );
 
-
                     const value =
                         Math.floor(
                             target *
                             (
                                 1 -
                                 Math.pow(
-                                    1 -
-                                    progress,
+                                    1 - progress,
                                     3
                                 )
                             )
                         );
 
-
                     number.textContent =
                         value.toLocaleString();
-
 
                     if (
                         progress <
@@ -837,16 +864,12 @@ document.addEventListener(
 
                         number.textContent =
                             target.toLocaleString();
-
                     }
-
                 }
-
 
                 requestAnimationFrame(
                     animateCounter
                 );
-
             }
         );
 
@@ -860,7 +883,6 @@ document.addEventListener(
                 ".text-input, .number-input, select"
             );
 
-
         inputs.forEach(
             input => {
 
@@ -873,7 +895,6 @@ document.addEventListener(
 
                     }
                 );
-
 
                 input.addEventListener(
                     "blur",
@@ -904,11 +925,9 @@ document.addEventListener(
             100
         );
 
-
         console.log(
             "🌑 ShadowDashboard loaded successfully."
         );
-
     }
 );
 
@@ -925,33 +944,26 @@ function createButtonRipple(
     if (!element)
         return;
 
-
     const rect =
         element.getBoundingClientRect();
-
 
     const ripple =
         document.createElement(
             "span"
         );
 
-
     ripple.className =
         "click-ripple";
-
 
     ripple.style.left =
         `${event.clientX - rect.left}px`;
 
-
     ripple.style.top =
         `${event.clientY - rect.top}px`;
-
 
     element.appendChild(
         ripple
     );
-
 
     setTimeout(
         () => {
@@ -977,7 +989,6 @@ function showToast(
             ".toast"
         );
 
-
     if (!toast) {
 
         toast =
@@ -985,38 +996,30 @@ function showToast(
                 "div"
             );
 
-
         toast.className =
             "toast";
-
 
         document.body.appendChild(
             toast
         );
     }
 
-
     toast.textContent =
         message;
-
 
     toast.classList.remove(
         "show"
     );
 
-
     void toast.offsetWidth;
-
 
     toast.classList.add(
         "show"
     );
 
-
     clearTimeout(
         toast.hideTimer
     );
-
 
     toast.hideTimer =
         setTimeout(
@@ -1055,16 +1058,13 @@ function createPoll() {
             "pollQuestion"
         );
 
-
     const message =
         document.getElementById(
             "pollMessage"
         );
 
-
     if (!question)
         return;
-
 
     if (
         !question.value.trim()
@@ -1077,13 +1077,11 @@ function createPoll() {
         return;
     }
 
-
     if (message) {
 
         message.textContent =
             "🗳️ Poll created successfully!";
     }
-
 
     showToast(
         "🗳️ Poll created!"
@@ -1102,18 +1100,14 @@ function changeTheme() {
             "themeSelect"
         );
 
-
     if (!select)
         return;
-
 
     const theme =
         select.value;
 
-
     document.body.dataset.theme =
         theme;
-
 
     showToast(
         `🎨 Theme changed to ${theme}`
