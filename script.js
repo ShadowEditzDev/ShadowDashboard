@@ -4,10 +4,6 @@
 const BACKEND_URL =
     "https://punctured-aide-yogurt.ngrok-free.dev";
 
-const NGROK_HEADER = {
-    "ngrok-skip-browser-warning": "true"
-};
-
 
 // =========================
 // DISCORD LOGIN
@@ -18,7 +14,8 @@ function loginWithDiscord() {
     console.log("🔐 Opening Discord OAuth...");
 
     window.location.href =
-        BACKEND_URL + "/auth/discord";
+        BACKEND_URL +
+        "/auth/discord";
 }
 
 
@@ -79,8 +76,6 @@ async function apiFetch(
         "Accept":
             "application/json",
 
-        ...NGROK_HEADER,
-
         ...(options.headers || {})
     };
 
@@ -95,7 +90,7 @@ async function apiFetch(
         {
             ...options,
             headers,
-            credentials: "include"
+            credentials: "omit"
         }
     );
 }
@@ -151,7 +146,6 @@ async function checkDiscordLogin() {
             );
 
             clearSession();
-
             cleanURL();
 
             showToast(
@@ -176,16 +170,16 @@ async function checkDiscordLogin() {
             );
 
 
-        // =========================
-        // NOT LOGGED IN
-        // =========================
-
         if (!response.ok) {
 
             console.log(
                 "🔒 No valid dashboard session:",
                 response.status
             );
+
+            if (session) {
+                clearSession();
+            }
 
             cleanURL();
 
@@ -219,7 +213,7 @@ async function checkDiscordLogin() {
 
 
             // =========================
-            // HIDE LOGIN SCREEN
+            // HIDE LOGIN
             // =========================
 
             const loginScreen =
@@ -310,7 +304,7 @@ async function checkDiscordLogin() {
 
 
             // =========================
-            // WELCOME MESSAGE
+            // WELCOME TOAST
             // =========================
 
             if (
@@ -322,7 +316,6 @@ async function checkDiscordLogin() {
                     `👋 Welcome, ${username}!`
                 );
             }
-
 
             cleanURL();
 
@@ -369,7 +362,8 @@ async function logout() {
         await apiFetch(
             "/auth/logout",
             {
-                method: "POST"
+                method:
+                    "POST"
             }
         );
 
