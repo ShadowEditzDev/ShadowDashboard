@@ -28,7 +28,6 @@ async function checkDiscordLogin() {
 
     try {
 
-        // Check URL for session returned by Discord OAuth
         const params =
             new URLSearchParams(
                 window.location.search
@@ -45,7 +44,8 @@ async function checkDiscordLogin() {
         if (session) {
 
             console.log(
-                "🔐 Session received."
+                "🔐 Session received:",
+                session
             );
 
             localStorage.setItem(
@@ -53,8 +53,6 @@ async function checkDiscordLogin() {
                 session
             );
 
-
-            // Remove session from URL
             window.history.replaceState(
                 {},
                 document.title,
@@ -87,6 +85,10 @@ async function checkDiscordLogin() {
         // CHECK SESSION
         // =========================
 
+        console.log(
+            "🔍 Checking dashboard session..."
+        );
+
         const response =
             await fetch(
                 BACKEND_URL + "/api/me",
@@ -107,7 +109,8 @@ async function checkDiscordLogin() {
         if (!response.ok) {
 
             console.log(
-                "🔒 Dashboard session invalid."
+                "🔒 Dashboard session invalid:",
+                response.status
             );
 
             localStorage.removeItem(
@@ -153,7 +156,14 @@ async function checkDiscordLogin() {
             showToast(
                 `👋 Welcome, ${data.user.username}!`
             );
+
+            return;
         }
+
+
+        localStorage.removeItem(
+            "shadow_session"
+        );
 
 
     } catch (error) {
@@ -1038,7 +1048,6 @@ function saveSettings() {
     showToast(
         "💾 Settings saved successfully!"
     );
-
 }
 
 
