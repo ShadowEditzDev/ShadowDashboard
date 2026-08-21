@@ -4,9 +4,6 @@
 const BACKEND_URL =
     "https://punctured-aide-yogurt.ngrok-free.dev";
 
-const FRONTEND_URL =
-    "https://shadoweditzdev.github.io/ShadowDashboard/";
-
 
 // =========================
 // DISCORD LOGIN
@@ -17,7 +14,7 @@ function loginWithDiscord() {
     console.log("🔐 Opening Discord OAuth...");
 
     window.location.href =
-        `${BACKEND_URL}/auth/discord`;
+        BACKEND_URL + "/auth/discord";
 }
 
 
@@ -34,58 +31,12 @@ async function checkDiscordLogin() {
                 window.location.search
             );
 
-        const session =
-            params.get("session");
-
         const loginStatus =
             params.get("login");
 
 
         // =========================
-        // NEW SESSION FROM OAUTH
-        // =========================
-
-        if (session) {
-
-            console.log(
-                "🔐 Discord session received."
-            );
-
-            localStorage.setItem(
-                "shadow_session",
-                session
-            );
-
-            // Remove ALL OAuth parameters
-            window.history.replaceState(
-                {},
-                document.title,
-                window.location.pathname
-            );
-        }
-
-
-        // =========================
-        // OAUTH SUCCESS
-        // =========================
-
-        if (loginStatus === "success") {
-
-            console.log(
-                "✅ Discord OAuth completed."
-            );
-
-            // Remove ?login=success
-            window.history.replaceState(
-                {},
-                document.title,
-                window.location.pathname
-            );
-        }
-
-
-        // =========================
-        // OAUTH ERROR
+        // OAUTH FAILED
         // =========================
 
         if (
@@ -99,15 +50,7 @@ async function checkDiscordLogin() {
                 loginStatus
             );
 
-            window.history.replaceState(
-                {},
-                document.title,
-                window.location.pathname
-            );
-
-            localStorage.removeItem(
-                "shadow_session"
-            );
+            cleanURL();
 
             showToast(
                 "❌ Discord login failed."
@@ -118,67 +61,49 @@ async function checkDiscordLogin() {
 
 
         // =========================
-        // GET SAVED SESSION
+        // OAUTH SUCCESS
         // =========================
 
-        const savedSession =
-            localStorage.getItem(
-                "shadow_session"
-            );
-
-
-        if (!savedSession) {
+        if (loginStatus === "success") {
 
             console.log(
-                "🔒 No dashboard session."
+                "✅ Discord OAuth successful."
             );
 
-            return;
+            cleanURL();
         }
 
 
         // =========================
-        // CHECK SESSION
+        // CHECK BACKEND SESSION
         // =========================
 
         console.log(
-            "🔍 Checking dashboard session..."
+            "🔍 Checking Discord session..."
         );
 
 
         const response =
             await fetch(
-                `${BACKEND_URL}/api/me`,
+                BACKEND_URL + "/api/me",
                 {
+                    method: "GET",
 
-                    method:
-                        "GET",
+                    credentials: "include",
 
                     headers: {
-
                         "Accept":
-                            "application/json",
-
-                        "Authorization":
-                            `Bearer ${savedSession}`
+                            "application/json"
                     }
                 }
             );
 
 
-        // =========================
-        // INVALID SESSION
-        // =========================
-
         if (!response.ok) {
 
             console.log(
-                "🔒 Dashboard session invalid:",
+                "🔒 No valid dashboard session:",
                 response.status
-            );
-
-            localStorage.removeItem(
-                "shadow_session"
             );
 
             return;
@@ -189,8 +114,14 @@ async function checkDiscordLogin() {
             await response.json();
 
 
+        console.log(
+            "📡 Session response:",
+            data
+        );
+
+
         // =========================
-        // LOGIN SUCCESS
+        // LOGGED IN
         // =========================
 
         if (
@@ -213,6 +144,7 @@ async function checkDiscordLogin() {
                     "loginScreen"
                 );
 
+
             if (loginScreen) {
 
                 loginScreen.style.display =
@@ -225,15 +157,14 @@ async function checkDiscordLogin() {
             // =========================
 
             const username =
-                data.user.global_name ||
-                data.user.username ||
-                "Discord User";
+                data.user.username;
 
 
             const topUsername =
                 document.getElementById(
                     "topUsername"
                 );
+
 
             const dashboardUsername =
                 document.getElementById(
@@ -270,19 +201,22 @@ async function checkDiscordLogin() {
                 data.user.avatar
             ) {
 
-                userAvatar.innerHTML =
-                    "";
+                userAvatar.innerHTML = "";
+
 
                 const img =
                     document.createElement(
                         "img"
                     );
 
+
                 img.src =
-                    `https://cdn.discordapp.com/avatars/${data.user.id}/${data.user.avatar}.png?size=128`;
+                    data.user.avatar;
+
 
                 img.alt =
                     username;
+
 
                 userAvatar.appendChild(
                     img
@@ -290,16 +224,24 @@ async function checkDiscordLogin() {
             }
 
 
-            showToast(
-                `👋 Welcome, ${username}!`
-            );
+            // =========================
+            // SHOW WELCOME ONLY AFTER OAUTH
+            // =========================
+
+            if (loginStatus === "success") {
+
+                showToast(
+                    `👋 Welcome, ${username}!`
+                );
+            }
+
 
             return;
         }
 
 
         console.log(
-            "🔒 Not logged in."
+            "🔒 Backend says user is not logged in."
         );
 
     } catch (error) {
@@ -313,6 +255,20 @@ async function checkDiscordLogin() {
 
 
 // =========================
+// CLEAN URL
+// =========================
+
+function cleanURL() {
+
+    window.history.replaceState(
+        {},
+        document.title,
+        window.location.pathname
+    );
+}
+
+
+// =========================
 // LOGOUT
 // =========================
 
@@ -320,31 +276,19 @@ async function logout() {
 
     try {
 
-        const session =
-            localStorage.getItem(
-                "shadow_session"
-            );
+        await fetch(
+            BACKEND_URL + "/auth/logout",
+            {
+                method: "POST",
 
-        if (session) {
+                credentials: "include",
 
-            await fetch(
-                `${BACKEND_URL}/auth/logout`,
-                {
-
-                    method:
-                        "POST",
-
-                    headers: {
-
-                        "Accept":
-                            "application/json",
-
-                        "Authorization":
-                            `Bearer ${session}`
-                    }
+                headers: {
+                    "Accept":
+                        "application/json"
                 }
-            );
-        }
+            }
+        );
 
     } catch (error) {
 
@@ -355,16 +299,11 @@ async function logout() {
 
     } finally {
 
-        localStorage.removeItem(
-            "shadow_session"
-        );
-
         console.log(
             "👋 Logged out."
         );
 
-        window.location.href =
-            FRONTEND_URL;
+        window.location.reload();
     }
 }
 
@@ -383,6 +322,7 @@ function showPage(
             ".page"
         );
 
+
     const navButtons =
         document.querySelectorAll(
             ".nav-btn"
@@ -395,6 +335,7 @@ function showPage(
             page.classList.remove(
                 "active"
             );
+
         }
     );
 
@@ -405,6 +346,7 @@ function showPage(
             btn.classList.remove(
                 "active"
             );
+
         }
     );
 
@@ -439,9 +381,13 @@ function showPage(
                         "onclick"
                     ) || "";
 
+
                 if (
                     onclick.includes(
                         `showPage('${pageId}'`
+                    ) ||
+                    onclick.includes(
+                        `showPage("${pageId}"`
                     )
                 ) {
 
@@ -449,6 +395,7 @@ function showPage(
                         "active"
                     );
                 }
+
             }
         );
     }
@@ -499,18 +446,9 @@ function showPage(
 
 
     window.scrollTo({
-
-        top:
-            0,
-
-        behavior:
-            "smooth"
+        top: 0,
+        behavior: "smooth"
     });
-
-
-    createRipple(
-        button || page
-    );
 }
 
 
@@ -522,47 +460,11 @@ document.addEventListener(
     "DOMContentLoaded",
     () => {
 
+        // =========================
+        // CHECK LOGIN
+        // =========================
+
         checkDiscordLogin();
-
-
-        // =========================
-        // NAV BUTTONS
-        // =========================
-
-        const navButtons =
-            document.querySelectorAll(
-                ".nav-btn"
-            );
-
-
-        navButtons.forEach(
-            button => {
-
-                button.addEventListener(
-                    "click",
-                    () => {
-
-                        const onclick =
-                            button.getAttribute(
-                                "onclick"
-                            ) || "";
-
-                        const match =
-                            onclick.match(
-                                /showPage\(['"]([^'"]+)/
-                            );
-
-                        if (match) {
-
-                            showPage(
-                                match[1],
-                                button
-                            );
-                        }
-                    }
-                );
-            }
-        );
 
 
         // =========================
@@ -586,8 +488,10 @@ document.addEventListener(
                             this,
                             event
                         );
+
                     }
                 );
+
             }
         );
 
@@ -612,11 +516,14 @@ document.addEventListener(
                         const text =
                             button.innerText.trim();
 
+
                         showToast(
                             `⚡ ${text} selected`
                         );
+
                     }
                 );
+
             }
         );
 
@@ -638,13 +545,25 @@ document.addEventListener(
                     "change",
                     () => {
 
-                        showToast(
+                        if (
                             toggle.checked
-                                ? "🟣 Feature enabled"
-                                : "⚫ Feature disabled"
-                        );
+                        ) {
+
+                            showToast(
+                                "🟣 Feature enabled"
+                            );
+
+                        } else {
+
+                            showToast(
+                                "⚫ Feature disabled"
+                            );
+
+                        }
+
                     }
                 );
+
             }
         );
 
@@ -669,33 +588,39 @@ document.addEventListener(
                         const rect =
                             card.getBoundingClientRect();
 
+
                         const x =
                             event.clientX -
                             rect.left;
+
 
                         const y =
                             event.clientY -
                             rect.top;
 
+
                         const rotateX =
                             (
-                                y /
-                                rect.height -
+                                (y /
+                                    rect.height) -
                                 0.5
                             ) * -3;
 
+
                         const rotateY =
                             (
-                                x /
-                                rect.width -
+                                (x /
+                                    rect.width) -
                                 0.5
                             ) * 3;
+
 
                         card.style.transform =
                             `perspective(700px)
                              rotateX(${rotateX}deg)
                              rotateY(${rotateY}deg)
                              translateY(-4px)`;
+
                     }
                 );
 
@@ -706,8 +631,10 @@ document.addEventListener(
 
                         card.style.transform =
                             "";
+
                     }
                 );
+
             }
         );
 
@@ -731,12 +658,14 @@ document.addEventListener(
                     const rect =
                         hero.getBoundingClientRect();
 
+
                     const x =
                         (
                             event.clientX -
                             rect.left
                         ) /
                         rect.width;
+
 
                     const y =
                         (
@@ -745,14 +674,18 @@ document.addEventListener(
                         ) /
                         rect.height;
 
+
                     const moveX =
                         (x - 0.5) * 8;
+
 
                     const moveY =
                         (y - 0.5) * 8;
 
+
                     hero.style.backgroundPosition =
                         `${50 + moveX}% ${50 + moveY}%`;
+
                 }
             );
 
@@ -763,8 +696,10 @@ document.addEventListener(
 
                     hero.style.backgroundPosition =
                         "center";
+
                 }
             );
+
         }
 
 
@@ -786,6 +721,7 @@ document.addEventListener(
                     online.style.transform =
                         "scale(1.03)";
 
+
                     setTimeout(
                         () => {
 
@@ -799,6 +735,7 @@ document.addEventListener(
                 },
                 2500
             );
+
         }
 
 
@@ -818,31 +755,37 @@ document.addEventListener(
                 const text =
                     number.textContent.trim();
 
+
                 const match =
                     text.match(
                         /^([\d,]+)$/
                     );
 
+
                 if (!match)
                     return;
 
+
                 const target =
                     Number(
-                        match[1]
-                            .replace(
-                                /,/g,
-                                ""
-                            )
+                        match[1].replace(
+                            /,/g,
+                            ""
+                        )
                     );
+
 
                 if (!target)
                     return;
 
+
                 number.textContent =
                     "0";
 
+
                 const duration =
                     800;
+
 
                 const start =
                     performance.now();
@@ -862,6 +805,7 @@ document.addEventListener(
                             1
                         );
 
+
                     const value =
                         Math.floor(
                             target *
@@ -874,6 +818,7 @@ document.addEventListener(
                                 )
                             )
                         );
+
 
                     number.textContent =
                         value.toLocaleString();
@@ -892,13 +837,16 @@ document.addEventListener(
 
                         number.textContent =
                             target.toLocaleString();
+
                     }
+
                 }
 
 
                 requestAnimationFrame(
                     animateCounter
                 );
+
             }
         );
 
@@ -922,6 +870,7 @@ document.addEventListener(
 
                         input.style.boxShadow =
                             "0 0 20px rgba(139,92,246,0.15)";
+
                     }
                 );
 
@@ -932,8 +881,10 @@ document.addEventListener(
 
                         input.style.boxShadow =
                             "";
+
                     }
                 );
+
             }
         );
 
@@ -957,46 +908,9 @@ document.addEventListener(
         console.log(
             "🌑 ShadowDashboard loaded successfully."
         );
+
     }
 );
-
-
-// =========================
-// RIPPLE
-// =========================
-
-function createRipple(
-    element
-) {
-
-    if (!element)
-        return;
-
-
-    const ripple =
-        document.createElement(
-            "span"
-        );
-
-
-    ripple.className =
-        "click-ripple";
-
-
-    element.appendChild(
-        ripple
-    );
-
-
-    setTimeout(
-        () => {
-
-            ripple.remove();
-
-        },
-        600
-    );
-}
 
 
 // =========================
@@ -1071,8 +985,10 @@ function showToast(
                 "div"
             );
 
+
         toast.className =
             "toast";
+
 
         document.body.appendChild(
             toast
@@ -1138,6 +1054,7 @@ function createPoll() {
         document.getElementById(
             "pollQuestion"
         );
+
 
     const message =
         document.getElementById(
