@@ -1,5 +1,6 @@
 // 🌑 ShadowDashboard
 // Navigation + Discord OAuth + Cookie Session + Animations + Toasts + Backend
+// REAL DISCORD MEMBER COUNT
 
 const BACKEND_URL =
     "https://punctured-aide-yogurt.ngrok-free.dev";
@@ -20,7 +21,6 @@ function loginWithDiscord() {
 // =========================
 
 async function apiFetch(endpoint, options = {}) {
-
     const headers = {
         "Accept": "application/json",
         ...(options.headers || {})
@@ -42,7 +42,6 @@ async function apiFetch(endpoint, options = {}) {
 // =========================
 
 async function checkDiscordLogin() {
-
     try {
 
         const params =
@@ -69,7 +68,9 @@ async function checkDiscordLogin() {
 
             cleanURL();
 
-            showToast("❌ Discord login failed.");
+            showToast(
+                "❌ Discord login failed."
+            );
 
             return;
         }
@@ -79,7 +80,9 @@ async function checkDiscordLogin() {
         // CHECK SESSION
         // =========================
 
-        console.log("🔍 Checking Discord session...");
+        console.log(
+            "🔍 Checking Discord session..."
+        );
 
         const response =
             await apiFetch("/api/me");
@@ -132,10 +135,14 @@ async function checkDiscordLogin() {
 
 
             const topUsername =
-                document.getElementById("topUsername");
+                document.getElementById(
+                    "topUsername"
+                );
 
             const dashboardUsername =
-                document.getElementById("dashboardUsername");
+                document.getElementById(
+                    "dashboardUsername"
+                );
 
 
             if (topUsername) {
@@ -154,7 +161,9 @@ async function checkDiscordLogin() {
             // AVATAR
             // =========================
 
-            updateUserAvatar(data.user);
+            updateUserAvatar(
+                data.user
+            );
 
 
             // =========================
@@ -162,7 +171,9 @@ async function checkDiscordLogin() {
             // =========================
 
             const loginScreen =
-                document.getElementById("loginScreen");
+                document.getElementById(
+                    "loginScreen"
+                );
 
 
             if (loginScreen) {
@@ -177,6 +188,13 @@ async function checkDiscordLogin() {
             // =========================
 
             await loadGuilds();
+
+
+            // =========================
+            // LOAD REAL STATS
+            // =========================
+
+            await loadRealStats();
 
 
             // =========================
@@ -216,13 +234,179 @@ async function checkDiscordLogin() {
 
 
 // =========================
+// LOAD REAL DISCORD STATS
+// =========================
+
+async function loadRealStats() {
+
+    try {
+
+        console.log(
+            "📊 Loading real Discord member count..."
+        );
+
+
+        const response =
+            await apiFetch("/stats");
+
+
+        if (!response.ok) {
+
+            console.error(
+                "❌ Stats request failed:",
+                response.status
+            );
+
+            return;
+        }
+
+
+        const data =
+            await response.json();
+
+
+        console.log(
+            "📊 Real ShadowBot stats:",
+            data
+        );
+
+
+        const members =
+            Number(data.members);
+
+
+        if (
+            !Number.isFinite(members) ||
+            members < 0
+        ) {
+
+            console.error(
+                "❌ Invalid member count:",
+                data.members
+            );
+
+            return;
+        }
+
+
+        // =========================
+        // FIND MEMBERS CARD
+        // =========================
+
+        const statCards =
+            document.querySelectorAll(
+                ".stat-card"
+            );
+
+
+        let memberNumber = null;
+
+
+        statCards.forEach(card => {
+
+            const label =
+                card.textContent
+                    .toLowerCase();
+
+
+            if (
+                label.includes("members") ||
+                label.includes("member")
+            ) {
+
+                const strong =
+                    card.querySelector(
+                        "strong"
+                    );
+
+
+                if (strong) {
+                    memberNumber =
+                        strong;
+                }
+            }
+        });
+
+
+        // =========================
+        // FALLBACK
+        // =========================
+
+        if (!memberNumber) {
+
+            const strongElements =
+                document.querySelectorAll(
+                    ".stat-card strong"
+                );
+
+
+            if (strongElements.length > 0) {
+
+                memberNumber =
+                    strongElements[0];
+            }
+        }
+
+
+        if (!memberNumber) {
+
+            console.error(
+                "❌ Could not find Members stat element."
+            );
+
+            return;
+        }
+
+
+        // =========================
+        // REPLACE HARD-CODED NUMBER
+        // =========================
+
+        memberNumber.dataset.realMembers =
+            String(members);
+
+        memberNumber.textContent =
+            members.toLocaleString();
+
+
+        console.log(
+            `✅ REAL MEMBER COUNT: ${members.toLocaleString()}`
+        );
+
+
+        // =========================
+        // UPDATE AGAIN EVERY 60 SEC
+        // =========================
+
+        if (!window.shadowStatsInterval) {
+
+            window.shadowStatsInterval =
+                setInterval(
+                    loadRealStats,
+                    60000
+                );
+        }
+
+    } catch (error) {
+
+        console.error(
+            "❌ Failed to load real stats:",
+            error
+        );
+    }
+}
+
+
+// =========================
 // UPDATE USER AVATAR
 // =========================
 
 function updateUserAvatar(user) {
 
     const avatar =
-        document.getElementById("userAvatar");
+        document.getElementById(
+            "userAvatar"
+        );
 
 
     if (!avatar)
@@ -233,6 +417,7 @@ function updateUserAvatar(user) {
 
 
     // Already a complete URL
+
     if (
         typeof user.avatar === "string" &&
         user.avatar.startsWith("http")
@@ -240,10 +425,12 @@ function updateUserAvatar(user) {
 
         avatarURL =
             user.avatar;
+
     }
 
 
     // Discord avatar hash
+
     else if (
         user.avatar &&
         user.id
@@ -251,14 +438,18 @@ function updateUserAvatar(user) {
 
         avatarURL =
             `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png?size=128`;
+
     }
 
 
     // Discord default avatar
+
     else if (user.id) {
 
         const discriminator =
-            Number(user.discriminator || 0);
+            Number(
+                user.discriminator || 0
+            );
 
 
         avatarURL =
@@ -274,6 +465,7 @@ function updateUserAvatar(user) {
 
         avatar.innerHTML = "";
 
+
         const img =
             document.createElement("img");
 
@@ -281,26 +473,34 @@ function updateUserAvatar(user) {
         img.src =
             avatarURL;
 
+
         img.alt =
             "Discord Avatar";
+
 
         img.width =
             128;
 
+
         img.height =
             128;
+
 
         img.loading =
             "eager";
 
+
         img.style.width =
             "100%";
+
 
         img.style.height =
             "100%";
 
+
         img.style.objectFit =
             "cover";
+
 
         img.style.borderRadius =
             "inherit";
@@ -337,7 +537,9 @@ async function loadGuilds() {
 
 
         const response =
-            await apiFetch("/api/guilds");
+            await apiFetch(
+                "/api/guilds"
+            );
 
 
         if (!response.ok) {
@@ -381,15 +583,19 @@ async function loadGuilds() {
                 return;
 
 
-            select.innerHTML = "";
+            select.innerHTML =
+                "";
 
 
             const defaultOption =
-                document.createElement("option");
+                document.createElement(
+                    "option"
+                );
 
 
             defaultOption.value =
                 "";
+
 
             defaultOption.textContent =
                 "Select a server";
@@ -403,11 +609,14 @@ async function loadGuilds() {
             guilds.forEach(guild => {
 
                 const option =
-                    document.createElement("option");
+                    document.createElement(
+                        "option"
+                    );
 
 
                 option.value =
                     guild.id;
+
 
                 option.textContent =
                     guild.name;
@@ -416,9 +625,7 @@ async function loadGuilds() {
                 select.appendChild(
                     option
                 );
-
             });
-
         });
 
 
@@ -426,7 +633,9 @@ async function loadGuilds() {
         // SERVER SCREEN
         // =========================
 
-        renderServerScreen(guilds);
+        renderServerScreen(
+            guilds
+        );
 
 
         console.log(
@@ -450,14 +659,17 @@ async function loadGuilds() {
 function renderServerScreen(guilds) {
 
     const serverList =
-        document.getElementById("serverList");
+        document.getElementById(
+            "serverList"
+        );
 
 
     if (!serverList)
         return;
 
 
-    serverList.innerHTML = "";
+    serverList.innerHTML =
+        "";
 
 
     if (!guilds.length) {
@@ -477,7 +689,9 @@ function renderServerScreen(guilds) {
     guilds.forEach(guild => {
 
         const card =
-            document.createElement("div");
+            document.createElement(
+                "div"
+            );
 
 
         card.className =
@@ -491,7 +705,9 @@ function renderServerScreen(guilds) {
         if (guild.icon) {
 
             if (
-                guild.icon.startsWith("http")
+                guild.icon.startsWith(
+                    "http"
+                )
             ) {
 
                 iconURL =
@@ -506,7 +722,6 @@ function renderServerScreen(guilds) {
 
 
         card.innerHTML = `
-
             <img
                 class="server-icon"
                 src="${iconURL}"
@@ -553,8 +768,9 @@ function renderServerScreen(guilds) {
         `;
 
 
-        serverList.appendChild(card);
-
+        serverList.appendChild(
+            card
+        );
     });
 }
 
@@ -565,12 +781,29 @@ function renderServerScreen(guilds) {
 
 function escapeHTML(value) {
 
-    return String(value || "")
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
+    return String(
+        value || ""
+    )
+        .replace(
+            /&/g,
+            "&amp;"
+        )
+        .replace(
+            /</g,
+            "&lt;"
+        )
+        .replace(
+            />/g,
+            "&gt;"
+        )
+        .replace(
+            /"/g,
+            "&quot;"
+        )
+        .replace(
+            /'/g,
+            "&#039;"
+        );
 }
 
 
@@ -581,7 +814,9 @@ function escapeHTML(value) {
 function filterServers() {
 
     const search =
-        document.getElementById("serverSearch");
+        document.getElementById(
+            "serverSearch"
+        );
 
 
     const cards =
@@ -604,7 +839,9 @@ function filterServers() {
 
         const name =
             card
-                .querySelector(".server-name")
+                .querySelector(
+                    ".server-name"
+                )
                 ?.textContent
                 .toLowerCase() || "";
 
@@ -645,10 +882,12 @@ async function selectServer(guildId) {
                 "❌ Could not select server."
             );
 
+
             console.error(
                 "Server selection failed:",
                 data
             );
+
 
             return;
         }
@@ -660,7 +899,6 @@ async function selectServer(guildId) {
         );
 
 
-        // Hide server selector
         const serverScreen =
             document.getElementById(
                 "serverScreen"
@@ -684,6 +922,7 @@ async function selectServer(guildId) {
             "❌ Server selection error:",
             error
         );
+
 
         showToast(
             "❌ Server selection failed."
@@ -734,6 +973,7 @@ async function logout() {
             "👋 Logged out."
         );
 
+
         window.location.href =
             window.location.pathname;
     }
@@ -750,47 +990,61 @@ function showPage(
 ) {
 
     const pages =
-        document.querySelectorAll(".page");
+        document.querySelectorAll(
+            ".page"
+        );
 
 
     const navButtons =
-        document.querySelectorAll(".nav-btn");
+        document.querySelectorAll(
+            ".nav-btn"
+        );
 
 
     pages.forEach(page => {
 
-        page.classList.remove("active");
-
+        page.classList.remove(
+            "active"
+        );
     });
 
 
     navButtons.forEach(btn => {
 
-        btn.classList.remove("active");
-
+        btn.classList.remove(
+            "active"
+        );
     });
 
 
     const page =
-        document.getElementById(pageId);
+        document.getElementById(
+            pageId
+        );
 
 
     if (page) {
 
-        page.classList.add("active");
+        page.classList.add(
+            "active"
+        );
     }
 
 
     if (button) {
 
-        button.classList.add("active");
+        button.classList.add(
+            "active"
+        );
 
     } else {
 
         navButtons.forEach(btn => {
 
             const onclick =
-                btn.getAttribute("onclick") || "";
+                btn.getAttribute(
+                    "onclick"
+                ) || "";
 
 
             if (
@@ -802,27 +1056,45 @@ function showPage(
                 )
             ) {
 
-                btn.classList.add("active");
+                btn.classList.add(
+                    "active"
+                );
             }
-
         });
     }
 
 
     const pageTitle =
-        document.getElementById("pageTitle");
+        document.getElementById(
+            "pageTitle"
+        );
 
 
     const titles = {
 
-        overview: "Dashboard Overview",
-        server: "Server Management",
-        xp: "XP & Levels",
-        games: "Games",
-        moderation: "Moderation",
-        verification: "Verification",
-        polls: "Polls",
-        settings: "Settings"
+        overview:
+            "Dashboard Overview",
+
+        server:
+            "Server Management",
+
+        xp:
+            "XP & Levels",
+
+        games:
+            "Games",
+
+        moderation:
+            "Moderation",
+
+        verification:
+            "Verification",
+
+        polls:
+            "Polls",
+
+        settings:
+            "Settings"
     };
 
 
@@ -980,7 +1252,8 @@ document.addEventListener(
                     "mouseleave",
                     () => {
 
-                        card.style.transform = "";
+                        card.style.transform =
+                            "";
                     }
                 );
             });
@@ -991,7 +1264,9 @@ document.addEventListener(
         // =========================
 
         const hero =
-            document.querySelector(".hero");
+            document.querySelector(
+                ".hero"
+            );
 
 
         if (hero) {
@@ -1048,7 +1323,9 @@ document.addEventListener(
         // =========================
 
         const online =
-            document.querySelector(".online-badge");
+            document.querySelector(
+                ".online-badge"
+            );
 
 
         if (online) {
@@ -1085,12 +1362,42 @@ document.addEventListener(
             )
             .forEach(number => {
 
+                // Skip Members because
+                // loadRealStats handles it.
+
+                const card =
+                    number.closest(
+                        ".stat-card"
+                    );
+
+
+                const cardText =
+                    card
+                        ?.textContent
+                        .toLowerCase() || "";
+
+
+                if (
+                    cardText.includes(
+                        "members"
+                    ) ||
+                    cardText.includes(
+                        "member"
+                    )
+                ) {
+
+                    return;
+                }
+
+
                 const text =
                     number.textContent.trim();
 
 
                 const match =
-                    text.match(/^([\d,]+)$/);
+                    text.match(
+                        /^([\d,]+)$/
+                    );
 
 
                 if (!match)
@@ -1099,7 +1406,11 @@ document.addEventListener(
 
                 const target =
                     Number(
-                        match[1].replace(/,/g, "")
+                        match[1]
+                            .replace(
+                                /,/g,
+                                ""
+                            )
                     );
 
 
@@ -1107,20 +1418,28 @@ document.addEventListener(
                     return;
 
 
-                number.textContent = "0";
+                number.textContent =
+                    "0";
 
 
-                const duration = 800;
+                const duration =
+                    800;
+
 
                 const start =
                     performance.now();
 
 
-                function animateCounter(time) {
+                function animateCounter(
+                    time
+                ) {
 
                     const progress =
                         Math.min(
-                            (time - start) /
+                            (
+                                time -
+                                start
+                            ) /
                             duration,
                             1
                         );
@@ -1132,7 +1451,8 @@ document.addEventListener(
                             (
                                 1 -
                                 Math.pow(
-                                    1 - progress,
+                                    1 -
+                                    progress,
                                     3
                                 )
                             )
@@ -1143,7 +1463,9 @@ document.addEventListener(
                         value.toLocaleString();
 
 
-                    if (progress < 1) {
+                    if (
+                        progress < 1
+                    ) {
 
                         requestAnimationFrame(
                             animateCounter
@@ -1257,7 +1579,9 @@ function createButtonRipple(
 
 
     const ripple =
-        document.createElement("span");
+        document.createElement(
+            "span"
+        );
 
 
     ripple.className =
@@ -1272,7 +1596,9 @@ function createButtonRipple(
         `${event.clientY - rect.top}px`;
 
 
-    element.appendChild(ripple);
+    element.appendChild(
+        ripple
+    );
 
 
     setTimeout(
@@ -1290,23 +1616,31 @@ function createButtonRipple(
 // TOAST
 // =========================
 
-function showToast(message) {
+function showToast(
+    message
+) {
 
     let toast =
-        document.querySelector(".toast");
+        document.querySelector(
+            ".toast"
+        );
 
 
     if (!toast) {
 
         toast =
-            document.createElement("div");
+            document.createElement(
+                "div"
+            );
 
 
         toast.className =
             "toast";
 
 
-        document.body.appendChild(toast);
+        document.body.appendChild(
+            toast
+        );
     }
 
 
@@ -1314,13 +1648,17 @@ function showToast(message) {
         message;
 
 
-    toast.classList.remove("show");
+    toast.classList.remove(
+        "show"
+    );
 
 
     void toast.offsetWidth;
 
 
-    toast.classList.add("show");
+    toast.classList.add(
+        "show"
+    );
 
 
     clearTimeout(
@@ -1332,7 +1670,9 @@ function showToast(message) {
         setTimeout(
             () => {
 
-                toast.classList.remove("show");
+                toast.classList.remove(
+                    "show"
+                );
 
             },
             2500
