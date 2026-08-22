@@ -10,11 +10,8 @@ const BACKEND_URL =
 // =========================
 
 function loginWithDiscord() {
-
     console.log("🔐 Opening Discord OAuth...");
-
-    window.location.href =
-        BACKEND_URL + "/auth/discord";
+    window.location.href = BACKEND_URL + "/auth/discord";
 }
 
 
@@ -22,15 +19,10 @@ function loginWithDiscord() {
 // API REQUEST
 // =========================
 
-async function apiFetch(
-    endpoint,
-    options = {}
-) {
+async function apiFetch(endpoint, options = {}) {
 
     const headers = {
-
         "Accept": "application/json",
-
         ...(options.headers || {})
     };
 
@@ -38,9 +30,7 @@ async function apiFetch(
         BACKEND_URL + endpoint,
         {
             ...options,
-
             headers,
-
             credentials: "include"
         }
     );
@@ -56,9 +46,7 @@ async function checkDiscordLogin() {
     try {
 
         const params =
-            new URLSearchParams(
-                window.location.search
-            );
+            new URLSearchParams(window.location.search);
 
         const loginStatus =
             params.get("login");
@@ -81,31 +69,21 @@ async function checkDiscordLogin() {
 
             cleanURL();
 
-            showToast(
-                "❌ Discord login failed."
-            );
+            showToast("❌ Discord login failed.");
 
             return;
         }
 
 
         // =========================
-        // CHECK BACKEND SESSION
+        // CHECK SESSION
         // =========================
 
-        console.log(
-            "🔍 Checking Discord session..."
-        );
+        console.log("🔍 Checking Discord session...");
 
         const response =
-            await apiFetch(
-                "/api/me"
-            );
+            await apiFetch("/api/me");
 
-
-        // =========================
-        // NOT LOGGED IN
-        // =========================
 
         if (!response.ok) {
 
@@ -154,32 +132,19 @@ async function checkDiscordLogin() {
 
 
             const topUsername =
-                document.getElementById(
-                    "topUsername"
-                );
-
+                document.getElementById("topUsername");
 
             const dashboardUsername =
-                document.getElementById(
-                    "dashboardUsername"
-                );
+                document.getElementById("dashboardUsername");
 
 
             if (topUsername) {
-
                 topUsername.textContent =
                     username;
-
-                topUsername.style.display =
-                    "block";
-
-                topUsername.style.visibility =
-                    "visible";
             }
 
 
             if (dashboardUsername) {
-
                 dashboardUsername.textContent =
                     username;
             }
@@ -189,70 +154,15 @@ async function checkDiscordLogin() {
             // AVATAR
             // =========================
 
-            const userAvatar =
-                document.getElementById(
-                    "userAvatar"
-                );
-
-
-            if (userAvatar) {
-
-                userAvatar.innerHTML = "";
-
-
-                if (data.user.avatar) {
-
-                    const img =
-                        document.createElement(
-                            "img"
-                        );
-
-
-                    img.src =
-                        data.user.avatar;
-
-
-                    img.alt =
-                        username;
-
-
-                    img.width = 40;
-                    img.height = 40;
-
-
-                    img.style.width =
-                        "100%";
-
-                    img.style.height =
-                        "100%";
-
-                    img.style.objectFit =
-                        "cover";
-
-                    img.style.borderRadius =
-                        "50%";
-
-
-                    userAvatar.appendChild(
-                        img
-                    );
-
-                } else {
-
-                    userAvatar.textContent =
-                        "👤";
-                }
-            }
+            updateUserAvatar(data.user);
 
 
             // =========================
-            // HIDE LOGIN SCREEN
+            // HIDE LOGIN
             // =========================
 
             const loginScreen =
-                document.getElementById(
-                    "loginScreen"
-                );
+                document.getElementById("loginScreen");
 
 
             if (loginScreen) {
@@ -263,33 +173,22 @@ async function checkDiscordLogin() {
 
 
             // =========================
-            // SHOW DASHBOARD
+            // LOAD SERVERS
             // =========================
 
-            document.body.classList.add(
-                "dashboard-authenticated"
-            );
+            await loadGuilds();
 
 
             // =========================
-            // WELCOME TOAST
+            // WELCOME
             // =========================
 
-            if (
-                loginStatus === "success"
-            ) {
+            if (loginStatus === "success") {
 
                 showToast(
                     `👋 Welcome, ${username}!`
                 );
             }
-
-
-            // =========================
-            // LOAD SERVERS
-            // =========================
-
-            loadGuilds();
 
 
             // =========================
@@ -317,6 +216,114 @@ async function checkDiscordLogin() {
 
 
 // =========================
+// UPDATE USER AVATAR
+// =========================
+
+function updateUserAvatar(user) {
+
+    const avatar =
+        document.getElementById("userAvatar");
+
+
+    if (!avatar)
+        return;
+
+
+    let avatarURL = null;
+
+
+    // Already a complete URL
+    if (
+        typeof user.avatar === "string" &&
+        user.avatar.startsWith("http")
+    ) {
+
+        avatarURL =
+            user.avatar;
+    }
+
+
+    // Discord avatar hash
+    else if (
+        user.avatar &&
+        user.id
+    ) {
+
+        avatarURL =
+            `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png?size=128`;
+    }
+
+
+    // Discord default avatar
+    else if (user.id) {
+
+        const discriminator =
+            Number(user.discriminator || 0);
+
+
+        avatarURL =
+            `https://cdn.discordapp.com/embed/avatars/${discriminator % 5}.png`;
+    }
+
+
+    // =========================
+    // DISPLAY AVATAR
+    // =========================
+
+    if (avatarURL) {
+
+        avatar.innerHTML = "";
+
+        const img =
+            document.createElement("img");
+
+
+        img.src =
+            avatarURL;
+
+        img.alt =
+            "Discord Avatar";
+
+        img.width =
+            128;
+
+        img.height =
+            128;
+
+        img.loading =
+            "eager";
+
+        img.style.width =
+            "100%";
+
+        img.style.height =
+            "100%";
+
+        img.style.objectFit =
+            "cover";
+
+        img.style.borderRadius =
+            "inherit";
+
+
+        img.onerror = () => {
+
+            avatar.innerHTML =
+                "👤";
+        };
+
+
+        avatar.appendChild(img);
+
+    } else {
+
+        avatar.innerHTML =
+            "👤";
+    }
+}
+
+
+// =========================
 // LOAD DISCORD SERVERS
 // =========================
 
@@ -330,9 +337,7 @@ async function loadGuilds() {
 
 
         const response =
-            await apiFetch(
-                "/api/guilds"
-            );
+            await apiFetch("/api/guilds");
 
 
         if (!response.ok) {
@@ -361,7 +366,7 @@ async function loadGuilds() {
 
 
         // =========================
-        // OLD SELECTORS
+        // NORMAL SERVER SELECTS
         // =========================
 
         const selectors =
@@ -370,161 +375,58 @@ async function loadGuilds() {
             );
 
 
-        selectors.forEach(
-            select => {
+        selectors.forEach(select => {
 
-                if (!select)
-                    return;
-
-
-                select.innerHTML =
-                    "";
+            if (!select)
+                return;
 
 
-                const defaultOption =
-                    document.createElement(
-                        "option"
-                    );
+            select.innerHTML = "";
 
 
-                defaultOption.value =
-                    "";
+            const defaultOption =
+                document.createElement("option");
 
 
-                defaultOption.textContent =
-                    "Select a server";
+            defaultOption.value =
+                "";
+
+            defaultOption.textContent =
+                "Select a server";
+
+
+            select.appendChild(
+                defaultOption
+            );
+
+
+            guilds.forEach(guild => {
+
+                const option =
+                    document.createElement("option");
+
+
+                option.value =
+                    guild.id;
+
+                option.textContent =
+                    guild.name;
 
 
                 select.appendChild(
-                    defaultOption
+                    option
                 );
 
+            });
 
-                guilds.forEach(
-                    guild => {
-
-                        const option =
-                            document.createElement(
-                                "option"
-                            );
-
-
-                        option.value =
-                            guild.id;
-
-
-                        option.textContent =
-                            guild.name;
-
-
-                        select.appendChild(
-                            option
-                        );
-
-                    }
-                );
-
-            }
-        );
+        });
 
 
         // =========================
         // SERVER SCREEN
         // =========================
 
-        const serverList =
-            document.getElementById(
-                "serverList"
-            );
-
-
-        if (serverList) {
-
-            serverList.innerHTML =
-                "";
-
-
-            if (!guilds.length) {
-
-                serverList.innerHTML = `
-                    <div class="server-empty">
-                        <div class="server-empty-icon">
-                            🏠
-                        </div>
-
-                        <h3>
-                            No servers found
-                        </h3>
-
-                        <p>
-                            No Discord servers are available.
-                        </p>
-                    </div>
-                `;
-
-            } else {
-
-                guilds.forEach(
-                    guild => {
-
-                        const card =
-                            document.createElement(
-                                "div"
-                            );
-
-
-                        card.className =
-                            "server-card";
-
-
-                        const icon =
-                            guild.icon ||
-                            "logo.png";
-
-
-                        card.innerHTML = `
-
-                            <img
-                                class="server-icon"
-                                src="${icon}"
-                                alt="${escapeHTML(guild.name)}"
-                                onerror="this.src='logo.png'"
-                            >
-
-                            <div class="server-info">
-
-                                <span class="server-name">
-                                    ${escapeHTML(guild.name)}
-                                </span>
-
-                                <div class="server-badges">
-
-                                    <span class="server-badge bot">
-                                        🤖 ShadowBot
-                                    </span>
-
-                                </div>
-
-                            </div>
-
-                            <button
-                                class="manage-server-btn"
-                                onclick="selectServer('${guild.id}')"
-                            >
-                                Manage
-                            </button>
-
-                        `;
-
-
-                        serverList.appendChild(
-                            card
-                        );
-
-                    }
-                );
-            }
-        }
+        renderServerScreen(guilds);
 
 
         console.log(
@@ -542,24 +444,133 @@ async function loadGuilds() {
 
 
 // =========================
+// RENDER SERVER SCREEN
+// =========================
+
+function renderServerScreen(guilds) {
+
+    const serverList =
+        document.getElementById("serverList");
+
+
+    if (!serverList)
+        return;
+
+
+    serverList.innerHTML = "";
+
+
+    if (!guilds.length) {
+
+        serverList.innerHTML = `
+            <div class="server-empty">
+                <div class="server-empty-icon">🏠</div>
+                <h3>No servers found</h3>
+                <p>You don't have any servers available to manage.</p>
+            </div>
+        `;
+
+        return;
+    }
+
+
+    guilds.forEach(guild => {
+
+        const card =
+            document.createElement("div");
+
+
+        card.className =
+            "server-card";
+
+
+        let iconURL =
+            "logo.png";
+
+
+        if (guild.icon) {
+
+            if (
+                guild.icon.startsWith("http")
+            ) {
+
+                iconURL =
+                    guild.icon;
+
+            } else {
+
+                iconURL =
+                    `https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png?size=128`;
+            }
+        }
+
+
+        card.innerHTML = `
+
+            <img
+                class="server-icon"
+                src="${iconURL}"
+                alt="${escapeHTML(guild.name)}"
+                onerror="this.src='logo.png'"
+            >
+
+            <div class="server-info">
+
+                <span class="server-name">
+                    ${escapeHTML(guild.name)}
+                </span>
+
+                <div class="server-badges">
+
+                    ${
+                        guild.owner
+                            ? `<span class="server-badge owner">👑 OWNER</span>`
+                            : ""
+                    }
+
+                    ${
+                        guild.admin
+                            ? `<span class="server-badge admin">🛡️ ADMIN</span>`
+                            : ""
+                    }
+
+                    ${
+                        guild.botInstalled
+                            ? `<span class="server-badge bot">✓ BOT</span>`
+                            : `<span class="server-badge not-installed">⚠ BOT NOT INSTALLED</span>`
+                    }
+
+                </div>
+
+            </div>
+
+            <button
+                class="manage-server-btn"
+                onclick="selectServer('${guild.id}')"
+            >
+                Manage
+            </button>
+        `;
+
+
+        serverList.appendChild(card);
+
+    });
+}
+
+
+// =========================
 // ESCAPE HTML
 // =========================
 
-function escapeHTML(
-    text
-) {
+function escapeHTML(value) {
 
-    const div =
-        document.createElement(
-            "div"
-        );
-
-
-    div.textContent =
-        text || "";
-
-
-    return div.innerHTML;
+    return String(value || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
 }
 
 
@@ -569,16 +580,8 @@ function escapeHTML(
 
 function filterServers() {
 
-    const input =
-        document.getElementById(
-            "serverSearch"
-        );
-
-
-    const query =
-        input
-            ? input.value.toLowerCase().trim()
-            : "";
+    const search =
+        document.getElementById("serverSearch");
 
 
     const cards =
@@ -587,24 +590,30 @@ function filterServers() {
         );
 
 
-    cards.forEach(
-        card => {
-
-            const name =
-                card
-                    .querySelector(
-                        ".server-name"
-                    )
-                    ?.textContent
-                    .toLowerCase() || "";
+    if (!search)
+        return;
 
 
-            card.style.display =
-                name.includes(query)
-                    ? ""
-                    : "none";
-        }
-    );
+    const query =
+        search.value
+            .trim()
+            .toLowerCase();
+
+
+    cards.forEach(card => {
+
+        const name =
+            card
+                .querySelector(".server-name")
+                ?.textContent
+                .toLowerCase() || "";
+
+
+        card.style.display =
+            name.includes(query)
+                ? "flex"
+                : "none";
+    });
 }
 
 
@@ -612,9 +621,7 @@ function filterServers() {
 // SELECT SERVER
 // =========================
 
-async function selectServer(
-    guildId
-) {
+async function selectServer(guildId) {
 
     if (!guildId)
         return;
@@ -638,12 +645,10 @@ async function selectServer(
                 "❌ Could not select server."
             );
 
-
             console.error(
                 "Server selection failed:",
                 data
             );
-
 
             return;
         }
@@ -655,6 +660,7 @@ async function selectServer(
         );
 
 
+        // Hide server selector
         const serverScreen =
             document.getElementById(
                 "serverScreen"
@@ -678,7 +684,6 @@ async function selectServer(
             "❌ Server selection error:",
             error
         );
-
 
         showToast(
             "❌ Server selection failed."
@@ -712,8 +717,7 @@ async function logout() {
         await apiFetch(
             "/auth/logout",
             {
-                method:
-                    "POST"
+                method: "POST"
             }
         );
 
@@ -729,7 +733,6 @@ async function logout() {
         console.log(
             "👋 Logged out."
         );
-
 
         window.location.href =
             window.location.pathname;
@@ -747,120 +750,79 @@ function showPage(
 ) {
 
     const pages =
-        document.querySelectorAll(
-            ".page"
-        );
+        document.querySelectorAll(".page");
 
 
     const navButtons =
-        document.querySelectorAll(
-            ".nav-btn"
-        );
+        document.querySelectorAll(".nav-btn");
 
 
-    pages.forEach(
-        page => {
+    pages.forEach(page => {
 
-            page.classList.remove(
-                "active"
-            );
+        page.classList.remove("active");
 
-        }
-    );
+    });
 
 
-    navButtons.forEach(
-        btn => {
+    navButtons.forEach(btn => {
 
-            btn.classList.remove(
-                "active"
-            );
+        btn.classList.remove("active");
 
-        }
-    );
+    });
 
 
     const page =
-        document.getElementById(
-            pageId
-        );
+        document.getElementById(pageId);
 
 
     if (page) {
 
-        page.classList.add(
-            "active"
-        );
+        page.classList.add("active");
     }
 
 
     if (button) {
 
-        button.classList.add(
-            "active"
-        );
+        button.classList.add("active");
 
     } else {
 
-        navButtons.forEach(
-            btn => {
+        navButtons.forEach(btn => {
 
-                const onclick =
-                    btn.getAttribute(
-                        "onclick"
-                    ) || "";
+            const onclick =
+                btn.getAttribute("onclick") || "";
 
 
-                if (
-                    onclick.includes(
-                        `showPage('${pageId}'`
-                    ) ||
-                    onclick.includes(
-                        `showPage("${pageId}"`
-                    )
-                ) {
+            if (
+                onclick.includes(
+                    `showPage('${pageId}'`
+                ) ||
+                onclick.includes(
+                    `showPage("${pageId}"`
+                )
+            ) {
 
-                    btn.classList.add(
-                        "active"
-                    );
-                }
-
+                btn.classList.add("active");
             }
-        );
+
+        });
     }
 
 
     const pageTitle =
-        document.getElementById(
-            "pageTitle"
-        );
+        document.getElementById("pageTitle");
 
 
     const titles = {
 
-        overview:
-            "Dashboard Overview",
-
-        server:
-            "Server Management",
-
-        xp:
-            "XP & Levels",
-
-        games:
-            "Games",
-
-        moderation:
-            "Moderation",
-
-        verification:
-            "Verification",
-
-        polls:
-            "Polls",
-
-        settings:
-            "Settings"
+        overview: "Dashboard Overview",
+        server: "Server Management",
+        xp: "XP & Levels",
+        games: "Games",
+        moderation: "Moderation",
+        verification: "Verification",
+        polls: "Polls",
+        settings: "Settings"
     };
 
 
@@ -893,17 +855,12 @@ document.addEventListener(
 
 
         // =========================
-        // RIPPLE EFFECTS
+        // RIPPLE
         // =========================
 
-        const buttons =
-            document.querySelectorAll(
-                "button"
-            );
-
-
-        buttons.forEach(
-            button => {
+        document
+            .querySelectorAll("button")
+            .forEach(button => {
 
                 button.addEventListener(
                     "click",
@@ -913,26 +870,20 @@ document.addEventListener(
                             this,
                             event
                         );
-
                     }
                 );
-
-            }
-        );
+            });
 
 
         // =========================
         // QUICK ACTIONS
         // =========================
 
-        const quickButtons =
-            document.querySelectorAll(
+        document
+            .querySelectorAll(
                 ".quick-actions button"
-            );
-
-
-        quickButtons.forEach(
-            button => {
+            )
+            .forEach(button => {
 
                 button.addEventListener(
                     "click",
@@ -945,66 +896,44 @@ document.addEventListener(
                         showToast(
                             `⚡ ${text} selected`
                         );
-
                     }
                 );
-
-            }
-        );
+            });
 
 
         // =========================
         // SWITCHES
         // =========================
 
-        const switches =
-            document.querySelectorAll(
+        document
+            .querySelectorAll(
                 ".switch input"
-            );
-
-
-        switches.forEach(
-            toggle => {
+            )
+            .forEach(toggle => {
 
                 toggle.addEventListener(
                     "change",
                     () => {
 
-                        if (
+                        showToast(
                             toggle.checked
-                        ) {
-
-                            showToast(
-                                "🟣 Feature enabled"
-                            );
-
-                        } else {
-
-                            showToast(
-                                "⚫ Feature disabled"
-                            );
-
-                        }
-
+                                ? "🟣 Feature enabled"
+                                : "⚫ Feature disabled"
+                        );
                     }
                 );
-
-            }
-        );
+            });
 
 
         // =========================
         // CARD TILT
         // =========================
 
-        const cards =
-            document.querySelectorAll(
+        document
+            .querySelectorAll(
                 ".stat-card, .setting-card, .game-panel"
-            );
-
-
-        cards.forEach(
-            card => {
+            )
+            .forEach(card => {
 
                 card.addEventListener(
                     "mousemove",
@@ -1026,20 +955,14 @@ document.addEventListener(
 
                         const rotateX =
                             (
-                                (
-                                    y /
-                                    rect.height
-                                ) -
+                                y / rect.height -
                                 0.5
                             ) * -3;
 
 
                         const rotateY =
                             (
-                                (
-                                    x /
-                                    rect.width
-                                ) -
+                                x / rect.width -
                                 0.5
                             ) * 3;
 
@@ -1049,7 +972,6 @@ document.addEventListener(
                              rotateX(${rotateX}deg)
                              rotateY(${rotateY}deg)
                              translateY(-4px)`;
-
                     }
                 );
 
@@ -1058,14 +980,10 @@ document.addEventListener(
                     "mouseleave",
                     () => {
 
-                        card.style.transform =
-                            "";
-
+                        card.style.transform = "";
                     }
                 );
-
-            }
-        );
+            });
 
 
         // =========================
@@ -1073,9 +991,7 @@ document.addEventListener(
         // =========================
 
         const hero =
-            document.querySelector(
-                ".hero"
-            );
+            document.querySelector(".hero");
 
 
         if (hero) {
@@ -1092,16 +1008,14 @@ document.addEventListener(
                         (
                             event.clientX -
                             rect.left
-                        ) /
-                        rect.width;
+                        ) / rect.width;
 
 
                     const y =
                         (
                             event.clientY -
                             rect.top
-                        ) /
-                        rect.height;
+                        ) / rect.height;
 
 
                     const moveX =
@@ -1114,7 +1028,6 @@ document.addEventListener(
 
                     hero.style.backgroundPosition =
                         `${50 + moveX}% ${50 + moveY}%`;
-
                 }
             );
 
@@ -1125,7 +1038,6 @@ document.addEventListener(
 
                     hero.style.backgroundPosition =
                         "center";
-
                 }
             );
         }
@@ -1136,9 +1048,7 @@ document.addEventListener(
         // =========================
 
         const online =
-            document.querySelector(
-                ".online-badge"
-            );
+            document.querySelector(".online-badge");
 
 
         if (online) {
@@ -1155,7 +1065,6 @@ document.addEventListener(
 
                             online.style.transform =
                                 "scale(1)";
-
                         },
                         300
                     );
@@ -1170,23 +1079,18 @@ document.addEventListener(
         // NUMBER COUNTERS
         // =========================
 
-        const statNumbers =
-            document.querySelectorAll(
+        document
+            .querySelectorAll(
                 ".stat-card strong"
-            );
-
-
-        statNumbers.forEach(
-            number => {
+            )
+            .forEach(number => {
 
                 const text =
                     number.textContent.trim();
 
 
                 const match =
-                    text.match(
-                        /^([\d,]+)$/
-                    );
+                    text.match(/^([\d,]+)$/);
 
 
                 if (!match)
@@ -1195,10 +1099,7 @@ document.addEventListener(
 
                 const target =
                     Number(
-                        match[1].replace(
-                            /,/g,
-                            ""
-                        )
+                        match[1].replace(/,/g, "")
                     );
 
 
@@ -1206,28 +1107,20 @@ document.addEventListener(
                     return;
 
 
-                number.textContent =
-                    "0";
+                number.textContent = "0";
 
 
-                const duration =
-                    800;
-
+                const duration = 800;
 
                 const start =
                     performance.now();
 
 
-                function animateCounter(
-                    time
-                ) {
+                function animateCounter(time) {
 
                     const progress =
                         Math.min(
-                            (
-                                time -
-                                start
-                            ) /
+                            (time - start) /
                             duration,
                             1
                         );
@@ -1250,10 +1143,7 @@ document.addEventListener(
                         value.toLocaleString();
 
 
-                    if (
-                        progress <
-                        1
-                    ) {
+                    if (progress < 1) {
 
                         requestAnimationFrame(
                             animateCounter
@@ -1270,22 +1160,18 @@ document.addEventListener(
                 requestAnimationFrame(
                     animateCounter
                 );
-            }
-        );
+            });
 
 
         // =========================
         // INPUT GLOW
         // =========================
 
-        const inputs =
-            document.querySelectorAll(
+        document
+            .querySelectorAll(
                 ".text-input, .number-input, select"
-            );
-
-
-        inputs.forEach(
-            input => {
+            )
+            .forEach(input => {
 
                 input.addEventListener(
                     "focus",
@@ -1293,7 +1179,6 @@ document.addEventListener(
 
                         input.style.boxShadow =
                             "0 0 20px rgba(139,92,246,0.15)";
-
                     }
                 );
 
@@ -1304,12 +1189,9 @@ document.addEventListener(
 
                         input.style.boxShadow =
                             "";
-
                     }
                 );
-
-            }
-        );
+            });
 
 
         // =========================
@@ -1375,9 +1257,7 @@ function createButtonRipple(
 
 
     const ripple =
-        document.createElement(
-            "span"
-        );
+        document.createElement("span");
 
 
     ripple.className =
@@ -1392,9 +1272,7 @@ function createButtonRipple(
         `${event.clientY - rect.top}px`;
 
 
-    element.appendChild(
-        ripple
-    );
+    element.appendChild(ripple);
 
 
     setTimeout(
@@ -1412,31 +1290,23 @@ function createButtonRipple(
 // TOAST
 // =========================
 
-function showToast(
-    message
-) {
+function showToast(message) {
 
     let toast =
-        document.querySelector(
-            ".toast"
-        );
+        document.querySelector(".toast");
 
 
     if (!toast) {
 
         toast =
-            document.createElement(
-                "div"
-            );
+            document.createElement("div");
 
 
         toast.className =
             "toast";
 
 
-        document.body.appendChild(
-            toast
-        );
+        document.body.appendChild(toast);
     }
 
 
@@ -1444,17 +1314,13 @@ function showToast(
         message;
 
 
-    toast.classList.remove(
-        "show"
-    );
+    toast.classList.remove("show");
 
 
     void toast.offsetWidth;
 
 
-    toast.classList.add(
-        "show"
-    );
+    toast.classList.add("show");
 
 
     clearTimeout(
@@ -1466,9 +1332,7 @@ function showToast(
         setTimeout(
             () => {
 
-                toast.classList.remove(
-                    "show"
-                );
+                toast.classList.remove("show");
 
             },
             2500
@@ -1510,9 +1374,7 @@ function createPoll() {
         return;
 
 
-    if (
-        !question.value.trim()
-    ) {
+    if (!question.value.trim()) {
 
         showToast(
             "⚠️ Enter a poll question first."
