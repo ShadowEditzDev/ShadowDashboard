@@ -10,8 +10,11 @@ const BACKEND_URL =
 // =========================
 
 function loginWithDiscord() {
+
     console.log("🔐 Opening Discord OAuth...");
-    window.location.href = BACKEND_URL + "/auth/discord";
+
+    window.location.href =
+        BACKEND_URL + "/auth/discord";
 }
 
 
@@ -19,17 +22,28 @@ function loginWithDiscord() {
 // API REQUEST
 // =========================
 
-async function apiFetch(endpoint, options = {}) {
+async function apiFetch(
+    endpoint,
+    options = {}
+) {
+
     const headers = {
+
         "Accept": "application/json",
+
         ...(options.headers || {})
     };
 
-    return fetch(BACKEND_URL + endpoint, {
-        ...options,
-        headers,
-        credentials: "include"
-    });
+    return fetch(
+        BACKEND_URL + endpoint,
+        {
+            ...options,
+
+            headers,
+
+            credentials: "include"
+        }
+    );
 }
 
 
@@ -38,88 +52,262 @@ async function apiFetch(endpoint, options = {}) {
 // =========================
 
 async function checkDiscordLogin() {
+
     try {
-        const params = new URLSearchParams(window.location.search);
-        const loginStatus = params.get("login");
+
+        const params =
+            new URLSearchParams(
+                window.location.search
+            );
+
+        const loginStatus =
+            params.get("login");
+
+
+        // =========================
+        // OAUTH FAILED
+        // =========================
 
         if (
             loginStatus === "failed" ||
             loginStatus === "error" ||
             loginStatus === "cancelled"
         ) {
-            console.error("❌ Discord OAuth failed:", loginStatus);
+
+            console.error(
+                "❌ Discord OAuth failed:",
+                loginStatus
+            );
+
             cleanURL();
-            showToast("❌ Discord login failed.");
+
+            showToast(
+                "❌ Discord login failed."
+            );
+
             return;
         }
 
-        console.log("🔍 Checking Discord session...");
 
-        const response = await apiFetch("/api/me");
+        // =========================
+        // CHECK BACKEND SESSION
+        // =========================
+
+        console.log(
+            "🔍 Checking Discord session..."
+        );
+
+        const response =
+            await apiFetch(
+                "/api/me"
+            );
+
+
+        // =========================
+        // NOT LOGGED IN
+        // =========================
 
         if (!response.ok) {
+
             console.log(
                 "🔒 No valid dashboard session:",
                 response.status
             );
 
-            cleanURL();
             return;
         }
 
-        const data = await response.json();
 
-        console.log("📡 Session response:", data);
+        const data =
+            await response.json();
 
-        if (data.loggedIn && data.user) {
+
+        console.log(
+            "📡 Session response:",
+            data
+        );
+
+
+        // =========================
+        // LOGGED IN
+        // =========================
+
+        if (
+            data.loggedIn &&
+            data.user
+        ) {
+
             console.log(
                 "✅ Logged in as:",
                 data.user.username
             );
 
-            const loginScreen =
-                document.getElementById("loginScreen");
 
-            if (loginScreen) {
-                loginScreen.style.display = "none";
-            }
+            // =========================
+            // USERNAME
+            // =========================
 
             const username =
                 data.user.global_name ||
                 data.user.username ||
                 "Discord User";
 
+
             const topUsername =
-                document.getElementById("topUsername");
+                document.getElementById(
+                    "topUsername"
+                );
+
 
             const dashboardUsername =
-                document.getElementById("dashboardUsername");
+                document.getElementById(
+                    "dashboardUsername"
+                );
+
 
             if (topUsername) {
-                topUsername.textContent = username;
+
+                topUsername.textContent =
+                    username;
+
+                topUsername.style.display =
+                    "block";
+
+                topUsername.style.visibility =
+                    "visible";
             }
+
 
             if (dashboardUsername) {
-                dashboardUsername.textContent = username;
+
+                dashboardUsername.textContent =
+                    username;
             }
 
-            updateUserAvatar(data.user, username);
 
-            if (loginStatus === "success") {
-                showToast(`👋 Welcome, ${username}!`);
+            // =========================
+            // AVATAR
+            // =========================
+
+            const userAvatar =
+                document.getElementById(
+                    "userAvatar"
+                );
+
+
+            if (userAvatar) {
+
+                userAvatar.innerHTML = "";
+
+
+                if (data.user.avatar) {
+
+                    const img =
+                        document.createElement(
+                            "img"
+                        );
+
+
+                    img.src =
+                        data.user.avatar;
+
+
+                    img.alt =
+                        username;
+
+
+                    img.width = 40;
+                    img.height = 40;
+
+
+                    img.style.width =
+                        "100%";
+
+                    img.style.height =
+                        "100%";
+
+                    img.style.objectFit =
+                        "cover";
+
+                    img.style.borderRadius =
+                        "50%";
+
+
+                    userAvatar.appendChild(
+                        img
+                    );
+
+                } else {
+
+                    userAvatar.textContent =
+                        "👤";
+                }
             }
 
-            await loadGuilds();
+
+            // =========================
+            // HIDE LOGIN SCREEN
+            // =========================
+
+            const loginScreen =
+                document.getElementById(
+                    "loginScreen"
+                );
+
+
+            if (loginScreen) {
+
+                loginScreen.style.display =
+                    "none";
+            }
+
+
+            // =========================
+            // SHOW DASHBOARD
+            // =========================
+
+            document.body.classList.add(
+                "dashboard-authenticated"
+            );
+
+
+            // =========================
+            // WELCOME TOAST
+            // =========================
+
+            if (
+                loginStatus === "success"
+            ) {
+
+                showToast(
+                    `👋 Welcome, ${username}!`
+                );
+            }
+
+
+            // =========================
+            // LOAD SERVERS
+            // =========================
+
+            loadGuilds();
+
+
+            // =========================
+            // CLEAN URL
+            // =========================
 
             cleanURL();
+
             return;
         }
+
 
         console.log(
             "🔒 Backend says user is not logged in."
         );
 
     } catch (error) {
+
         console.error(
             "❌ Login check failed:",
             error
@@ -129,105 +317,222 @@ async function checkDiscordLogin() {
 
 
 // =========================
-// UPDATE USER AVATAR
-// =========================
-
-function updateUserAvatar(user, username) {
-    const userAvatar =
-        document.getElementById("userAvatar");
-
-    if (!userAvatar) return;
-
-    if (user.avatar) {
-        userAvatar.innerHTML = "";
-
-        const img =
-            document.createElement("img");
-
-        img.src = user.avatar;
-        img.alt = username;
-
-        img.style.width = "100%";
-        img.style.height = "100%";
-        img.style.objectFit = "cover";
-        img.style.borderRadius = "inherit";
-
-        img.onerror = () => {
-            userAvatar.textContent = "👤";
-        };
-
-        userAvatar.appendChild(img);
-    }
-}
-
-
-// =========================
 // LOAD DISCORD SERVERS
 // =========================
 
 async function loadGuilds() {
+
     try {
-        console.log("🏠 Loading Discord servers...");
+
+        console.log(
+            "🏠 Loading Discord servers..."
+        );
+
 
         const response =
-            await apiFetch("/api/guilds");
+            await apiFetch(
+                "/api/guilds"
+            );
+
 
         if (!response.ok) {
+
             console.log(
                 "❌ Failed to load guilds:",
                 response.status
             );
+
             return;
         }
 
+
         const data =
             await response.json();
+
 
         console.log(
             "🏠 Discord servers:",
             data
         );
 
+
         const guilds =
-            Array.isArray(data.guilds)
-                ? data.guilds
-                : [];
+            data.guilds || [];
+
+
+        // =========================
+        // OLD SELECTORS
+        // =========================
 
         const selectors =
             document.querySelectorAll(
                 "#serverSelect, .server-select"
             );
 
-        selectors.forEach(select => {
-            if (!select) return;
 
-            select.innerHTML = "";
+        selectors.forEach(
+            select => {
 
-            const defaultOption =
-                document.createElement("option");
+                if (!select)
+                    return;
 
-            defaultOption.value = "";
-            defaultOption.textContent =
-                "Select a server";
 
-            select.appendChild(defaultOption);
+                select.innerHTML =
+                    "";
 
-            guilds.forEach(guild => {
-                const option =
-                    document.createElement("option");
 
-                option.value = guild.id;
-                option.textContent = guild.name;
+                const defaultOption =
+                    document.createElement(
+                        "option"
+                    );
 
-                select.appendChild(option);
-            });
-        });
+
+                defaultOption.value =
+                    "";
+
+
+                defaultOption.textContent =
+                    "Select a server";
+
+
+                select.appendChild(
+                    defaultOption
+                );
+
+
+                guilds.forEach(
+                    guild => {
+
+                        const option =
+                            document.createElement(
+                                "option"
+                            );
+
+
+                        option.value =
+                            guild.id;
+
+
+                        option.textContent =
+                            guild.name;
+
+
+                        select.appendChild(
+                            option
+                        );
+
+                    }
+                );
+
+            }
+        );
+
+
+        // =========================
+        // SERVER SCREEN
+        // =========================
+
+        const serverList =
+            document.getElementById(
+                "serverList"
+            );
+
+
+        if (serverList) {
+
+            serverList.innerHTML =
+                "";
+
+
+            if (!guilds.length) {
+
+                serverList.innerHTML = `
+                    <div class="server-empty">
+                        <div class="server-empty-icon">
+                            🏠
+                        </div>
+
+                        <h3>
+                            No servers found
+                        </h3>
+
+                        <p>
+                            No Discord servers are available.
+                        </p>
+                    </div>
+                `;
+
+            } else {
+
+                guilds.forEach(
+                    guild => {
+
+                        const card =
+                            document.createElement(
+                                "div"
+                            );
+
+
+                        card.className =
+                            "server-card";
+
+
+                        const icon =
+                            guild.icon ||
+                            "logo.png";
+
+
+                        card.innerHTML = `
+
+                            <img
+                                class="server-icon"
+                                src="${icon}"
+                                alt="${escapeHTML(guild.name)}"
+                                onerror="this.src='logo.png'"
+                            >
+
+                            <div class="server-info">
+
+                                <span class="server-name">
+                                    ${escapeHTML(guild.name)}
+                                </span>
+
+                                <div class="server-badges">
+
+                                    <span class="server-badge bot">
+                                        🤖 ShadowBot
+                                    </span>
+
+                                </div>
+
+                            </div>
+
+                            <button
+                                class="manage-server-btn"
+                                onclick="selectServer('${guild.id}')"
+                            >
+                                Manage
+                            </button>
+
+                        `;
+
+
+                        serverList.appendChild(
+                            card
+                        );
+
+                    }
+                );
+            }
+        }
+
 
         console.log(
             `✅ Loaded ${guilds.length} servers.`
         );
 
     } catch (error) {
+
         console.error(
             "❌ Guild loading failed:",
             error
@@ -237,48 +542,143 @@ async function loadGuilds() {
 
 
 // =========================
+// ESCAPE HTML
+// =========================
+
+function escapeHTML(
+    text
+) {
+
+    const div =
+        document.createElement(
+            "div"
+        );
+
+
+    div.textContent =
+        text || "";
+
+
+    return div.innerHTML;
+}
+
+
+// =========================
+// FILTER SERVERS
+// =========================
+
+function filterServers() {
+
+    const input =
+        document.getElementById(
+            "serverSearch"
+        );
+
+
+    const query =
+        input
+            ? input.value.toLowerCase().trim()
+            : "";
+
+
+    const cards =
+        document.querySelectorAll(
+            "#serverList .server-card"
+        );
+
+
+    cards.forEach(
+        card => {
+
+            const name =
+                card
+                    .querySelector(
+                        ".server-name"
+                    )
+                    ?.textContent
+                    .toLowerCase() || "";
+
+
+            card.style.display =
+                name.includes(query)
+                    ? ""
+                    : "none";
+        }
+    );
+}
+
+
+// =========================
 // SELECT SERVER
 // =========================
 
-async function selectServer(guildId) {
-    if (!guildId) return;
+async function selectServer(
+    guildId
+) {
+
+    if (!guildId)
+        return;
+
 
     try {
+
         const response =
             await apiFetch(
                 `/api/guild/${encodeURIComponent(guildId)}`
             );
 
+
         const data =
             await response.json();
 
+
         if (!response.ok) {
+
             showToast(
                 "❌ Could not select server."
             );
+
 
             console.error(
                 "Server selection failed:",
                 data
             );
 
+
             return;
         }
+
 
         console.log(
             "🏠 Selected server:",
             data
         );
 
+
+        const serverScreen =
+            document.getElementById(
+                "serverScreen"
+            );
+
+
+        if (serverScreen) {
+
+            serverScreen.style.display =
+                "none";
+        }
+
+
         showToast(
             `🏠 ${data.name || "Server"} selected`
         );
 
     } catch (error) {
+
         console.error(
             "❌ Server selection error:",
             error
         );
+
 
         showToast(
             "❌ Server selection failed."
@@ -292,6 +692,7 @@ async function selectServer(guildId) {
 // =========================
 
 function cleanURL() {
+
     window.history.replaceState(
         {},
         document.title,
@@ -305,22 +706,30 @@ function cleanURL() {
 // =========================
 
 async function logout() {
+
     try {
+
         await apiFetch(
             "/auth/logout",
             {
-                method: "POST"
+                method:
+                    "POST"
             }
         );
 
     } catch (error) {
+
         console.error(
             "❌ Logout request failed:",
             error
         );
 
     } finally {
-        console.log("👋 Logged out.");
+
+        console.log(
+            "👋 Logged out."
+        );
+
 
         window.location.href =
             window.location.pathname;
@@ -332,69 +741,138 @@ async function logout() {
 // PAGE NAVIGATION
 // =========================
 
-function showPage(pageId, button = null) {
+function showPage(
+    pageId,
+    button = null
+) {
+
     const pages =
-        document.querySelectorAll(".page");
+        document.querySelectorAll(
+            ".page"
+        );
+
 
     const navButtons =
-        document.querySelectorAll(".nav-btn");
+        document.querySelectorAll(
+            ".nav-btn"
+        );
 
-    pages.forEach(page => {
-        page.classList.remove("active");
-    });
 
-    navButtons.forEach(btn => {
-        btn.classList.remove("active");
-    });
+    pages.forEach(
+        page => {
+
+            page.classList.remove(
+                "active"
+            );
+
+        }
+    );
+
+
+    navButtons.forEach(
+        btn => {
+
+            btn.classList.remove(
+                "active"
+            );
+
+        }
+    );
+
 
     const page =
-        document.getElementById(pageId);
+        document.getElementById(
+            pageId
+        );
+
 
     if (page) {
-        page.classList.add("active");
+
+        page.classList.add(
+            "active"
+        );
     }
+
 
     if (button) {
-        button.classList.add("active");
-    } else {
-        navButtons.forEach(btn => {
-            const onclick =
-                btn.getAttribute("onclick") || "";
 
-            if (
-                onclick.includes(
-                    `showPage('${pageId}'`
-                ) ||
-                onclick.includes(
-                    `showPage("${pageId}"`
-                )
-            ) {
-                btn.classList.add("active");
+        button.classList.add(
+            "active"
+        );
+
+    } else {
+
+        navButtons.forEach(
+            btn => {
+
+                const onclick =
+                    btn.getAttribute(
+                        "onclick"
+                    ) || "";
+
+
+                if (
+                    onclick.includes(
+                        `showPage('${pageId}'`
+                    ) ||
+                    onclick.includes(
+                        `showPage("${pageId}"`
+                    )
+                ) {
+
+                    btn.classList.add(
+                        "active"
+                    );
+                }
+
             }
-        });
+        );
     }
 
+
     const pageTitle =
-        document.getElementById("pageTitle");
+        document.getElementById(
+            "pageTitle"
+        );
+
 
     const titles = {
-        overview: "Dashboard Overview",
-        server: "Server Management",
-        xp: "XP & Levels",
-        games: "Games",
-        moderation: "Moderation",
-        verification: "Verification",
-        polls: "Polls",
-        settings: "Settings"
+
+        overview:
+            "Dashboard Overview",
+
+        server:
+            "Server Management",
+
+        xp:
+            "XP & Levels",
+
+        games:
+            "Games",
+
+        moderation:
+            "Moderation",
+
+        verification:
+            "Verification",
+
+        polls:
+            "Polls",
+
+        settings:
+            "Settings"
     };
+
 
     if (
         pageTitle &&
         titles[pageId]
     ) {
+
         pageTitle.textContent =
             titles[pageId];
     }
+
 
     window.scrollTo({
         top: 0,
@@ -419,19 +897,28 @@ document.addEventListener(
         // =========================
 
         const buttons =
-            document.querySelectorAll("button");
-
-        buttons.forEach(button => {
-            button.addEventListener(
-                "click",
-                function(event) {
-                    createButtonRipple(
-                        this,
-                        event
-                    );
-                }
+            document.querySelectorAll(
+                "button"
             );
-        });
+
+
+        buttons.forEach(
+            button => {
+
+                button.addEventListener(
+                    "click",
+                    function(event) {
+
+                        createButtonRipple(
+                            this,
+                            event
+                        );
+
+                    }
+                );
+
+            }
+        );
 
 
         // =========================
@@ -443,19 +930,27 @@ document.addEventListener(
                 ".quick-actions button"
             );
 
-        quickButtons.forEach(button => {
-            button.addEventListener(
-                "click",
-                () => {
-                    const text =
-                        button.innerText.trim();
 
-                    showToast(
-                        `⚡ ${text} selected`
-                    );
-                }
-            );
-        });
+        quickButtons.forEach(
+            button => {
+
+                button.addEventListener(
+                    "click",
+                    () => {
+
+                        const text =
+                            button.innerText.trim();
+
+
+                        showToast(
+                            `⚡ ${text} selected`
+                        );
+
+                    }
+                );
+
+            }
+        );
 
 
         // =========================
@@ -467,22 +962,35 @@ document.addEventListener(
                 ".switch input"
             );
 
-        switches.forEach(toggle => {
-            toggle.addEventListener(
-                "change",
-                () => {
-                    if (toggle.checked) {
-                        showToast(
-                            "🟣 Feature enabled"
-                        );
-                    } else {
-                        showToast(
-                            "⚫ Feature disabled"
-                        );
+
+        switches.forEach(
+            toggle => {
+
+                toggle.addEventListener(
+                    "change",
+                    () => {
+
+                        if (
+                            toggle.checked
+                        ) {
+
+                            showToast(
+                                "🟣 Feature enabled"
+                            );
+
+                        } else {
+
+                            showToast(
+                                "⚫ Feature disabled"
+                            );
+
+                        }
+
                     }
-                }
-            );
-        });
+                );
+
+            }
+        );
 
 
         // =========================
@@ -494,52 +1002,70 @@ document.addEventListener(
                 ".stat-card, .setting-card, .game-panel"
             );
 
-        cards.forEach(card => {
 
-            card.addEventListener(
-                "mousemove",
-                event => {
+        cards.forEach(
+            card => {
 
-                    const rect =
-                        card.getBoundingClientRect();
+                card.addEventListener(
+                    "mousemove",
+                    event => {
 
-                    const x =
-                        event.clientX -
-                        rect.left;
+                        const rect =
+                            card.getBoundingClientRect();
 
-                    const y =
-                        event.clientY -
-                        rect.top;
 
-                    const rotateX =
-                        (
-                            y /
-                            rect.height -
-                            0.5
-                        ) * -3;
+                        const x =
+                            event.clientX -
+                            rect.left;
 
-                    const rotateY =
-                        (
-                            x /
-                            rect.width -
-                            0.5
-                        ) * 3;
 
-                    card.style.transform =
-                        `perspective(700px)
-                         rotateX(${rotateX}deg)
-                         rotateY(${rotateY}deg)
-                         translateY(-4px)`;
-                }
-            );
+                        const y =
+                            event.clientY -
+                            rect.top;
 
-            card.addEventListener(
-                "mouseleave",
-                () => {
-                    card.style.transform = "";
-                }
-            );
-        });
+
+                        const rotateX =
+                            (
+                                (
+                                    y /
+                                    rect.height
+                                ) -
+                                0.5
+                            ) * -3;
+
+
+                        const rotateY =
+                            (
+                                (
+                                    x /
+                                    rect.width
+                                ) -
+                                0.5
+                            ) * 3;
+
+
+                        card.style.transform =
+                            `perspective(700px)
+                             rotateX(${rotateX}deg)
+                             rotateY(${rotateY}deg)
+                             translateY(-4px)`;
+
+                    }
+                );
+
+
+                card.addEventListener(
+                    "mouseleave",
+                    () => {
+
+                        card.style.transform =
+                            "";
+
+                    }
+                );
+
+            }
+        );
 
 
         // =========================
@@ -547,7 +1073,10 @@ document.addEventListener(
         // =========================
 
         const hero =
-            document.querySelector(".hero");
+            document.querySelector(
+                ".hero"
+            );
+
 
         if (hero) {
 
@@ -558,34 +1087,45 @@ document.addEventListener(
                     const rect =
                         hero.getBoundingClientRect();
 
+
                     const x =
                         (
                             event.clientX -
                             rect.left
-                        ) / rect.width;
+                        ) /
+                        rect.width;
+
 
                     const y =
                         (
                             event.clientY -
                             rect.top
-                        ) / rect.height;
+                        ) /
+                        rect.height;
+
 
                     const moveX =
                         (x - 0.5) * 8;
 
+
                     const moveY =
                         (y - 0.5) * 8;
 
+
                     hero.style.backgroundPosition =
                         `${50 + moveX}% ${50 + moveY}%`;
+
                 }
             );
+
 
             hero.addEventListener(
                 "mouseleave",
                 () => {
+
                     hero.style.backgroundPosition =
                         "center";
+
                 }
             );
         }
@@ -600,6 +1140,7 @@ document.addEventListener(
                 ".online-badge"
             );
 
+
         if (online) {
 
             setInterval(
@@ -608,10 +1149,13 @@ document.addEventListener(
                     online.style.transform =
                         "scale(1.03)";
 
+
                     setTimeout(
                         () => {
+
                             online.style.transform =
                                 "scale(1)";
+
                         },
                         300
                     );
@@ -631,71 +1175,103 @@ document.addEventListener(
                 ".stat-card strong"
             );
 
-        statNumbers.forEach(number => {
 
-            const text =
-                number.textContent.trim();
+        statNumbers.forEach(
+            number => {
 
-            const match =
-                text.match(/^([\d,]+)$/);
+                const text =
+                    number.textContent.trim();
 
-            if (!match) return;
 
-            const target =
-                Number(
-                    match[1].replace(
-                        /,/g,
-                        ""
-                    )
-                );
-
-            if (!target) return;
-
-            number.textContent = "0";
-
-            const duration = 800;
-            const start = performance.now();
-
-            function animateCounter(time) {
-
-                const progress =
-                    Math.min(
-                        (
-                            time -
-                            start
-                        ) / duration,
-                        1
+                const match =
+                    text.match(
+                        /^([\d,]+)$/
                     );
 
-                const value =
-                    Math.floor(
-                        target *
-                        (
-                            1 -
-                            Math.pow(
-                                1 - progress,
-                                3
-                            )
+
+                if (!match)
+                    return;
+
+
+                const target =
+                    Number(
+                        match[1].replace(
+                            /,/g,
+                            ""
                         )
                     );
 
+
+                if (!target)
+                    return;
+
+
                 number.textContent =
-                    value.toLocaleString();
+                    "0";
 
-                if (progress < 1) {
-                    requestAnimationFrame(
-                        animateCounter
-                    );
-                } else {
+
+                const duration =
+                    800;
+
+
+                const start =
+                    performance.now();
+
+
+                function animateCounter(
+                    time
+                ) {
+
+                    const progress =
+                        Math.min(
+                            (
+                                time -
+                                start
+                            ) /
+                            duration,
+                            1
+                        );
+
+
+                    const value =
+                        Math.floor(
+                            target *
+                            (
+                                1 -
+                                Math.pow(
+                                    1 - progress,
+                                    3
+                                )
+                            )
+                        );
+
+
                     number.textContent =
-                        target.toLocaleString();
-                }
-            }
+                        value.toLocaleString();
 
-            requestAnimationFrame(
-                animateCounter
-            );
-        });
+
+                    if (
+                        progress <
+                        1
+                    ) {
+
+                        requestAnimationFrame(
+                            animateCounter
+                        );
+
+                    } else {
+
+                        number.textContent =
+                            target.toLocaleString();
+                    }
+                }
+
+
+                requestAnimationFrame(
+                    animateCounter
+                );
+            }
+        );
 
 
         // =========================
@@ -707,23 +1283,33 @@ document.addEventListener(
                 ".text-input, .number-input, select"
             );
 
-        inputs.forEach(input => {
 
-            input.addEventListener(
-                "focus",
-                () => {
-                    input.style.boxShadow =
-                        "0 0 20px rgba(139,92,246,0.15)";
-                }
-            );
+        inputs.forEach(
+            input => {
 
-            input.addEventListener(
-                "blur",
-                () => {
-                    input.style.boxShadow = "";
-                }
-            );
-        });
+                input.addEventListener(
+                    "focus",
+                    () => {
+
+                        input.style.boxShadow =
+                            "0 0 20px rgba(139,92,246,0.15)";
+
+                    }
+                );
+
+
+                input.addEventListener(
+                    "blur",
+                    () => {
+
+                        input.style.boxShadow =
+                            "";
+
+                    }
+                );
+
+            }
+        );
 
 
         // =========================
@@ -739,6 +1325,7 @@ document.addEventListener(
                         "#serverSelect, .server-select"
                     )
                 ) {
+
                     selectServer(
                         event.target.value
                     );
@@ -753,12 +1340,15 @@ document.addEventListener(
 
         setTimeout(
             () => {
+
                 document.body.classList.add(
                     "dashboard-loaded"
                 );
+
             },
             100
         );
+
 
         console.log(
             "🌑 ShadowDashboard loaded successfully."
@@ -775,28 +1365,43 @@ function createButtonRipple(
     element,
     event
 ) {
-    if (!element) return;
+
+    if (!element)
+        return;
+
 
     const rect =
         element.getBoundingClientRect();
 
+
     const ripple =
-        document.createElement("span");
+        document.createElement(
+            "span"
+        );
+
 
     ripple.className =
         "click-ripple";
 
+
     ripple.style.left =
         `${event.clientX - rect.left}px`;
+
 
     ripple.style.top =
         `${event.clientY - rect.top}px`;
 
-    element.appendChild(ripple);
+
+    element.appendChild(
+        ripple
+    );
+
 
     setTimeout(
         () => {
+
             ripple.remove();
+
         },
         600
     );
@@ -807,35 +1412,64 @@ function createButtonRipple(
 // TOAST
 // =========================
 
-function showToast(message) {
+function showToast(
+    message
+) {
 
     let toast =
-        document.querySelector(".toast");
+        document.querySelector(
+            ".toast"
+        );
+
 
     if (!toast) {
 
         toast =
-            document.createElement("div");
+            document.createElement(
+                "div"
+            );
 
-        toast.className = "toast";
 
-        document.body.appendChild(toast);
+        toast.className =
+            "toast";
+
+
+        document.body.appendChild(
+            toast
+        );
     }
 
-    toast.textContent = message;
 
-    toast.classList.remove("show");
+    toast.textContent =
+        message;
+
+
+    toast.classList.remove(
+        "show"
+    );
+
 
     void toast.offsetWidth;
 
-    toast.classList.add("show");
 
-    clearTimeout(toast.hideTimer);
+    toast.classList.add(
+        "show"
+    );
+
+
+    clearTimeout(
+        toast.hideTimer
+    );
+
 
     toast.hideTimer =
         setTimeout(
             () => {
-                toast.classList.remove("show");
+
+                toast.classList.remove(
+                    "show"
+                );
+
             },
             2500
         );
@@ -847,6 +1481,7 @@ function showToast(message) {
 // =========================
 
 function saveSettings() {
+
     showToast(
         "💾 Settings saved successfully!"
     );
@@ -864,14 +1499,20 @@ function createPoll() {
             "pollQuestion"
         );
 
+
     const message =
         document.getElementById(
             "pollMessage"
         );
 
-    if (!question) return;
 
-    if (!question.value.trim()) {
+    if (!question)
+        return;
+
+
+    if (
+        !question.value.trim()
+    ) {
 
         showToast(
             "⚠️ Enter a poll question first."
@@ -880,10 +1521,13 @@ function createPoll() {
         return;
     }
 
+
     if (message) {
+
         message.textContent =
             "🗳️ Poll created successfully!";
     }
+
 
     showToast(
         "🗳️ Poll created!"
@@ -902,13 +1546,18 @@ function changeTheme() {
             "themeSelect"
         );
 
-    if (!select) return;
+
+    if (!select)
+        return;
+
 
     const theme =
         select.value;
 
+
     document.body.dataset.theme =
         theme;
+
 
     showToast(
         `🎨 Theme changed to ${theme}`
