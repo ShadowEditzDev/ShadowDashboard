@@ -10,11 +10,8 @@ const BACKEND_URL =
 // =========================
 
 function loginWithDiscord() {
-
     console.log("🔐 Opening Discord OAuth...");
-
-    window.location.href =
-        BACKEND_URL + "/auth/discord";
+    window.location.href = BACKEND_URL + "/auth/discord";
 }
 
 
@@ -22,31 +19,17 @@ function loginWithDiscord() {
 // API REQUEST
 // =========================
 
-async function apiFetch(
-    endpoint,
-    options = {}
-) {
-
+async function apiFetch(endpoint, options = {}) {
     const headers = {
-
-        "Accept":
-            "application/json",
-
+        "Accept": "application/json",
         ...(options.headers || {})
     };
 
-    return fetch(
-        BACKEND_URL + endpoint,
-        {
-            ...options,
-
-            headers,
-
-            // IMPORTANT:
-            // Java backend uses shadow_session cookie
-            credentials: "include"
-        }
-    );
+    return fetch(BACKEND_URL + endpoint, {
+        ...options,
+        headers,
+        credentials: "include"
+    });
 }
 
 
@@ -55,229 +38,88 @@ async function apiFetch(
 // =========================
 
 async function checkDiscordLogin() {
-
     try {
-
-        const params =
-            new URLSearchParams(
-                window.location.search
-            );
-
-        const loginStatus =
-            params.get("login");
-
-
-        // =========================
-        // OAUTH FAILED
-        // =========================
+        const params = new URLSearchParams(window.location.search);
+        const loginStatus = params.get("login");
 
         if (
             loginStatus === "failed" ||
             loginStatus === "error" ||
             loginStatus === "cancelled"
         ) {
-
-            console.error(
-                "❌ Discord OAuth failed:",
-                loginStatus
-            );
-
+            console.error("❌ Discord OAuth failed:", loginStatus);
             cleanURL();
-
-            showToast(
-                "❌ Discord login failed."
-            );
-
+            showToast("❌ Discord login failed.");
             return;
         }
 
+        console.log("🔍 Checking Discord session...");
 
-        // =========================
-        // CHECK BACKEND SESSION
-        // =========================
-
-        console.log(
-            "🔍 Checking Discord session..."
-        );
-
-        const response =
-            await apiFetch(
-                "/api/me"
-            );
-
-
-        // =========================
-        // NOT LOGGED IN
-        // =========================
+        const response = await apiFetch("/api/me");
 
         if (!response.ok) {
-
             console.log(
                 "🔒 No valid dashboard session:",
                 response.status
             );
 
             cleanURL();
-
             return;
         }
 
+        const data = await response.json();
 
-        const data =
-            await response.json();
+        console.log("📡 Session response:", data);
 
-
-        console.log(
-            "📡 Session response:",
-            data
-        );
-
-
-        // =========================
-        // LOGGED IN
-        // =========================
-
-        if (
-            data.loggedIn &&
-            data.user
-        ) {
-
+        if (data.loggedIn && data.user) {
             console.log(
                 "✅ Logged in as:",
                 data.user.username
             );
 
-
-            // =========================
-            // HIDE LOGIN
-            // =========================
-
             const loginScreen =
-                document.getElementById(
-                    "loginScreen"
-                );
+                document.getElementById("loginScreen");
 
             if (loginScreen) {
-
-                loginScreen.style.display =
-                    "none";
+                loginScreen.style.display = "none";
             }
 
-
-            // =========================
-            // UPDATE USERNAME
-            // =========================
-
             const username =
-                data.user.username ||
                 data.user.global_name ||
+                data.user.username ||
                 "Discord User";
 
             const topUsername =
-                document.getElementById(
-                    "topUsername"
-                );
+                document.getElementById("topUsername");
 
             const dashboardUsername =
-                document.getElementById(
-                    "dashboardUsername"
-                );
+                document.getElementById("dashboardUsername");
 
             if (topUsername) {
-
-                topUsername.textContent =
-                    username;
+                topUsername.textContent = username;
             }
 
             if (dashboardUsername) {
-
-                dashboardUsername.textContent =
-                    username;
+                dashboardUsername.textContent = username;
             }
 
+            updateUserAvatar(data.user, username);
 
-            // =========================
-            // UPDATE AVATAR
-            // =========================
-
-            const userAvatar =
-                document.getElementById(
-                    "userAvatar"
-                );
-
-            if (
-                userAvatar &&
-                data.user.avatar
-            ) {
-
-                userAvatar.innerHTML = "";
-
-                const img =
-                    document.createElement(
-                        "img"
-                    );
-
-                img.src =
-                    data.user.avatar;
-
-                img.alt =
-                    username;
-
-                img.style.width =
-                    "100%";
-
-                img.style.height =
-                    "100%";
-
-                img.style.objectFit =
-                    "cover";
-
-                img.style.borderRadius =
-                    "inherit";
-
-                userAvatar.appendChild(
-                    img
-                );
+            if (loginStatus === "success") {
+                showToast(`👋 Welcome, ${username}!`);
             }
 
-
-            // =========================
-            // WELCOME TOAST
-            // =========================
-
-            if (
-                loginStatus === "success"
-            ) {
-
-                showToast(
-                    `👋 Welcome, ${username}!`
-                );
-            }
-
-
-            // =========================
-            // LOAD SERVERS
-            // =========================
-
-            loadGuilds();
-
-
-            // =========================
-            // CLEAN URL
-            // =========================
+            await loadGuilds();
 
             cleanURL();
-
             return;
         }
-
 
         console.log(
             "🔒 Backend says user is not logged in."
         );
 
     } catch (error) {
-
         console.error(
             "❌ Login check failed:",
             error
@@ -287,114 +129,105 @@ async function checkDiscordLogin() {
 
 
 // =========================
+// UPDATE USER AVATAR
+// =========================
+
+function updateUserAvatar(user, username) {
+    const userAvatar =
+        document.getElementById("userAvatar");
+
+    if (!userAvatar) return;
+
+    if (user.avatar) {
+        userAvatar.innerHTML = "";
+
+        const img =
+            document.createElement("img");
+
+        img.src = user.avatar;
+        img.alt = username;
+
+        img.style.width = "100%";
+        img.style.height = "100%";
+        img.style.objectFit = "cover";
+        img.style.borderRadius = "inherit";
+
+        img.onerror = () => {
+            userAvatar.textContent = "👤";
+        };
+
+        userAvatar.appendChild(img);
+    }
+}
+
+
+// =========================
 // LOAD DISCORD SERVERS
 // =========================
 
 async function loadGuilds() {
-
     try {
-
-        console.log(
-            "🏠 Loading Discord servers..."
-        );
+        console.log("🏠 Loading Discord servers...");
 
         const response =
-            await apiFetch(
-                "/api/guilds"
-            );
-
+            await apiFetch("/api/guilds");
 
         if (!response.ok) {
-
             console.log(
                 "❌ Failed to load guilds:",
                 response.status
             );
-
             return;
         }
 
-
         const data =
             await response.json();
-
 
         console.log(
             "🏠 Discord servers:",
             data
         );
 
-
         const guilds =
-            data.guilds || [];
-
-
-        // =========================
-        // SERVER SELECTOR
-        // =========================
+            Array.isArray(data.guilds)
+                ? data.guilds
+                : [];
 
         const selectors =
             document.querySelectorAll(
                 "#serverSelect, .server-select"
             );
 
+        selectors.forEach(select => {
+            if (!select) return;
 
-        selectors.forEach(
-            select => {
+            select.innerHTML = "";
 
-                if (!select)
-                    return;
+            const defaultOption =
+                document.createElement("option");
 
+            defaultOption.value = "";
+            defaultOption.textContent =
+                "Select a server";
 
-                select.innerHTML =
-                    "";
+            select.appendChild(defaultOption);
 
+            guilds.forEach(guild => {
+                const option =
+                    document.createElement("option");
 
-                const defaultOption =
-                    document.createElement(
-                        "option"
-                    );
+                option.value = guild.id;
+                option.textContent = guild.name;
 
-                defaultOption.value =
-                    "";
-
-                defaultOption.textContent =
-                    "Select a server";
-
-                select.appendChild(
-                    defaultOption
-                );
-
-
-                guilds.forEach(
-                    guild => {
-
-                        const option =
-                            document.createElement(
-                                "option"
-                            );
-
-                        option.value =
-                            guild.id;
-
-                        option.textContent =
-                            guild.name;
-
-                        select.appendChild(
-                            option
-                        );
-                    }
-                );
-            }
-        );
-
+                select.appendChild(option);
+            });
+        });
 
         console.log(
             `✅ Loaded ${guilds.length} servers.`
         );
 
     } catch (error) {
-
         console.error(
             "❌ Guild loading failed:",
             error
@@ -407,28 +240,19 @@ async function loadGuilds() {
 // SELECT SERVER
 // =========================
 
-async function selectServer(
-    guildId
-) {
-
-    if (!guildId)
-        return;
-
+async function selectServer(guildId) {
+    if (!guildId) return;
 
     try {
-
         const response =
             await apiFetch(
                 `/api/guild/${encodeURIComponent(guildId)}`
             );
 
-
         const data =
             await response.json();
 
-
         if (!response.ok) {
-
             showToast(
                 "❌ Could not select server."
             );
@@ -441,19 +265,16 @@ async function selectServer(
             return;
         }
 
-
         console.log(
             "🏠 Selected server:",
             data
         );
 
-
         showToast(
-            `🏠 ${data.name} selected`
+            `🏠 ${data.name || "Server"} selected`
         );
 
     } catch (error) {
-
         console.error(
             "❌ Server selection error:",
             error
@@ -471,7 +292,6 @@ async function selectServer(
 // =========================
 
 function cleanURL() {
-
     window.history.replaceState(
         {},
         document.title,
@@ -485,29 +305,22 @@ function cleanURL() {
 // =========================
 
 async function logout() {
-
     try {
-
         await apiFetch(
             "/auth/logout",
             {
-                method:
-                    "POST"
+                method: "POST"
             }
         );
 
     } catch (error) {
-
         console.error(
             "❌ Logout request failed:",
             error
         );
 
     } finally {
-
-        console.log(
-            "👋 Logged out."
-        );
+        console.log("👋 Logged out.");
 
         window.location.href =
             window.location.pathname;
@@ -519,137 +332,69 @@ async function logout() {
 // PAGE NAVIGATION
 // =========================
 
-function showPage(
-    pageId,
-    button = null
-) {
-
+function showPage(pageId, button = null) {
     const pages =
-        document.querySelectorAll(
-            ".page"
-        );
+        document.querySelectorAll(".page");
 
     const navButtons =
-        document.querySelectorAll(
-            ".nav-btn"
-        );
+        document.querySelectorAll(".nav-btn");
 
+    pages.forEach(page => {
+        page.classList.remove("active");
+    });
 
-    pages.forEach(
-        page => {
-
-            page.classList.remove(
-                "active"
-            );
-
-        }
-    );
-
-
-    navButtons.forEach(
-        btn => {
-
-            btn.classList.remove(
-                "active"
-            );
-
-        }
-    );
-
+    navButtons.forEach(btn => {
+        btn.classList.remove("active");
+    });
 
     const page =
-        document.getElementById(
-            pageId
-        );
-
+        document.getElementById(pageId);
 
     if (page) {
-
-        page.classList.add(
-            "active"
-        );
+        page.classList.add("active");
     }
-
 
     if (button) {
-
-        button.classList.add(
-            "active"
-        );
-
+        button.classList.add("active");
     } else {
+        navButtons.forEach(btn => {
+            const onclick =
+                btn.getAttribute("onclick") || "";
 
-        navButtons.forEach(
-            btn => {
-
-                const onclick =
-                    btn.getAttribute(
-                        "onclick"
-                    ) || "";
-
-
-                if (
-                    onclick.includes(
-                        `showPage('${pageId}'`
-                    ) ||
-                    onclick.includes(
-                        `showPage("${pageId}"`
-                    )
-                ) {
-
-                    btn.classList.add(
-                        "active"
-                    );
-                }
-
+            if (
+                onclick.includes(
+                    `showPage('${pageId}'`
+                ) ||
+                onclick.includes(
+                    `showPage("${pageId}"`
+                )
+            ) {
+                btn.classList.add("active");
             }
-        );
+        });
     }
 
-
     const pageTitle =
-        document.getElementById(
-            "pageTitle"
-        );
-
+        document.getElementById("pageTitle");
 
     const titles = {
-
-        overview:
-            "Dashboard Overview",
-
-        server:
-            "Server Management",
-
-        xp:
-            "XP & Levels",
-
-        games:
-            "Games",
-
-        moderation:
-            "Moderation",
-
-        verification:
-            "Verification",
-
-        polls:
-            "Polls",
-
-        settings:
-            "Settings"
+        overview: "Dashboard Overview",
+        server: "Server Management",
+        xp: "XP & Levels",
+        games: "Games",
+        moderation: "Moderation",
+        verification: "Verification",
+        polls: "Polls",
+        settings: "Settings"
     };
-
 
     if (
         pageTitle &&
         titles[pageId]
     ) {
-
         pageTitle.textContent =
             titles[pageId];
     }
-
 
     window.scrollTo({
         top: 0,
@@ -674,28 +419,19 @@ document.addEventListener(
         // =========================
 
         const buttons =
-            document.querySelectorAll(
-                "button"
+            document.querySelectorAll("button");
+
+        buttons.forEach(button => {
+            button.addEventListener(
+                "click",
+                function(event) {
+                    createButtonRipple(
+                        this,
+                        event
+                    );
+                }
             );
-
-
-        buttons.forEach(
-            button => {
-
-                button.addEventListener(
-                    "click",
-                    function(event) {
-
-                        createButtonRipple(
-                            this,
-                            event
-                        );
-
-                    }
-                );
-
-            }
-        );
+        });
 
 
         // =========================
@@ -707,27 +443,19 @@ document.addEventListener(
                 ".quick-actions button"
             );
 
+        quickButtons.forEach(button => {
+            button.addEventListener(
+                "click",
+                () => {
+                    const text =
+                        button.innerText.trim();
 
-        quickButtons.forEach(
-            button => {
-
-                button.addEventListener(
-                    "click",
-                    () => {
-
-                        const text =
-                            button.innerText.trim();
-
-
-                        showToast(
-                            `⚡ ${text} selected`
-                        );
-
-                    }
-                );
-
-            }
-        );
+                    showToast(
+                        `⚡ ${text} selected`
+                    );
+                }
+            );
+        });
 
 
         // =========================
@@ -739,35 +467,22 @@ document.addEventListener(
                 ".switch input"
             );
 
-
-        switches.forEach(
-            toggle => {
-
-                toggle.addEventListener(
-                    "change",
-                    () => {
-
-                        if (
-                            toggle.checked
-                        ) {
-
-                            showToast(
-                                "🟣 Feature enabled"
-                            );
-
-                        } else {
-
-                            showToast(
-                                "⚫ Feature disabled"
-                            );
-
-                        }
-
+        switches.forEach(toggle => {
+            toggle.addEventListener(
+                "change",
+                () => {
+                    if (toggle.checked) {
+                        showToast(
+                            "🟣 Feature enabled"
+                        );
+                    } else {
+                        showToast(
+                            "⚫ Feature disabled"
+                        );
                     }
-                );
-
-            }
-        );
+                }
+            );
+        });
 
 
         // =========================
@@ -779,70 +494,52 @@ document.addEventListener(
                 ".stat-card, .setting-card, .game-panel"
             );
 
+        cards.forEach(card => {
 
-        cards.forEach(
-            card => {
+            card.addEventListener(
+                "mousemove",
+                event => {
 
-                card.addEventListener(
-                    "mousemove",
-                    event => {
+                    const rect =
+                        card.getBoundingClientRect();
 
-                        const rect =
-                            card.getBoundingClientRect();
+                    const x =
+                        event.clientX -
+                        rect.left;
 
+                    const y =
+                        event.clientY -
+                        rect.top;
 
-                        const x =
-                            event.clientX -
-                            rect.left;
+                    const rotateX =
+                        (
+                            y /
+                            rect.height -
+                            0.5
+                        ) * -3;
 
+                    const rotateY =
+                        (
+                            x /
+                            rect.width -
+                            0.5
+                        ) * 3;
 
-                        const y =
-                            event.clientY -
-                            rect.top;
+                    card.style.transform =
+                        `perspective(700px)
+                         rotateX(${rotateX}deg)
+                         rotateY(${rotateY}deg)
+                         translateY(-4px)`;
+                }
+            );
 
-
-                        const rotateX =
-                            (
-                                (
-                                    y /
-                                    rect.height
-                                ) -
-                                0.5
-                            ) * -3;
-
-
-                        const rotateY =
-                            (
-                                (
-                                    x /
-                                    rect.width
-                                ) -
-                                0.5
-                            ) * 3;
-
-
-                        card.style.transform =
-                            `perspective(700px)
-                             rotateX(${rotateX}deg)
-                             rotateY(${rotateY}deg)
-                             translateY(-4px)`;
-
-                    }
-                );
-
-
-                card.addEventListener(
-                    "mouseleave",
-                    () => {
-
-                        card.style.transform =
-                            "";
-
-                    }
-                );
-
-            }
-        );
+            card.addEventListener(
+                "mouseleave",
+                () => {
+                    card.style.transform = "";
+                }
+            );
+        });
 
 
         // =========================
@@ -850,10 +547,7 @@ document.addEventListener(
         // =========================
 
         const hero =
-            document.querySelector(
-                ".hero"
-            );
-
+            document.querySelector(".hero");
 
         if (hero) {
 
@@ -864,45 +558,34 @@ document.addEventListener(
                     const rect =
                         hero.getBoundingClientRect();
 
-
                     const x =
                         (
                             event.clientX -
                             rect.left
-                        ) /
-                        rect.width;
-
+                        ) / rect.width;
 
                     const y =
                         (
                             event.clientY -
                             rect.top
-                        ) /
-                        rect.height;
-
+                        ) / rect.height;
 
                     const moveX =
                         (x - 0.5) * 8;
 
-
                     const moveY =
                         (y - 0.5) * 8;
 
-
                     hero.style.backgroundPosition =
                         `${50 + moveX}% ${50 + moveY}%`;
-
                 }
             );
-
 
             hero.addEventListener(
                 "mouseleave",
                 () => {
-
                     hero.style.backgroundPosition =
                         "center";
-
                 }
             );
         }
@@ -917,7 +600,6 @@ document.addEventListener(
                 ".online-badge"
             );
 
-
         if (online) {
 
             setInterval(
@@ -926,13 +608,10 @@ document.addEventListener(
                     online.style.transform =
                         "scale(1.03)";
 
-
                     setTimeout(
                         () => {
-
                             online.style.transform =
                                 "scale(1)";
-
                         },
                         300
                     );
@@ -952,103 +631,71 @@ document.addEventListener(
                 ".stat-card strong"
             );
 
+        statNumbers.forEach(number => {
 
-        statNumbers.forEach(
-            number => {
+            const text =
+                number.textContent.trim();
 
-                const text =
-                    number.textContent.trim();
+            const match =
+                text.match(/^([\d,]+)$/);
 
+            if (!match) return;
 
-                const match =
-                    text.match(
-                        /^([\d,]+)$/
+            const target =
+                Number(
+                    match[1].replace(
+                        /,/g,
+                        ""
+                    )
+                );
+
+            if (!target) return;
+
+            number.textContent = "0";
+
+            const duration = 800;
+            const start = performance.now();
+
+            function animateCounter(time) {
+
+                const progress =
+                    Math.min(
+                        (
+                            time -
+                            start
+                        ) / duration,
+                        1
                     );
 
-
-                if (!match)
-                    return;
-
-
-                const target =
-                    Number(
-                        match[1].replace(
-                            /,/g,
-                            ""
+                const value =
+                    Math.floor(
+                        target *
+                        (
+                            1 -
+                            Math.pow(
+                                1 - progress,
+                                3
+                            )
                         )
                     );
 
-
-                if (!target)
-                    return;
-
-
                 number.textContent =
-                    "0";
+                    value.toLocaleString();
 
-
-                const duration =
-                    800;
-
-
-                const start =
-                    performance.now();
-
-
-                function animateCounter(
-                    time
-                ) {
-
-                    const progress =
-                        Math.min(
-                            (
-                                time -
-                                start
-                            ) /
-                            duration,
-                            1
-                        );
-
-
-                    const value =
-                        Math.floor(
-                            target *
-                            (
-                                1 -
-                                Math.pow(
-                                    1 - progress,
-                                    3
-                                )
-                            )
-                        );
-
-
+                if (progress < 1) {
+                    requestAnimationFrame(
+                        animateCounter
+                    );
+                } else {
                     number.textContent =
-                        value.toLocaleString();
-
-
-                    if (
-                        progress <
-                        1
-                    ) {
-
-                        requestAnimationFrame(
-                            animateCounter
-                        );
-
-                    } else {
-
-                        number.textContent =
-                            target.toLocaleString();
-                    }
+                        target.toLocaleString();
                 }
-
-
-                requestAnimationFrame(
-                    animateCounter
-                );
             }
-        );
+
+            requestAnimationFrame(
+                animateCounter
+            );
+        });
 
 
         // =========================
@@ -1060,33 +707,23 @@ document.addEventListener(
                 ".text-input, .number-input, select"
             );
 
+        inputs.forEach(input => {
 
-        inputs.forEach(
-            input => {
+            input.addEventListener(
+                "focus",
+                () => {
+                    input.style.boxShadow =
+                        "0 0 20px rgba(139,92,246,0.15)";
+                }
+            );
 
-                input.addEventListener(
-                    "focus",
-                    () => {
-
-                        input.style.boxShadow =
-                            "0 0 20px rgba(139,92,246,0.15)";
-
-                    }
-                );
-
-
-                input.addEventListener(
-                    "blur",
-                    () => {
-
-                        input.style.boxShadow =
-                            "";
-
-                    }
-                );
-
-            }
-        );
+            input.addEventListener(
+                "blur",
+                () => {
+                    input.style.boxShadow = "";
+                }
+            );
+        });
 
 
         // =========================
@@ -1102,7 +739,6 @@ document.addEventListener(
                         "#serverSelect, .server-select"
                     )
                 ) {
-
                     selectServer(
                         event.target.value
                     );
@@ -1117,15 +753,12 @@ document.addEventListener(
 
         setTimeout(
             () => {
-
                 document.body.classList.add(
                     "dashboard-loaded"
                 );
-
             },
             100
         );
-
 
         console.log(
             "🌑 ShadowDashboard loaded successfully."
@@ -1142,43 +775,28 @@ function createButtonRipple(
     element,
     event
 ) {
-
-    if (!element)
-        return;
-
+    if (!element) return;
 
     const rect =
         element.getBoundingClientRect();
 
-
     const ripple =
-        document.createElement(
-            "span"
-        );
-
+        document.createElement("span");
 
     ripple.className =
         "click-ripple";
 
-
     ripple.style.left =
         `${event.clientX - rect.left}px`;
-
 
     ripple.style.top =
         `${event.clientY - rect.top}px`;
 
-
-    element.appendChild(
-        ripple
-    );
-
+    element.appendChild(ripple);
 
     setTimeout(
         () => {
-
             ripple.remove();
-
         },
         600
     );
@@ -1189,64 +807,35 @@ function createButtonRipple(
 // TOAST
 // =========================
 
-function showToast(
-    message
-) {
+function showToast(message) {
 
     let toast =
-        document.querySelector(
-            ".toast"
-        );
-
+        document.querySelector(".toast");
 
     if (!toast) {
 
         toast =
-            document.createElement(
-                "div"
-            );
+            document.createElement("div");
 
+        toast.className = "toast";
 
-        toast.className =
-            "toast";
-
-
-        document.body.appendChild(
-            toast
-        );
+        document.body.appendChild(toast);
     }
 
+    toast.textContent = message;
 
-    toast.textContent =
-        message;
-
-
-    toast.classList.remove(
-        "show"
-    );
-
+    toast.classList.remove("show");
 
     void toast.offsetWidth;
 
+    toast.classList.add("show");
 
-    toast.classList.add(
-        "show"
-    );
-
-
-    clearTimeout(
-        toast.hideTimer
-    );
-
+    clearTimeout(toast.hideTimer);
 
     toast.hideTimer =
         setTimeout(
             () => {
-
-                toast.classList.remove(
-                    "show"
-                );
-
+                toast.classList.remove("show");
             },
             2500
         );
@@ -1258,7 +847,6 @@ function showToast(
 // =========================
 
 function saveSettings() {
-
     showToast(
         "💾 Settings saved successfully!"
     );
@@ -1276,20 +864,14 @@ function createPoll() {
             "pollQuestion"
         );
 
-
     const message =
         document.getElementById(
             "pollMessage"
         );
 
+    if (!question) return;
 
-    if (!question)
-        return;
-
-
-    if (
-        !question.value.trim()
-    ) {
+    if (!question.value.trim()) {
 
         showToast(
             "⚠️ Enter a poll question first."
@@ -1298,13 +880,10 @@ function createPoll() {
         return;
     }
 
-
     if (message) {
-
         message.textContent =
             "🗳️ Poll created successfully!";
     }
-
 
     showToast(
         "🗳️ Poll created!"
@@ -1323,18 +902,13 @@ function changeTheme() {
             "themeSelect"
         );
 
-
-    if (!select)
-        return;
-
+    if (!select) return;
 
     const theme =
         select.value;
 
-
     document.body.dataset.theme =
         theme;
-
 
     showToast(
         `🎨 Theme changed to ${theme}`
