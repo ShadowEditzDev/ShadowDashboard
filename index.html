@@ -27,20 +27,21 @@
           content="Manage your Discord server, XP system, games, moderation, verification and polls.">
     <meta property="og:url"
           content="https://shadoweditzdev.github.io/ShadowDashboard/">
-    <meta property="og:site_name" content="𝑆𝘩𝑎𝘥𝘰𝘸 • 影-Bot">
+    <meta property="og:site_name" content="𝑆𝘩𝑎𝘥𝑜𝘸 • 影-Bot">
     <meta property="og:image"
           content="https://shadoweditzdev.github.io/ShadowDashboard/banner.png">
 
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="𝑆𝘩𝑎𝘥𝘰𝘸 • 影-Bot | Discord Dashboard">
+    <meta name="twitter:title" content="𝑆𝘩𝑎𝘥𝑜𝘸 • 影-Bot | Discord Dashboard">
     <meta name="twitter:description"
-          content="The official 𝑆𝘩𝑎𝘥𝘰𝘸 • 影-Bot Discord dashboard.">
+          content="The official 𝑆𝘩𝑎𝘥𝑜𝘸 • 影-Bot Discord dashboard.">
     <meta name="twitter:image"
           content="https://shadoweditzdev.github.io/ShadowDashboard/banner.png">
 
     <link rel="stylesheet" href="style.css">
 
     <style>
+
         #serverScreen {
             position: fixed;
             inset: 0;
@@ -50,26 +51,54 @@
             justify-content: center;
             padding: 60px 25px;
             overflow-y: auto;
+
             background:
-                radial-gradient(circle at 50% 15%, rgba(139,92,246,.15), transparent 35%),
-                radial-gradient(circle at 10% 90%, rgba(88,101,242,.08), transparent 30%),
+                radial-gradient(
+                    circle at 50% 15%,
+                    rgba(139,92,246,.15),
+                    transparent 35%
+                ),
+                radial-gradient(
+                    circle at 10% 90%,
+                    rgba(88,101,242,.08),
+                    transparent 30%
+                ),
                 #08080d;
         }
 
         .server-select-card {
             width: min(900px, 100%);
-            background: linear-gradient(145deg, rgba(23,23,32,.98), rgba(11,11,17,.98));
+
+            background:
+                linear-gradient(
+                    145deg,
+                    rgba(23,23,32,.98),
+                    rgba(11,11,17,.98)
+                );
+
             border: 1px solid rgba(139,92,246,.18);
             border-radius: 24px;
             padding: 30px;
-            box-shadow: 0 30px 100px rgba(0,0,0,.65), 0 0 60px rgba(139,92,246,.08);
+
+            box-shadow:
+                0 30px 100px rgba(0,0,0,.65),
+                0 0 60px rgba(139,92,246,.08);
+
             backdrop-filter: blur(20px);
+
             animation: serverCardIn .5s ease;
         }
 
         @keyframes serverCardIn {
-            from { opacity: 0; transform: translateY(25px) scale(.98); }
-            to { opacity: 1; transform: translateY(0) scale(1); }
+            from {
+                opacity: 0;
+                transform: translateY(25px) scale(.98);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
         }
 
         .server-heading {
@@ -85,7 +114,9 @@
             object-fit: cover;
             border-radius: 18px;
             border: 1px solid rgba(255,255,255,.1);
-            box-shadow: 0 0 30px rgba(139,92,246,.2);
+
+            box-shadow:
+                0 0 30px rgba(139,92,246,.2);
         }
 
         .server-heading h1 {
@@ -124,7 +155,9 @@
 
         .server-search input:focus {
             border-color: rgba(139,92,246,.55);
-            box-shadow: 0 0 0 3px rgba(139,92,246,.08);
+
+            box-shadow:
+                0 0 0 3px rgba(139,92,246,.08);
         }
 
         .server-search-icon {
@@ -150,15 +183,32 @@
             padding: 15px;
             border-radius: 17px;
             border: 1px solid rgba(255,255,255,.07);
-            background: linear-gradient(145deg, rgba(255,255,255,.045), rgba(255,255,255,.018));
-            transition: transform .2s ease, border-color .2s ease, background .2s ease;
+
+            background:
+                linear-gradient(
+                    145deg,
+                    rgba(255,255,255,.045),
+                    rgba(255,255,255,.018)
+                );
+
+            transition:
+                transform .2s ease,
+                border-color .2s ease,
+                background .2s ease;
+
             overflow: hidden;
         }
 
         .server-card:hover {
             transform: translateY(-2px);
             border-color: rgba(139,92,246,.4);
-            background: linear-gradient(145deg, rgba(139,92,246,.09), rgba(255,255,255,.025));
+
+            background:
+                linear-gradient(
+                    145deg,
+                    rgba(139,92,246,.09),
+                    rgba(255,255,255,.025)
+                );
         }
 
         .server-icon {
@@ -169,7 +219,9 @@
             object-fit: cover;
             background: #18181f;
             border: 1px solid rgba(255,255,255,.08);
-            box-shadow: 0 5px 20px rgba(0,0,0,.25);
+
+            box-shadow:
+                0 5px 20px rgba(0,0,0,.25);
         }
 
         .server-info {
@@ -235,19 +287,30 @@
             border: 0;
             border-radius: 10px;
             padding: 10px 14px;
-            background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #8b5cf6,
+                    #6d28d9
+                );
+
             color: white;
             font-size: 12px;
             font-weight: 700;
             cursor: pointer;
             transition: .2s ease;
-            box-shadow: 0 6px 20px rgba(139,92,246,.15);
+
+            box-shadow:
+                0 6px 20px rgba(139,92,246,.15);
         }
 
         .manage-server-btn:hover {
             transform: translateY(-2px);
             filter: brightness(1.12);
-            box-shadow: 0 8px 25px rgba(139,92,246,.25);
+
+            box-shadow:
+                0 8px 25px rgba(139,92,246,.25);
         }
 
         .manage-server-btn:active {
@@ -284,9 +347,18 @@
             align-items: center;
             justify-content: center;
             overflow: hidden;
+
             background:
-                radial-gradient(circle at 50% 45%, rgba(139,92,246,.14), transparent 28%),
-                radial-gradient(circle at 20% 20%, rgba(109,61,240,.08), transparent 25%),
+                radial-gradient(
+                    circle at 50% 45%,
+                    rgba(139,92,246,.14),
+                    transparent 28%
+                ),
+                radial-gradient(
+                    circle at 20% 20%,
+                    rgba(109,61,240,.08),
+                    transparent 25%
+                ),
                 #08080d;
         }
 
@@ -311,9 +383,17 @@
         }
 
         @keyframes loginOrb {
-            from { transform: rotate(0deg) scale(1); }
-            50% { transform: rotate(180deg) scale(1.08); }
-            to { transform: rotate(360deg) scale(1); }
+            from {
+                transform: rotate(0deg) scale(1);
+            }
+
+            50% {
+                transform: rotate(180deg) scale(1.08);
+            }
+
+            to {
+                transform: rotate(360deg) scale(1);
+            }
         }
 
         .login-card {
@@ -323,16 +403,36 @@
             padding: 42px 34px;
             text-align: center;
             border-radius: 24px;
-            background: linear-gradient(145deg, rgba(24,24,34,.96), rgba(13,13,20,.96));
+
+            background:
+                linear-gradient(
+                    145deg,
+                    rgba(24,24,34,.96),
+                    rgba(13,13,20,.96)
+                );
+
             border: 1px solid rgba(139,92,246,.18);
-            box-shadow: 0 30px 100px rgba(0,0,0,.65), 0 0 70px rgba(139,92,246,.08);
+
+            box-shadow:
+                0 30px 100px rgba(0,0,0,.65),
+                0 0 70px rgba(139,92,246,.08);
+
             backdrop-filter: blur(20px);
-            animation: loginCardIn .7s cubic-bezier(.2,.8,.2,1);
+
+            animation:
+                loginCardIn .7s cubic-bezier(.2,.8,.2,1);
         }
 
         @keyframes loginCardIn {
-            from { opacity: 0; transform: translateY(30px) scale(.96); }
-            to { opacity: 1; transform: translateY(0) scale(1); }
+            from {
+                opacity: 0;
+                transform: translateY(30px) scale(.96);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
         }
 
         .login-logo {
@@ -344,7 +444,9 @@
             border-radius: 25px;
             margin-bottom: 20px;
             border: 1px solid rgba(255,255,255,.1);
-            box-shadow: 0 0 45px rgba(139,92,246,.25);
+
+            box-shadow:
+                0 0 45px rgba(139,92,246,.25);
         }
 
         .login-card h1 {
@@ -371,18 +473,31 @@
             border: 1px solid rgba(255,255,255,.1);
             border-radius: 12px;
             padding: 14px 18px;
-            background: linear-gradient(135deg, #5865f2, #4752c4);
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #5865f2,
+                    #4752c4
+                );
+
             color: white;
             font-size: 15px;
             font-weight: 700;
             cursor: pointer;
-            transition: transform .25s ease, filter .25s ease, box-shadow .25s ease;
+
+            transition:
+                transform .25s ease,
+                filter .25s ease,
+                box-shadow .25s ease;
         }
 
         .discord-login-btn:hover {
             transform: translateY(-3px);
             filter: brightness(1.1);
-            box-shadow: 0 15px 40px rgba(88,101,242,.3);
+
+            box-shadow:
+                0 15px 40px rgba(88,101,242,.3);
         }
 
         .login-small {
@@ -395,6 +510,7 @@
         }
 
         @media (max-width: 700px) {
+
             #serverScreen {
                 padding: 25px 15px;
             }
@@ -413,6 +529,7 @@
         }
 
         @media (max-width: 430px) {
+
             .server-card {
                 padding: 12px;
             }
@@ -426,12 +543,16 @@
                 padding: 9px 10px;
             }
         }
+
     </style>
 </head>
 
 <body>
 
+<!-- LOGIN -->
+
 <div id="loginScreen">
+
     <div class="login-card">
 
         <img
@@ -440,7 +561,9 @@
             alt="ShadowBot Logo"
         >
 
-        <h1>𝑆𝘩𝑎𝘥𝑜𝘸 • 影-Bot</h1>
+        <h1>
+            𝑆𝘩𝑎𝘥𝑜𝘸 • 影-Bot
+        </h1>
 
         <p>
             Connect your Discord account to access
@@ -459,7 +582,11 @@
         </span>
 
     </div>
+
 </div>
+
+
+<!-- SERVER SELECTOR -->
 
 <div id="serverScreen">
 
@@ -474,7 +601,9 @@
 
             <div>
 
-                <h1>Select a Server</h1>
+                <h1>
+                    Select a Server
+                </h1>
 
                 <p>
                     Choose a server to manage with ShadowBot.
@@ -486,7 +615,9 @@
 
         <div class="server-search">
 
-            <span class="server-search-icon">🔍</span>
+            <span class="server-search-icon">
+                🔍
+            </span>
 
             <input
                 type="text"
@@ -504,7 +635,11 @@
 
 </div>
 
+
 <div class="dashboard-loader"></div>
+
+
+<!-- SIDEBAR -->
 
 <aside class="sidebar">
 
@@ -521,57 +656,79 @@
 
         <div>
 
-            <h1>𝑆𝘩𝑎𝘥𝑜𝘸 • 影-Bot</h1>
+            <h1>
+                𝑆𝘩𝑎𝘥𝑜𝘸 • 影-Bot
+            </h1>
 
-            <span>Control Panel</span>
+            <span>
+                Control Panel
+            </span>
 
         </div>
 
     </div>
 
+
     <nav>
 
-        <button class="nav-btn active"
-                onclick="showPage('overview', this)">
+        <button
+            class="nav-btn active"
+            onclick="showPage('overview', this)"
+        >
             🏠 <span>Overview</span>
         </button>
 
-        <button class="nav-btn"
-                onclick="showPage('server', this)">
+        <button
+            class="nav-btn"
+            onclick="showPage('server', this)"
+        >
             🛡️ <span>Server</span>
         </button>
 
-        <button class="nav-btn"
-                onclick="showPage('xp', this)">
+        <button
+            class="nav-btn"
+            onclick="showPage('xp', this)"
+        >
             ⭐ <span>XP & Levels</span>
         </button>
 
-        <button class="nav-btn"
-                onclick="showPage('games', this)">
+        <button
+            class="nav-btn"
+            onclick="showPage('games', this)"
+        >
             🎮 <span>Games</span>
         </button>
 
-        <button class="nav-btn"
-                onclick="showPage('moderation', this)">
+        <button
+            class="nav-btn"
+            onclick="showPage('moderation', this)"
+        >
             🔨 <span>Moderation</span>
         </button>
 
-        <button class="nav-btn"
-                onclick="showPage('verification', this)">
+        <button
+            class="nav-btn"
+            onclick="showPage('verification', this)"
+        >
             🔐 <span>Verification</span>
         </button>
 
-        <button class="nav-btn"
-                onclick="showPage('polls', this)">
+        <button
+            class="nav-btn"
+            onclick="showPage('polls', this)"
+        >
             🗳️ <span>Polls</span>
         </button>
 
-        <button class="nav-btn"
-                onclick="showPage('settings', this)">
+        <button
+            class="nav-btn"
+            onclick="showPage('settings', this)"
+        >
             ⚙️ <span>Settings</span>
         </button>
 
     </nav>
+
 
     <div class="sidebar-bottom">
 
@@ -587,7 +744,9 @@
 
             <div>
 
-                <strong>𝑆𝘩𝑎𝘥𝘰𝘸 • 影-Bot</strong>
+                <strong>
+                    𝑆𝘩𝑎𝘥𝑜𝘸 • 影-Bot
+                </strong>
 
                 <small id="bot-status">
                     ONLINE
@@ -601,7 +760,13 @@
 
 </aside>
 
+
+<!-- MAIN -->
+
 <main class="main">
+
+
+    <!-- TOPBAR -->
 
     <header class="topbar">
 
@@ -616,6 +781,7 @@
             </h2>
 
         </div>
+
 
         <div class="user-area">
 
@@ -642,7 +808,13 @@
 
     </header>
 
-    <section id="overview" class="page active">
+
+    <!-- OVERVIEW -->
+
+    <section
+        id="overview"
+        class="page active"
+    >
 
         <div class="hero">
 
@@ -676,6 +848,7 @@
 
             </div>
 
+
             <div class="hero-symbol">
 
                 <img
@@ -687,65 +860,97 @@
 
         </div>
 
+
+        <!-- REAL STATS -->
+
         <div class="stats-grid">
 
+            <!-- MEMBERS -->
+
             <div class="stat-card">
 
-                <div class="stat-icon">👥</div>
+                <div class="stat-icon">
+                    👥
+                </div>
 
                 <div>
 
-                    <span>Members</span>
+                    <span>
+                        Members
+                    </span>
 
                     <strong id="memberCount">
-                        Loading...
+                        0
                     </strong>
 
                 </div>
 
             </div>
 
+
+            <!-- TOTAL XP -->
+
             <div class="stat-card">
 
-                <div class="stat-icon">⭐</div>
+                <div class="stat-icon">
+                    ⭐
+                </div>
 
                 <div>
 
-                    <span>Total XP</span>
+                    <span>
+                        Total XP
+                    </span>
 
                     <strong id="xpCount">
-                        84,520
+                        0
                     </strong>
 
                 </div>
 
             </div>
 
+
+            <!-- GAMES PLAYED -->
+
             <div class="stat-card">
 
-                <div class="stat-icon">🎮</div>
+                <div class="stat-icon">
+                    🎮
+                </div>
 
                 <div>
 
-                    <span>Games Played</span>
+                    <span>
+                        Games Played
+                    </span>
 
                     <strong id="gameCount">
-                        2,431
+                        0
                     </strong>
 
                 </div>
 
             </div>
 
+
+            <!-- MODERATION -->
+
             <div class="stat-card">
 
-                <div class="stat-icon">🛡️</div>
+                <div class="stat-icon">
+                    🛡️
+                </div>
 
                 <div>
 
-                    <span>Moderation</span>
+                    <span>
+                        Moderation
+                    </span>
 
-                    <strong>Protected</strong>
+                    <strong>
+                        Protected
+                    </strong>
 
                 </div>
 
@@ -753,7 +958,11 @@
 
         </div>
 
+
         <div class="content-grid">
+
+
+            <!-- FEATURES -->
 
             <div class="panel">
 
@@ -761,78 +970,160 @@
 
                     <div>
 
-                        <h3>Bot Features</h3>
+                        <h3>
+                            Bot Features
+                        </h3>
 
-                        <p>Current ShadowBot systems</p>
+                        <p>
+                            Current ShadowBot systems
+                        </p>
 
                     </div>
 
                 </div>
 
+
                 <div class="feature-list">
 
                     <div class="feature">
+
                         <span>⭐</span>
+
                         <div>
-                            <strong>XP System</strong>
-                            <small>Levels and rank cards are enabled.</small>
+
+                            <strong>
+                                XP System
+                            </strong>
+
+                            <small>
+                                Levels and rank cards are enabled.
+                            </small>
+
                         </div>
-                        <b class="enabled">ENABLED</b>
+
+                        <b class="enabled">
+                            ENABLED
+                        </b>
+
                     </div>
 
+
                     <div class="feature">
+
                         <span>🎮</span>
+
                         <div>
-                            <strong>Games</strong>
-                            <small>Interactive Discord games are enabled.</small>
+
+                            <strong>
+                                Games
+                            </strong>
+
+                            <small>
+                                Interactive Discord games are enabled.
+                            </small>
+
                         </div>
-                        <b class="enabled">ENABLED</b>
+
+                        <b class="enabled">
+                            ENABLED
+                        </b>
+
                     </div>
 
+
                     <div class="feature">
+
                         <span>🗳️</span>
+
                         <div>
-                            <strong>Polls</strong>
-                            <small>Voting and poll commands are enabled.</small>
+
+                            <strong>
+                                Polls
+                            </strong>
+
+                            <small>
+                                Voting and poll commands are enabled.
+                            </small>
+
                         </div>
-                        <b class="enabled">ENABLED</b>
+
+                        <b class="enabled">
+                            ENABLED
+                        </b>
+
                     </div>
 
+
                     <div class="feature">
+
                         <span>🔐</span>
+
                         <div>
-                            <strong>Verification</strong>
-                            <small>Member verification is active.</small>
+
+                            <strong>
+                                Verification
+                            </strong>
+
+                            <small>
+                                Member verification is active.
+                            </small>
+
                         </div>
-                        <b class="enabled">ENABLED</b>
+
+                        <b class="enabled">
+                            ENABLED
+                        </b>
+
                     </div>
 
+
                     <div class="feature">
+
                         <span>🛡️</span>
+
                         <div>
-                            <strong>Moderation</strong>
-                            <small>Server protection tools are active.</small>
+
+                            <strong>
+                                Moderation
+                            </strong>
+
+                            <small>
+                                Server protection tools are active.
+                            </small>
+
                         </div>
-                        <b class="enabled">ENABLED</b>
+
+                        <b class="enabled">
+                            ENABLED
+                        </b>
+
                     </div>
 
                 </div>
 
             </div>
 
+
+            <!-- QUICK ACTIONS -->
+
             <div class="panel">
 
                 <div class="panel-header">
 
                     <div>
 
-                        <h3>Quick Actions</h3>
+                        <h3>
+                            Quick Actions
+                        </h3>
 
-                        <p>Frequently used controls</p>
+                        <p>
+                            Frequently used controls
+                        </p>
 
                     </div>
 
                 </div>
+
 
                 <div class="quick-actions">
 
@@ -860,128 +1151,241 @@
 
     </section>
 
+
+    <!-- SERVER -->
+
     <section id="server" class="page">
 
         <div class="section-title">
 
-            <h1>🛡️ Server Management</h1>
+            <h1>
+                🛡️ Server Management
+            </h1>
 
-            <p>Manage your Shadow Discord server.</p>
+            <p>
+                Manage your Shadow Discord server.
+            </p>
 
         </div>
+
 
         <div class="settings-grid">
 
             <div class="panel setting-card">
+
                 <span class="big-icon">👋</span>
-                <h3>Welcome Messages</h3>
-                <p>Send a Shadow-themed welcome message when someone joins.</p>
+
+                <h3>
+                    Welcome Messages
+                </h3>
+
+                <p>
+                    Send a Shadow-themed welcome message when someone joins.
+                </p>
 
                 <label class="switch">
+
                     <input type="checkbox" checked>
+
                     <span></span>
+
                 </label>
+
             </div>
 
+
             <div class="panel setting-card">
+
                 <span class="big-icon">🚪</span>
-                <h3>Leave Messages</h3>
-                <p>Send a message when a member leaves the server.</p>
+
+                <h3>
+                    Leave Messages
+                </h3>
+
+                <p>
+                    Send a message when a member leaves the server.
+                </p>
 
                 <label class="switch">
+
                     <input type="checkbox" checked>
+
                     <span></span>
+
                 </label>
+
             </div>
 
+
             <div class="panel setting-card">
+
                 <span class="big-icon">📢</span>
-                <h3>Announcements</h3>
-                <p>Control bot announcement messages.</p>
+
+                <h3>
+                    Announcements
+                </h3>
+
+                <p>
+                    Control bot announcement messages.
+                </p>
 
                 <label class="switch">
+
                     <input type="checkbox" checked>
+
                     <span></span>
+
                 </label>
+
             </div>
 
+
             <div class="panel setting-card">
+
                 <span class="big-icon">🤖</span>
-                <h3>Bot Status</h3>
-                <p>ShadowBot is currently connected to Discord.</p>
+
+                <h3>
+                    Bot Status
+                </h3>
+
+                <p>
+                    ShadowBot is currently connected to Discord.
+                </p>
 
                 <span class="online-badge">
                     ● ONLINE
                 </span>
+
             </div>
 
         </div>
 
     </section>
 
+
+    <!-- XP -->
+
     <section id="xp" class="page">
 
         <div class="section-title">
 
-            <h1>⭐ XP & Levels</h1>
+            <h1>
+                ⭐ XP & Levels
+            </h1>
 
-            <p>Configure your server's leveling system.</p>
+            <p>
+                Configure your server's leveling system.
+            </p>
 
         </div>
+
 
         <div class="panel">
 
             <div class="setting-row">
 
                 <div>
-                    <h3>XP System</h3>
-                    <p>Give members XP when they chat.</p>
+
+                    <h3>
+                        XP System
+                    </h3>
+
+                    <p>
+                        Give members XP when they chat.
+                    </p>
+
                 </div>
 
                 <label class="switch">
-                    <input type="checkbox" id="xpToggle" checked>
+
+                    <input
+                        type="checkbox"
+                        id="xpToggle"
+                        checked
+                    >
+
                     <span></span>
+
                 </label>
 
             </div>
 
+
             <div class="setting-row">
 
                 <div>
-                    <h3>XP Per Message</h3>
-                    <p>Amount of XP members receive per message.</p>
+
+                    <h3>
+                        XP Per Message
+                    </h3>
+
+                    <p>
+                        Amount of XP members receive per message.
+                    </p>
+
                 </div>
 
-                <input class="number-input" type="number" value="10">
+                <input
+                    class="number-input"
+                    type="number"
+                    value="10"
+                >
 
             </div>
 
+
             <div class="setting-row">
 
                 <div>
-                    <h3>XP Cooldown</h3>
-                    <p>Seconds before a member can earn XP again.</p>
+
+                    <h3>
+                        XP Cooldown
+                    </h3>
+
+                    <p>
+                        Seconds before a member can earn XP again.
+                    </p>
+
                 </div>
 
-                <input class="number-input" type="number" value="30">
+                <input
+                    class="number-input"
+                    type="number"
+                    value="30"
+                >
 
             </div>
 
+
             <div class="setting-row">
 
                 <div>
-                    <h3>Rank Cards</h3>
-                    <p>Allow members to use the /rank command.</p>
+
+                    <h3>
+                        Rank Cards
+                    </h3>
+
+                    <p>
+                        Allow members to use the /rank command.
+                    </p>
+
                 </div>
 
                 <label class="switch">
+
                     <input type="checkbox" checked>
+
                     <span></span>
+
                 </label>
 
             </div>
 
-            <button class="primary-btn" onclick="saveSettings()">
+
+            <button
+                class="primary-btn"
+                onclick="saveSettings()"
+            >
                 💾 Save XP Settings
             </button>
 
@@ -989,96 +1393,187 @@
 
     </section>
 
+
+    <!-- GAMES -->
+
     <section id="games" class="page">
 
         <div class="section-title">
 
-            <h1>🎮 Games</h1>
+            <h1>
+                🎮 Games
+            </h1>
 
-            <p>Manage ShadowBot's interactive games.</p>
+            <p>
+                Manage ShadowBot's interactive games.
+            </p>
 
         </div>
+
 
         <div class="stats-grid">
 
             <div class="stat-card">
-                <div class="stat-icon">🎮</div>
-                <div>
-                    <span>Games Played</span>
-                    <strong>2,431</strong>
+
+                <div class="stat-icon">
+                    🎮
                 </div>
+
+                <div>
+
+                    <span>
+                        Games Played
+                    </span>
+
+                    <strong id="gamesPlayedCount">
+                        0
+                    </strong>
+
+                </div>
+
             </div>
 
-            <div class="stat-card">
-                <div class="stat-icon">🏆</div>
-                <div>
-                    <span>Winners</span>
-                    <strong>1,207</strong>
-                </div>
-            </div>
 
             <div class="stat-card">
-                <div class="stat-icon">⚡</div>
-                <div>
-                    <span>Fastest Win</span>
-                    <strong>3.2s</strong>
+
+                <div class="stat-icon">
+                    🏆
                 </div>
+
+                <div>
+
+                    <span>
+                        Winners
+                    </span>
+
+                    <strong id="gameWinnersCount">
+                        0
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <div class="stat-icon">
+                    ⚡
+                </div>
+
+                <div>
+
+                    <span>
+                        Fastest Win
+                    </span>
+
+                    <strong id="fastestWin">
+                        0s
+                    </strong>
+
+                </div>
+
             </div>
 
         </div>
+
 
         <div class="panel game-panel">
 
             <div class="game-row">
 
                 <div>
-                    <span class="game-icon">⚡</span>
+
+                    <span class="game-icon">
+                        ⚡
+                    </span>
 
                     <div>
-                        <h3>Reaction Game</h3>
-                        <p>Test how quickly members can react.</p>
+
+                        <h3>
+                            Reaction Game
+                        </h3>
+
+                        <p>
+                            Test how quickly members can react.
+                        </p>
+
                     </div>
+
                 </div>
 
                 <label class="switch">
+
                     <input type="checkbox" checked>
+
                     <span></span>
+
                 </label>
 
             </div>
 
+
             <div class="game-row">
 
                 <div>
-                    <span class="game-icon">🧠</span>
+
+                    <span class="game-icon">
+                        🧠
+                    </span>
 
                     <div>
-                        <h3>Trivia</h3>
-                        <p>Questions and answers for members.</p>
+
+                        <h3>
+                            Trivia
+                        </h3>
+
+                        <p>
+                            Questions and answers for members.
+                        </p>
+
                     </div>
+
                 </div>
 
                 <label class="switch">
+
                     <input type="checkbox" checked>
+
                     <span></span>
+
                 </label>
 
             </div>
 
+
             <div class="game-row">
 
                 <div>
-                    <span class="game-icon">🎯</span>
+
+                    <span class="game-icon">
+                        🎯
+                    </span>
 
                     <div>
-                        <h3>Guessing Game</h3>
-                        <p>Members guess the secret number.</p>
+
+                        <h3>
+                            Guessing Game
+                        </h3>
+
+                        <p>
+                            Members guess the secret number.
+                        </p>
+
                     </div>
+
                 </div>
 
                 <label class="switch">
+
                     <input type="checkbox" checked>
+
                     <span></span>
+
                 </label>
 
             </div>
@@ -1086,124 +1581,221 @@
         </div>
 
     </section>
+
+
+    <!-- MODERATION -->
 
     <section id="moderation" class="page">
 
         <div class="section-title">
 
-            <h1>🔨 Moderation</h1>
+            <h1>
+                🔨 Moderation
+            </h1>
 
-            <p>Protect and manage your server.</p>
+            <p>
+                Protect and manage your server.
+            </p>
 
         </div>
+
 
         <div class="settings-grid">
 
             <div class="panel setting-card">
+
                 <span class="big-icon">⚠️</span>
-                <h3>Warnings</h3>
-                <p>Allow moderators to warn members.</p>
+
+                <h3>
+                    Warnings
+                </h3>
+
+                <p>
+                    Allow moderators to warn members.
+                </p>
 
                 <label class="switch">
+
                     <input type="checkbox" checked>
+
                     <span></span>
+
                 </label>
+
             </div>
 
+
             <div class="panel setting-card">
+
                 <span class="big-icon">👢</span>
-                <h3>Kick</h3>
-                <p>Allow authorized staff to kick members.</p>
+
+                <h3>
+                    Kick
+                </h3>
+
+                <p>
+                    Allow authorized staff to kick members.
+                </p>
 
                 <label class="switch">
+
                     <input type="checkbox" checked>
+
                     <span></span>
+
                 </label>
+
             </div>
 
+
             <div class="panel setting-card">
+
                 <span class="big-icon">🔨</span>
-                <h3>Ban</h3>
-                <p>Allow authorized staff to ban members.</p>
+
+                <h3>
+                    Ban
+                </h3>
+
+                <p>
+                    Allow authorized staff to ban members.
+                </p>
 
                 <label class="switch">
+
                     <input type="checkbox" checked>
+
                     <span></span>
+
                 </label>
+
             </div>
 
+
             <div class="panel setting-card">
+
                 <span class="big-icon">🧹</span>
-                <h3>Clear Messages</h3>
-                <p>Allow staff to clear messages.</p>
+
+                <h3>
+                    Clear Messages
+                </h3>
+
+                <p>
+                    Allow staff to clear messages.
+                </p>
 
                 <label class="switch">
+
                     <input type="checkbox" checked>
+
                     <span></span>
+
                 </label>
+
             </div>
 
         </div>
 
     </section>
 
+
+    <!-- VERIFICATION -->
+
     <section id="verification" class="page">
 
         <div class="section-title">
 
-            <h1>🔐 Verification</h1>
+            <h1>
+                🔐 Verification
+            </h1>
 
-            <p>Configure your member verification system.</p>
+            <p>
+                Configure your member verification system.
+            </p>
 
         </div>
+
 
         <div class="panel">
 
             <div class="setting-row">
 
                 <div>
-                    <h3>Verification System</h3>
-                    <p>Require members to verify themselves.</p>
+
+                    <h3>
+                        Verification System
+                    </h3>
+
+                    <p>
+                        Require members to verify themselves.
+                    </p>
+
                 </div>
 
                 <label class="switch">
+
                     <input type="checkbox" checked>
+
                     <span></span>
+
                 </label>
 
             </div>
 
+
             <div class="setting-row">
 
                 <div>
-                    <h3>Verification Role</h3>
-                    <p>Role given after successful verification.</p>
+
+                    <h3>
+                        Verification Role
+                    </h3>
+
+                    <p>
+                        Role given after successful verification.
+                    </p>
+
                 </div>
 
                 <select>
+
                     <option>Verified</option>
                     <option>Member</option>
                     <option>Shadow Member</option>
+
                 </select>
 
             </div>
+
 
             <div class="setting-row">
 
                 <div>
-                    <h3>Verification Channel</h3>
-                    <p>Channel where the verification panel appears.</p>
+
+                    <h3>
+                        Verification Channel
+                    </h3>
+
+                    <p>
+                        Channel where the verification panel appears.
+                    </p>
+
                 </div>
 
                 <select>
+
                     <option>#verification</option>
                     <option>#welcome</option>
                     <option>#verify-here</option>
+
                 </select>
 
             </div>
 
-            <button class="primary-btn" onclick="saveSettings()">
+
+            <button
+                class="primary-btn"
+                onclick="saveSettings()"
+            >
                 💾 Save Verification
             </button>
 
@@ -1211,25 +1803,37 @@
 
     </section>
 
+
+    <!-- POLLS -->
+
     <section id="polls" class="page">
 
         <div class="section-title">
 
-            <h1>🗳️ Polls</h1>
+            <h1>
+                🗳️ Polls
+            </h1>
 
-            <p>Create and manage community polls.</p>
+            <p>
+                Create and manage community polls.
+            </p>
 
         </div>
 
+
         <div class="panel">
 
-            <h3>Create Poll</h3>
+            <h3>
+                Create Poll
+            </h3>
+
 
             <input
                 class="text-input"
                 id="pollQuestion"
                 placeholder="Enter your poll question..."
             >
+
 
             <div class="poll-options">
 
@@ -1245,6 +1849,7 @@
 
             </div>
 
+
             <button
                 class="primary-btn"
                 onclick="createPoll()"
@@ -1252,68 +1857,114 @@
                 🗳️ Create Poll
             </button>
 
+
             <div id="pollMessage"></div>
 
         </div>
 
     </section>
 
+
+    <!-- SETTINGS -->
+
     <section id="settings" class="page">
 
         <div class="section-title">
 
-            <h1>⚙️ Settings</h1>
+            <h1>
+                ⚙️ Settings
+            </h1>
 
-            <p>General ShadowBot dashboard settings.</p>
+            <p>
+                General ShadowBot dashboard settings.
+            </p>
 
         </div>
+
 
         <div class="panel">
 
             <div class="setting-row">
 
                 <div>
-                    <h3>Dashboard Theme</h3>
-                    <p>Current dashboard appearance.</p>
+
+                    <h3>
+                        Dashboard Theme
+                    </h3>
+
+                    <p>
+                        Current dashboard appearance.
+                    </p>
+
                 </div>
 
                 <select
                     id="themeSelect"
                     onchange="changeTheme()"
                 >
-                    <option value="dark">Dark</option>
-                    <option value="midnight">Midnight</option>
+
+                    <option value="dark">
+                        Dark
+                    </option>
+
+                    <option value="midnight">
+                        Midnight
+                    </option>
+
                 </select>
 
             </div>
 
-            <div class="setting-row">
-
-                <div>
-                    <h3>Notifications</h3>
-                    <p>Show dashboard notifications.</p>
-                </div>
-
-                <label class="switch">
-                    <input type="checkbox" checked>
-                    <span></span>
-                </label>
-
-            </div>
 
             <div class="setting-row">
 
                 <div>
-                    <h3>Auto Refresh</h3>
-                    <p>Automatically refresh dashboard statistics.</p>
+
+                    <h3>
+                        Notifications
+                    </h3>
+
+                    <p>
+                        Show dashboard notifications.
+                    </p>
+
                 </div>
 
                 <label class="switch">
+
                     <input type="checkbox" checked>
+
                     <span></span>
+
                 </label>
 
             </div>
+
+
+            <div class="setting-row">
+
+                <div>
+
+                    <h3>
+                        Auto Refresh
+                    </h3>
+
+                    <p>
+                        Automatically refresh dashboard statistics.
+                    </p>
+
+                </div>
+
+                <label class="switch">
+
+                    <input type="checkbox" checked>
+
+                    <span></span>
+
+                </label>
+
+            </div>
+
 
             <button
                 class="primary-btn"
@@ -1328,12 +1979,18 @@
 
 </main>
 
-<div id="toast" class="toast">
+
+<!-- TOAST -->
+
+<div
+    id="toast"
+    class="toast"
+>
     Settings saved successfully! ✓
 </div>
 
-<!-- CACHE-BUSTED JAVASCRIPT -->
-<script src="script.js?v=3"></script>
+
+<script src="script.js"></script>
 
 </body>
 </html>
