@@ -1,5 +1,5 @@
 // 🌑 ShadowDashboard
-// Navigation + Discord OAuth + Session + Animations + Toasts + Backend
+// Navigation + Discord OAuth + Cookie Session + Animations + Toasts + Backend
 
 const BACKEND_URL =
     "https://punctured-aide-yogurt.ngrok-free.dev";
@@ -14,48 +14,7 @@ function loginWithDiscord() {
     console.log("🔐 Opening Discord OAuth...");
 
     window.location.href =
-        BACKEND_URL +
-        "/auth/discord";
-}
-
-
-// =========================
-// GET SESSION
-// =========================
-
-function getSession() {
-
-    return localStorage.getItem(
-        "shadowbot_session"
-    );
-}
-
-
-// =========================
-// SAVE SESSION
-// =========================
-
-function saveSession(session) {
-
-    if (!session)
-        return;
-
-    localStorage.setItem(
-        "shadowbot_session",
-        session
-    );
-}
-
-
-// =========================
-// CLEAR SESSION
-// =========================
-
-function clearSession() {
-
-    localStorage.removeItem(
-        "shadowbot_session"
-    );
+        BACKEND_URL + "/auth/discord";
 }
 
 
@@ -68,9 +27,6 @@ async function apiFetch(
     options = {}
 ) {
 
-    const session =
-        getSession();
-
     const headers = {
 
         "Accept":
@@ -79,18 +35,16 @@ async function apiFetch(
         ...(options.headers || {})
     };
 
-    if (session) {
-
-        headers.Authorization =
-            `Bearer ${session}`;
-    }
-
     return fetch(
         BACKEND_URL + endpoint,
         {
             ...options,
+
             headers,
-            credentials: "omit"
+
+            // IMPORTANT:
+            // Java backend uses shadow_session cookie
+            credentials: "include"
         }
     );
 }
@@ -112,23 +66,6 @@ async function checkDiscordLogin() {
         const loginStatus =
             params.get("login");
 
-        const session =
-            params.get("session");
-
-
-        // =========================
-        // SAVE OAUTH SESSION
-        // =========================
-
-        if (session) {
-
-            console.log(
-                "🔑 OAuth session received."
-            );
-
-            saveSession(session);
-        }
-
 
         // =========================
         // OAUTH FAILED
@@ -145,7 +82,6 @@ async function checkDiscordLogin() {
                 loginStatus
             );
 
-            clearSession();
             cleanURL();
 
             showToast(
@@ -170,16 +106,16 @@ async function checkDiscordLogin() {
             );
 
 
+        // =========================
+        // NOT LOGGED IN
+        // =========================
+
         if (!response.ok) {
 
             console.log(
                 "🔒 No valid dashboard session:",
                 response.status
             );
-
-            if (session) {
-                clearSession();
-            }
 
             cleanURL();
 
@@ -233,7 +169,9 @@ async function checkDiscordLogin() {
             // =========================
 
             const username =
-                data.user.username;
+                data.user.username ||
+                data.user.global_name ||
+                "Discord User";
 
             const topUsername =
                 document.getElementById(
@@ -308,14 +246,25 @@ async function checkDiscordLogin() {
             // =========================
 
             if (
-                loginStatus === "success" ||
-                session
+                loginStatus === "success"
             ) {
 
                 showToast(
                     `👋 Welcome, ${username}!`
                 );
             }
+
+
+            // =========================
+            // LOAD SERVERS
+            // =========================
+
+            loadGuilds();
+
+
+            // =========================
+            // CLEAN URL
+            // =========================
 
             cleanURL();
 
@@ -332,6 +281,186 @@ async function checkDiscordLogin() {
         console.error(
             "❌ Login check failed:",
             error
+        );
+    }
+}
+
+
+// =========================
+// LOAD DISCORD SERVERS
+// =========================
+
+async function loadGuilds() {
+
+    try {
+
+        console.log(
+            "🏠 Loading Discord servers..."
+        );
+
+        const response =
+            await apiFetch(
+                "/api/guilds"
+            );
+
+
+        if (!response.ok) {
+
+            console.log(
+                "❌ Failed to load guilds:",
+                response.status
+            );
+
+            return;
+        }
+
+
+        const data =
+            await response.json();
+
+
+        console.log(
+            "🏠 Discord servers:",
+            data
+        );
+
+
+        const guilds =
+            data.guilds || [];
+
+
+        // =========================
+        // SERVER SELECTOR
+        // =========================
+
+        const selectors =
+            document.querySelectorAll(
+                "#serverSelect, .server-select"
+            );
+
+
+        selectors.forEach(
+            select => {
+
+                if (!select)
+                    return;
+
+
+                select.innerHTML =
+                    "";
+
+
+                const defaultOption =
+                    document.createElement(
+                        "option"
+                    );
+
+                defaultOption.value =
+                    "";
+
+                defaultOption.textContent =
+                    "Select a server";
+
+                select.appendChild(
+                    defaultOption
+                );
+
+
+                guilds.forEach(
+                    guild => {
+
+                        const option =
+                            document.createElement(
+                                "option"
+                            );
+
+                        option.value =
+                            guild.id;
+
+                        option.textContent =
+                            guild.name;
+
+                        select.appendChild(
+                            option
+                        );
+                    }
+                );
+            }
+        );
+
+
+        console.log(
+            `✅ Loaded ${guilds.length} servers.`
+        );
+
+    } catch (error) {
+
+        console.error(
+            "❌ Guild loading failed:",
+            error
+        );
+    }
+}
+
+
+// =========================
+// SELECT SERVER
+// =========================
+
+async function selectServer(
+    guildId
+) {
+
+    if (!guildId)
+        return;
+
+
+    try {
+
+        const response =
+            await apiFetch(
+                `/api/guild/${encodeURIComponent(guildId)}`
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (!response.ok) {
+
+            showToast(
+                "❌ Could not select server."
+            );
+
+            console.error(
+                "Server selection failed:",
+                data
+            );
+
+            return;
+        }
+
+
+        console.log(
+            "🏠 Selected server:",
+            data
+        );
+
+
+        showToast(
+            `🏠 ${data.name} selected`
+        );
+
+    } catch (error) {
+
+        console.error(
+            "❌ Server selection error:",
+            error
+        );
+
+        showToast(
+            "❌ Server selection failed."
         );
     }
 }
@@ -376,13 +505,12 @@ async function logout() {
 
     } finally {
 
-        clearSession();
-
         console.log(
             "👋 Logged out."
         );
 
-        window.location.reload();
+        window.location.href =
+            window.location.pathname;
     }
 }
 
@@ -406,6 +534,7 @@ function showPage(
             ".nav-btn"
         );
 
+
     pages.forEach(
         page => {
 
@@ -415,6 +544,7 @@ function showPage(
 
         }
     );
+
 
     navButtons.forEach(
         btn => {
@@ -426,10 +556,12 @@ function showPage(
         }
     );
 
+
     const page =
         document.getElementById(
             pageId
         );
+
 
     if (page) {
 
@@ -437,6 +569,7 @@ function showPage(
             "active"
         );
     }
+
 
     if (button) {
 
@@ -453,6 +586,7 @@ function showPage(
                     btn.getAttribute(
                         "onclick"
                     ) || "";
+
 
                 if (
                     onclick.includes(
@@ -472,10 +606,12 @@ function showPage(
         );
     }
 
+
     const pageTitle =
         document.getElementById(
             "pageTitle"
         );
+
 
     const titles = {
 
@@ -504,6 +640,7 @@ function showPage(
             "Settings"
     };
 
+
     if (
         pageTitle &&
         titles[pageId]
@@ -512,6 +649,7 @@ function showPage(
         pageTitle.textContent =
             titles[pageId];
     }
+
 
     window.scrollTo({
         top: 0,
@@ -539,6 +677,7 @@ document.addEventListener(
             document.querySelectorAll(
                 "button"
             );
+
 
         buttons.forEach(
             button => {
@@ -568,6 +707,7 @@ document.addEventListener(
                 ".quick-actions button"
             );
 
+
         quickButtons.forEach(
             button => {
 
@@ -577,6 +717,7 @@ document.addEventListener(
 
                         const text =
                             button.innerText.trim();
+
 
                         showToast(
                             `⚡ ${text} selected`
@@ -597,6 +738,7 @@ document.addEventListener(
             document.querySelectorAll(
                 ".switch input"
             );
+
 
         switches.forEach(
             toggle => {
@@ -637,6 +779,7 @@ document.addEventListener(
                 ".stat-card, .setting-card, .game-panel"
             );
 
+
         cards.forEach(
             card => {
 
@@ -647,13 +790,16 @@ document.addEventListener(
                         const rect =
                             card.getBoundingClientRect();
 
+
                         const x =
                             event.clientX -
                             rect.left;
 
+
                         const y =
                             event.clientY -
                             rect.top;
+
 
                         const rotateX =
                             (
@@ -664,6 +810,7 @@ document.addEventListener(
                                 0.5
                             ) * -3;
 
+
                         const rotateY =
                             (
                                 (
@@ -673,6 +820,7 @@ document.addEventListener(
                                 0.5
                             ) * 3;
 
+
                         card.style.transform =
                             `perspective(700px)
                              rotateX(${rotateX}deg)
@@ -681,6 +829,7 @@ document.addEventListener(
 
                     }
                 );
+
 
                 card.addEventListener(
                     "mouseleave",
@@ -705,6 +854,7 @@ document.addEventListener(
                 ".hero"
             );
 
+
         if (hero) {
 
             hero.addEventListener(
@@ -714,12 +864,14 @@ document.addEventListener(
                     const rect =
                         hero.getBoundingClientRect();
 
+
                     const x =
                         (
                             event.clientX -
                             rect.left
                         ) /
                         rect.width;
+
 
                     const y =
                         (
@@ -728,17 +880,21 @@ document.addEventListener(
                         ) /
                         rect.height;
 
+
                     const moveX =
                         (x - 0.5) * 8;
 
+
                     const moveY =
                         (y - 0.5) * 8;
+
 
                     hero.style.backgroundPosition =
                         `${50 + moveX}% ${50 + moveY}%`;
 
                 }
             );
+
 
             hero.addEventListener(
                 "mouseleave",
@@ -761,6 +917,7 @@ document.addEventListener(
                 ".online-badge"
             );
 
+
         if (online) {
 
             setInterval(
@@ -768,6 +925,7 @@ document.addEventListener(
 
                     online.style.transform =
                         "scale(1.03)";
+
 
                     setTimeout(
                         () => {
@@ -794,19 +952,23 @@ document.addEventListener(
                 ".stat-card strong"
             );
 
+
         statNumbers.forEach(
             number => {
 
                 const text =
                     number.textContent.trim();
 
+
                 const match =
                     text.match(
                         /^([\d,]+)$/
                     );
 
+
                 if (!match)
                     return;
+
 
                 const target =
                     Number(
@@ -816,17 +978,22 @@ document.addEventListener(
                         )
                     );
 
+
                 if (!target)
                     return;
+
 
                 number.textContent =
                     "0";
 
+
                 const duration =
                     800;
 
+
                 const start =
                     performance.now();
+
 
                 function animateCounter(
                     time
@@ -842,6 +1009,7 @@ document.addEventListener(
                             1
                         );
 
+
                     const value =
                         Math.floor(
                             target *
@@ -854,8 +1022,10 @@ document.addEventListener(
                             )
                         );
 
+
                     number.textContent =
                         value.toLocaleString();
+
 
                     if (
                         progress <
@@ -873,6 +1043,7 @@ document.addEventListener(
                     }
                 }
 
+
                 requestAnimationFrame(
                     animateCounter
                 );
@@ -889,6 +1060,7 @@ document.addEventListener(
                 ".text-input, .number-input, select"
             );
 
+
         inputs.forEach(
             input => {
 
@@ -902,6 +1074,7 @@ document.addEventListener(
                     }
                 );
 
+
                 input.addEventListener(
                     "blur",
                     () => {
@@ -912,6 +1085,28 @@ document.addEventListener(
                     }
                 );
 
+            }
+        );
+
+
+        // =========================
+        // SERVER SELECT
+        // =========================
+
+        document.addEventListener(
+            "change",
+            event => {
+
+                if (
+                    event.target.matches(
+                        "#serverSelect, .server-select"
+                    )
+                ) {
+
+                    selectServer(
+                        event.target.value
+                    );
+                }
             }
         );
 
@@ -930,6 +1125,7 @@ document.addEventListener(
             },
             100
         );
+
 
         console.log(
             "🌑 ShadowDashboard loaded successfully."
@@ -950,26 +1146,33 @@ function createButtonRipple(
     if (!element)
         return;
 
+
     const rect =
         element.getBoundingClientRect();
+
 
     const ripple =
         document.createElement(
             "span"
         );
 
+
     ripple.className =
         "click-ripple";
+
 
     ripple.style.left =
         `${event.clientX - rect.left}px`;
 
+
     ripple.style.top =
         `${event.clientY - rect.top}px`;
+
 
     element.appendChild(
         ripple
     );
+
 
     setTimeout(
         () => {
@@ -995,6 +1198,7 @@ function showToast(
             ".toast"
         );
 
+
     if (!toast) {
 
         toast =
@@ -1002,30 +1206,38 @@ function showToast(
                 "div"
             );
 
+
         toast.className =
             "toast";
+
 
         document.body.appendChild(
             toast
         );
     }
 
+
     toast.textContent =
         message;
+
 
     toast.classList.remove(
         "show"
     );
 
+
     void toast.offsetWidth;
+
 
     toast.classList.add(
         "show"
     );
 
+
     clearTimeout(
         toast.hideTimer
     );
+
 
     toast.hideTimer =
         setTimeout(
@@ -1064,13 +1276,16 @@ function createPoll() {
             "pollQuestion"
         );
 
+
     const message =
         document.getElementById(
             "pollMessage"
         );
 
+
     if (!question)
         return;
+
 
     if (
         !question.value.trim()
@@ -1083,11 +1298,13 @@ function createPoll() {
         return;
     }
 
+
     if (message) {
 
         message.textContent =
             "🗳️ Poll created successfully!";
     }
+
 
     showToast(
         "🗳️ Poll created!"
@@ -1106,14 +1323,18 @@ function changeTheme() {
             "themeSelect"
         );
 
+
     if (!select)
         return;
+
 
     const theme =
         select.value;
 
+
     document.body.dataset.theme =
         theme;
+
 
     showToast(
         `🎨 Theme changed to ${theme}`
