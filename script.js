@@ -3,7 +3,7 @@
 // REAL DISCORD MEMBER COUNT
 
 const BACKEND_URL =
-    "https://punctured-aide-yogurt.ngrok-free.dev";
+    "https://node6.quaxly.com:25522";
 
 
 // =========================
