@@ -177,7 +177,6 @@ async function checkDiscordLogin() {
 
 
             if (loginScreen) {
-
                 loginScreen.style.display =
                     "none";
             }
@@ -375,7 +374,7 @@ async function loadRealStats() {
 
 
         // =========================
-        // UPDATE AGAIN EVERY 60 SEC
+        // UPDATE EVERY 60 SEC
         // =========================
 
         if (!window.shadowStatsInterval) {
@@ -416,7 +415,9 @@ function updateUserAvatar(user) {
     let avatarURL = null;
 
 
-    // Already a complete URL
+    // =========================
+    // COMPLETE URL
+    // =========================
 
     if (
         typeof user.avatar === "string" &&
@@ -425,11 +426,12 @@ function updateUserAvatar(user) {
 
         avatarURL =
             user.avatar;
-
     }
 
 
-    // Discord avatar hash
+    // =========================
+    // DISCORD AVATAR HASH
+    // =========================
 
     else if (
         user.avatar &&
@@ -438,11 +440,12 @@ function updateUserAvatar(user) {
 
         avatarURL =
             `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png?size=128`;
-
     }
 
 
-    // Discord default avatar
+    // =========================
+    // DEFAULT AVATAR
+    // =========================
 
     else if (user.id) {
 
@@ -568,7 +571,7 @@ async function loadGuilds() {
 
 
         // =========================
-        // NORMAL SERVER SELECTS
+        // SERVER SELECTS
         // =========================
 
         const selectors =
@@ -1362,9 +1365,6 @@ document.addEventListener(
             )
             .forEach(number => {
 
-                // Skip Members because
-                // loadRealStats handles it.
-
                 const card =
                     number.closest(
                         ".stat-card"
@@ -1376,6 +1376,9 @@ document.addEventListener(
                         ?.textContent
                         .toLowerCase() || "";
 
+
+                // Members is loaded
+                // directly from backend.
 
                 if (
                     cardText.includes(
@@ -1451,8 +1454,7 @@ document.addEventListener(
                             (
                                 1 -
                                 Math.pow(
-                                    1 -
-                                    progress,
+                                    1 - progress,
                                     3
                                 )
                             )
