@@ -2,8 +2,7 @@
 // Navigation + Discord OAuth + Cookie Session + Animations + Toasts + Backend
 // REAL DISCORD MEMBER COUNT
 
-const BACKEND_URL =
-    "https://node6.quaxly.com:25522";
+const BACKEND_URL = "https://node.ravenhost.space:19185";
 
 
 // =========================
