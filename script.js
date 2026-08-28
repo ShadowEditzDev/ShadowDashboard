@@ -2,7 +2,7 @@
 // Navigation + Discord OAuth + Cookie Session + Animations + Toasts + Backend
 // REAL DISCORD MEMBER COUNT
 
-const BACKEND_URL = "https://node.ravenhost.space:19185";
+const BACKEND_URL = "http://node.ravenhost.space:19185";
 
 
 // =========================
