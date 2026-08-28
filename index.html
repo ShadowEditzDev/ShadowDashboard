@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>𝑆𝘩𝑎𝘥𝑜𝘸 • 影-Bot | Discord Dashboard</title>
+<title>𝑆𝘩𝑎𝘥𝘰𝘸 • 影-Bot | Discord Dashboard</title>
 
 <meta
     name="description"
@@ -85,892 +85,17 @@
 
 <link rel="stylesheet" href="style.css">
 
-<style>
-    #serverScreen {
-        position: fixed;
-        inset: 0;
-        z-index: 99998;
-
-        display: none;
-
-        align-items: flex-start;
-        justify-content: center;
-
-        padding: 60px 25px;
-        overflow-y: auto;
-
-        opacity: 1;
-
-        background:
-            radial-gradient(
-                circle at 50% 15%,
-                rgba(139,92,246,.15),
-                transparent 35%
-            ),
-            radial-gradient(
-                circle at 10% 90%,
-                rgba(88,101,242,.08),
-                transparent 30%
-            ),
-            #08080d;
-
-        transition: opacity .18s ease;
-    }
-
-    .server-select-card {
-        position: relative;
-
-        width: min(900px, 100%);
-
-        background:
-            linear-gradient(
-                145deg,
-                rgba(23,23,32,.98),
-                rgba(11,11,17,.98)
-            );
-
-        border:
-            1px solid rgba(139,92,246,.18);
-
-        border-radius:
-            24px;
-
-        padding:
-            30px;
-
-        box-shadow:
-            0 30px 100px rgba(0,0,0,.65),
-            0 0 60px rgba(139,92,246,.08);
-
-        backdrop-filter:
-            blur(20px);
-
-        animation:
-            serverCardIn .5s ease;
-
-        overflow:
-            hidden;
-    }
-
-    .server-select-card::before {
-        content: "";
-
-        position: absolute;
-        inset: 0;
-
-        pointer-events: none;
-
-        background:
-            linear-gradient(
-                120deg,
-                rgba(139,92,246,.07),
-                transparent 35%,
-                transparent 65%,
-                rgba(88,101,242,.04)
-            );
-    }
-
-    @keyframes serverCardIn {
-        from {
-            opacity: 0;
-            transform:
-                translateY(25px)
-                scale(.98);
-        }
-
-        to {
-            opacity: 1;
-            transform:
-                translateY(0)
-                scale(1);
-        }
-    }
-
-    .server-heading {
-        position: relative;
-
-        display: flex;
-        align-items: center;
-
-        gap: 16px;
-
-        margin-bottom:
-            22px;
-    }
-
-    .server-heading img {
-        width: 64px;
-        height: 64px;
-
-        object-fit:
-            cover;
-
-        flex-shrink:
-            0;
-
-        border-radius:
-            18px;
-
-        border:
-            1px solid rgba(255,255,255,.1);
-
-        box-shadow:
-            0 0 30px rgba(139,92,246,.2);
-    }
-
-    .server-heading h1 {
-        margin:
-            0 0 5px;
-
-        color:
-            white;
-
-        font-size:
-            27px;
-    }
-
-    .server-heading p {
-        margin:
-            0;
-
-        color:
-            #a1a1aa;
-
-        font-size:
-            14px;
-    }
-
-    .server-search {
-        position:
-            relative;
-
-        margin-bottom:
-            20px;
-    }
-
-    .server-search input {
-        width:
-            100%;
-
-        box-sizing:
-            border-box;
-
-        padding:
-            14px 18px 14px 46px;
-
-        border:
-            1px solid rgba(255,255,255,.08);
-
-        outline:
-            none;
-
-        border-radius:
-            13px;
-
-        background:
-            rgba(255,255,255,.04);
-
-        color:
-            white;
-
-        font-size:
-            14px;
-
-        transition:
-            .2s ease;
-    }
-
-    .server-search input::placeholder {
-        color:
-            #71717a;
-    }
-
-    .server-search input:focus {
-        border-color:
-            rgba(139,92,246,.55);
-
-        box-shadow:
-            0 0 0 3px rgba(139,92,246,.08);
-    }
-
-    .server-search-icon {
-        position:
-            absolute;
-
-        left:
-            17px;
-
-        top:
-            50%;
-
-        transform:
-            translateY(-50%);
-
-        color:
-            #71717a;
-
-        font-size:
-            17px;
-
-        pointer-events:
-            none;
-    }
-
-    #serverList {
-        position:
-            relative;
-
-        display:
-            grid;
-
-        grid-template-columns:
-            repeat(2,minmax(0,1fr));
-
-        gap:
-            14px;
-    }
-
-    .server-card {
-        display:
-            flex;
-
-        align-items:
-            center;
-
-        gap:
-            14px;
-
-        min-width:
-            0;
-
-        padding:
-            15px;
-
-        border:
-            1px solid rgba(255,255,255,.07);
-
-        border-radius:
-            17px;
-
-        background:
-            linear-gradient(
-                145deg,
-                rgba(255,255,255,.045),
-                rgba(255,255,255,.018)
-            );
-
-        transition:
-            transform .2s ease,
-            border-color .2s ease,
-            background .2s ease,
-            box-shadow .2s ease;
-
-        overflow:
-            hidden;
-    }
-
-    .server-card:hover {
-        transform:
-            translateY(-2px);
-
-        border-color:
-            rgba(139,92,246,.4);
-
-        background:
-            linear-gradient(
-                145deg,
-                rgba(139,92,246,.09),
-                rgba(255,255,255,.025)
-            );
-
-        box-shadow:
-            0 18px 45px rgba(0,0,0,.25);
-    }
-
-    .server-icon {
-        width:
-            58px;
-
-        height:
-            58px;
-
-        flex-shrink:
-            0;
-
-        object-fit:
-            cover;
-
-        border-radius:
-            17px;
-
-        background:
-            #18181f;
-
-        border:
-            1px solid rgba(255,255,255,.08);
-
-        box-shadow:
-            0 5px 20px rgba(0,0,0,.25);
-    }
-
-    .server-info {
-        min-width:
-            0;
-
-        flex:
-            1;
-    }
-
-    .server-name {
-        display:
-            block;
-
-        color:
-            white;
-
-        font-weight:
-            700;
-
-        font-size:
-            15px;
-
-        white-space:
-            nowrap;
-
-        overflow:
-            hidden;
-
-        text-overflow:
-            ellipsis;
-
-        margin-bottom:
-            7px;
-    }
-
-    .server-badges {
-        display:
-            flex;
-
-        align-items:
-            center;
-
-        flex-wrap:
-            wrap;
-
-        gap:
-            5px;
-    }
-
-    .server-badge {
-        display:
-            inline-flex;
-
-        align-items:
-            center;
-
-        padding:
-            4px 7px;
-
-        border-radius:
-            6px;
-
-        font-size:
-            10px;
-
-        font-weight:
-            700;
-
-        letter-spacing:
-            .2px;
-
-        white-space:
-            nowrap;
-    }
-
-    .server-badge.owner {
-        color:
-            #f5d0fe;
-
-        background:
-            rgba(168,85,247,.14);
-
-        border:
-            1px solid rgba(168,85,247,.2);
-    }
-
-    .server-badge.admin {
-        color:
-            #c4b5fd;
-
-        background:
-            rgba(139,92,246,.14);
-
-        border:
-            1px solid rgba(139,92,246,.2);
-    }
-
-    .server-badge.bot {
-        color:
-            #86efac;
-
-        background:
-            rgba(34,197,94,.10);
-
-        border:
-            1px solid rgba(34,197,94,.18);
-    }
-
-    .server-badge.not-installed {
-        color:
-            #fbbf24;
-
-        background:
-            rgba(245,158,11,.10);
-
-        border:
-            1px solid rgba(245,158,11,.18);
-    }
-
-    .manage-server-btn {
-        flex-shrink:
-            0;
-
-        border:
-            0;
-
-        border-radius:
-            10px;
-
-        padding:
-            10px 14px;
-
-        background:
-            linear-gradient(
-                135deg,
-                #8b5cf6,
-                #6d28d9
-            );
-
-        color:
-            white;
-
-        font-size:
-            12px;
-
-        font-weight:
-            700;
-
-        cursor:
-            pointer;
-
-        transition:
-            .2s ease;
-
-        box-shadow:
-            0 6px 20px rgba(139,92,246,.15);
-    }
-
-    .manage-server-btn:hover {
-        transform:
-            translateY(-2px);
-
-        filter:
-            brightness(1.12);
-
-        box-shadow:
-            0 8px 25px rgba(139,92,246,.25);
-    }
-
-    .server-empty {
-        grid-column:
-            1 / -1;
-
-        padding:
-            45px 20px;
-
-        text-align:
-            center;
-
-        color:
-            #71717a;
-    }
-
-    .server-empty-icon {
-        font-size:
-            40px;
-
-        margin-bottom:
-            10px;
-    }
-
-    .server-empty h3 {
-        margin:
-            0 0 5px;
-
-        color:
-            #d4d4d8;
-    }
-
-    .server-empty p {
-        margin:
-            0;
-
-        font-size:
-            13px;
-    }
-
-    #loginScreen {
-        position:
-            fixed;
-
-        inset:
-            0;
-
-        z-index:
-            99999;
-
-        display:
-            flex;
-
-        align-items:
-            center;
-
-        justify-content:
-            center;
-
-        overflow:
-            hidden;
-
-        background:
-            radial-gradient(
-                circle at 50% 45%,
-                rgba(139,92,246,.14),
-                transparent 28%
-            ),
-            radial-gradient(
-                circle at 20% 20%,
-                rgba(109,61,240,.08),
-                transparent 25%
-            ),
-            #08080d;
-    }
-
-    #loginScreen::before {
-        content:
-            "";
-
-        position:
-            absolute;
-
-        width:
-            500px;
-
-        height:
-            500px;
-
-        border-radius:
-            50%;
-
-        border:
-            1px solid rgba(139,92,246,.08);
-
-        animation:
-            loginOrb 10s linear infinite;
-    }
-
-    #loginScreen::after {
-        content:
-            "";
-
-        position:
-            absolute;
-
-        width:
-            700px;
-
-        height:
-            700px;
-
-        border-radius:
-            50%;
-
-        border:
-            1px solid rgba(255,255,255,.025);
-
-        animation:
-            loginOrb 16s linear infinite reverse;
-    }
-
-    @keyframes loginOrb {
-        from {
-            transform:
-                rotate(0deg)
-                scale(1);
-        }
-
-        50% {
-            transform:
-                rotate(180deg)
-                scale(1.08);
-        }
-
-        to {
-            transform:
-                rotate(360deg)
-                scale(1);
-        }
-    }
-
-    .login-card {
-        position:
-            relative;
-
-        z-index:
-            2;
-
-        width:
-            min(430px,calc(100% - 40px));
-
-        padding:
-            42px 34px;
-
-        text-align:
-            center;
-
-        border-radius:
-            24px;
-
-        background:
-            linear-gradient(
-                145deg,
-                rgba(24,24,34,.96),
-                rgba(13,13,20,.96)
-            );
-
-        border:
-            1px solid rgba(139,92,246,.18);
-
-        box-shadow:
-            0 30px 100px rgba(0,0,0,.65),
-            0 0 70px rgba(139,92,246,.08);
-
-        backdrop-filter:
-            blur(20px);
-
-        animation:
-            loginCardIn .7s cubic-bezier(.2,.8,.2,1);
-    }
-
-    @keyframes loginCardIn {
-        from {
-            opacity:
-                0;
-
-            transform:
-                translateY(30px)
-                scale(.96);
-        }
-
-        to {
-            opacity:
-                1;
-
-            transform:
-                translateY(0)
-                scale(1);
-        }
-    }
-
-    .login-logo {
-        position:
-            relative;
-
-        z-index:
-            2;
-
-        width:
-            100px;
-
-        height:
-            100px;
-
-        object-fit:
-            cover;
-
-        border-radius:
-            25px;
-
-        margin-bottom:
-            20px;
-
-        border:
-            1px solid rgba(255,255,255,.1);
-
-        box-shadow:
-            0 0 45px rgba(139,92,246,.25);
-    }
-
-    .login-card h1 {
-        position:
-            relative;
-
-        z-index:
-            2;
-
-        margin:
-            0 0 10px;
-
-        color:
-            white;
-
-        font-size:
-            28px;
-    }
-
-    .login-card p {
-        position:
-            relative;
-
-        z-index:
-            2;
-
-        margin:
-            0 auto 28px;
-
-        max-width:
-            330px;
-
-        color:
-            #a1a1aa;
-
-        line-height:
-            1.6;
-    }
-
-    .discord-login-btn {
-        position:
-            relative;
-
-        z-index:
-            2;
-
-        width:
-            100%;
-
-        border:
-            1px solid rgba(255,255,255,.1);
-
-        border-radius:
-            12px;
-
-        padding:
-            14px 18px;
-
-        background:
-            linear-gradient(
-                135deg,
-                #5865f2,
-                #4752c4
-            );
-
-        color:
-            white;
-
-        font-size:
-            15px;
-
-        font-weight:
-            700;
-
-        cursor:
-            pointer;
-
-        transition:
-            transform .25s ease,
-            filter .25s ease,
-            box-shadow .25s ease;
-    }
-
-    .discord-login-btn:hover {
-        transform:
-            translateY(-3px);
-
-        filter:
-            brightness(1.1);
-
-        box-shadow:
-            0 15px 40px rgba(88,101,242,.3);
-    }
-
-    .login-small {
-        position:
-            relative;
-
-        z-index:
-            2;
-
-        display:
-            block;
-
-        margin-top:
-            18px;
-
-        color:
-            #71717a;
-
-        font-size:
-            11px;
-    }
-
-    @media (max-width: 700px) {
-        #serverScreen {
-            padding:
-                25px 15px;
-        }
-
-        .server-select-card {
-            padding:
-                20px;
-        }
-
-        #serverList {
-            grid-template-columns:
-                1fr;
-        }
-
-        .server-heading h1 {
-            font-size:
-                23px;
-        }
-    }
-
-    @media (max-width: 430px) {
-        .server-card {
-            padding:
-                12px;
-        }
-
-        .server-icon {
-            width:
-                50px;
-
-            height:
-                50px;
-        }
-
-        .manage-server-btn {
-            padding:
-                9px 10px;
-        }
-    }
-</style>
-
 </head>
 
 <body>
 
+<!-- =========================================================
+     LOGIN SCREEN
+========================================================= -->
+
 <div id="loginScreen">
-    <div class="login-card">
+
+<div class="login-card">
 
     <img
         class="login-logo"
@@ -1001,6 +126,10 @@
 </div>
 
 </div>
+
+<!-- =========================================================
+     SERVER SELECTOR
+========================================================= -->
 
 <div id="serverScreen">
 
@@ -1049,7 +178,15 @@
 
 </div>
 
+<!-- =========================================================
+     DASHBOARD LOADER
+========================================================= -->
+
 <div class="dashboard-loader"></div>
+
+<!-- =========================================================
+     SIDEBAR
+========================================================= -->
 
 <aside class="sidebar">
 
@@ -1077,6 +214,7 @@
     </div>
 
 </div>
+
 
 <nav>
 
@@ -1138,6 +276,7 @@
 
 </nav>
 
+
 <div class="sidebar-bottom">
 
     <div class="bot-status">
@@ -1168,7 +307,13 @@
 
 </aside>
 
+<!-- =========================================================
+     MAIN DASHBOARD
+========================================================= -->
+
 <main class="main">
+
+<!-- TOPBAR -->
 
 <header class="topbar">
 
@@ -1183,6 +328,7 @@
         </h2>
 
     </div>
+
 
     <div class="user-area">
 
@@ -1208,6 +354,11 @@
     </div>
 
 </header>
+
+
+<!-- =====================================================
+     OVERVIEW
+===================================================== -->
 
 <section
     id="overview"
@@ -1246,6 +397,7 @@
 
         </div>
 
+
         <div class="hero-symbol">
 
             <img
@@ -1256,6 +408,9 @@
         </div>
 
     </div>
+
+
+    <!-- STATS -->
 
     <div class="stats-grid">
 
@@ -1279,6 +434,7 @@
 
         </div>
 
+
         <div class="stat-card">
 
             <div class="stat-icon">
@@ -1299,6 +455,7 @@
 
         </div>
 
+
         <div class="stat-card">
 
             <div class="stat-icon">
@@ -1318,6 +475,7 @@
             </div>
 
         </div>
+
 
         <div class="stat-card">
 
@@ -1341,7 +499,13 @@
 
     </div>
 
+
+    <!-- CONTENT -->
+
     <div class="content-grid">
+
+
+        <!-- FEATURES -->
 
         <div class="panel">
 
@@ -1360,6 +524,7 @@
                 </div>
 
             </div>
+
 
             <div class="feature-list">
 
@@ -1385,6 +550,7 @@
 
                 </div>
 
+
                 <div class="feature">
 
                     <span>🎮</span>
@@ -1406,6 +572,7 @@
                     </b>
 
                 </div>
+
 
                 <div class="feature">
 
@@ -1429,6 +596,7 @@
 
                 </div>
 
+
                 <div class="feature">
 
                     <span>🔐</span>
@@ -1450,6 +618,7 @@
                     </b>
 
                 </div>
+
 
                 <div class="feature">
 
@@ -1477,6 +646,9 @@
 
         </div>
 
+
+        <!-- QUICK ACTIONS -->
+
         <div class="panel">
 
             <div class="panel-header">
@@ -1494,6 +666,7 @@
                 </div>
 
             </div>
+
 
             <div class="quick-actions">
 
@@ -1521,6 +694,11 @@
 
 </section>
 
+
+<!-- =====================================================
+     SERVER
+===================================================== -->
+
 <section
     id="server"
     class="page"
@@ -1537,6 +715,7 @@
         </p>
 
     </div>
+
 
     <div class="settings-grid">
 
@@ -1567,6 +746,7 @@
 
         </div>
 
+
         <div class="panel setting-card">
 
             <span class="big-icon">
@@ -1593,6 +773,7 @@
             </label>
 
         </div>
+
 
         <div class="panel setting-card">
 
@@ -1621,6 +802,7 @@
 
         </div>
 
+
         <div class="panel setting-card">
 
             <span class="big-icon">
@@ -1645,6 +827,11 @@
 
 </section>
 
+
+<!-- =====================================================
+     XP
+===================================================== -->
+
 <section
     id="xp"
     class="page"
@@ -1661,6 +848,7 @@
         </p>
 
     </div>
+
 
     <div class="panel">
 
@@ -1692,6 +880,7 @@
 
         </div>
 
+
         <div class="setting-row">
 
             <div>
@@ -1714,6 +903,7 @@
 
         </div>
 
+
         <div class="setting-row">
 
             <div>
@@ -1735,6 +925,7 @@
             >
 
         </div>
+
 
         <div class="setting-row">
 
@@ -1763,6 +954,7 @@
 
         </div>
 
+
         <button
             class="primary-btn"
             onclick="saveSettings()"
@@ -1773,6 +965,11 @@
     </div>
 
 </section>
+
+
+<!-- =====================================================
+     GAMES
+===================================================== -->
 
 <section
     id="games"
@@ -1790,6 +987,7 @@
         </p>
 
     </div>
+
 
     <div class="stats-grid">
 
@@ -1813,6 +1011,7 @@
 
         </div>
 
+
         <div class="stat-card">
 
             <div class="stat-icon">
@@ -1832,6 +1031,7 @@
             </div>
 
         </div>
+
 
         <div class="stat-card">
 
@@ -1854,6 +1054,7 @@
         </div>
 
     </div>
+
 
     <div class="panel game-panel">
 
@@ -1892,6 +1093,7 @@
 
         </div>
 
+
         <div class="game-row">
 
             <div>
@@ -1926,6 +1128,7 @@
             </label>
 
         </div>
+
 
         <div class="game-row">
 
@@ -1966,6 +1169,11 @@
 
 </section>
 
+
+<!-- =====================================================
+     MODERATION
+===================================================== -->
+
 <section
     id="moderation"
     class="page"
@@ -1982,6 +1190,7 @@
         </p>
 
     </div>
+
 
     <div class="settings-grid">
 
@@ -2012,6 +1221,7 @@
 
         </div>
 
+
         <div class="panel setting-card">
 
             <span class="big-icon">
@@ -2039,6 +1249,7 @@
 
         </div>
 
+
         <div class="panel setting-card">
 
             <span class="big-icon">
@@ -2065,6 +1276,7 @@
             </label>
 
         </div>
+
 
         <div class="panel setting-card">
 
@@ -2097,6 +1309,11 @@
 
 </section>
 
+
+<!-- =====================================================
+     VERIFICATION
+===================================================== -->
+
 <section
     id="verification"
     class="page"
@@ -2113,6 +1330,7 @@
         </p>
 
     </div>
+
 
     <div class="panel">
 
@@ -2142,6 +1360,7 @@
             </label>
 
         </div>
+
 
         <div class="setting-row">
 
@@ -2175,6 +1394,7 @@
 
         </div>
 
+
         <div class="setting-row">
 
             <div>
@@ -2207,6 +1427,7 @@
 
         </div>
 
+
         <button
             class="primary-btn"
             onclick="saveSettings()"
@@ -2217,6 +1438,11 @@
     </div>
 
 </section>
+
+
+<!-- =====================================================
+     POLLS
+===================================================== -->
 
 <section
     id="polls"
@@ -2235,17 +1461,20 @@
 
     </div>
 
+
     <div class="panel">
 
         <h3>
             Create Poll
         </h3>
 
+
         <input
             class="text-input"
             id="pollQuestion"
             placeholder="Enter your poll question..."
         >
+
 
         <div class="poll-options">
 
@@ -2261,6 +1490,7 @@
 
         </div>
 
+
         <button
             class="primary-btn"
             onclick="createPoll()"
@@ -2268,11 +1498,17 @@
             🗳️ Create Poll
         </button>
 
+
         <div id="pollMessage"></div>
 
     </div>
 
 </section>
+
+
+<!-- =====================================================
+     SETTINGS
+===================================================== -->
 
 <section
     id="settings"
@@ -2290,6 +1526,7 @@
         </p>
 
     </div>
+
 
     <div class="panel">
 
@@ -2324,6 +1561,7 @@
 
         </div>
 
+
         <div class="setting-row">
 
             <div>
@@ -2350,6 +1588,7 @@
             </label>
 
         </div>
+
 
         <div class="setting-row">
 
@@ -2378,6 +1617,7 @@
 
         </div>
 
+
         <button
             class="primary-btn"
             onclick="saveSettings()"
@@ -2391,12 +1631,20 @@
 
 </main>
 
+<!-- =========================================================
+     TOAST
+========================================================= -->
+
 <div
     id="toast"
     class="toast"
 >
     Settings saved successfully! ✓
 </div>
+
+<!-- =========================================================
+     JAVASCRIPT
+========================================================= -->
 
 <script src="script.js"></script>
 
