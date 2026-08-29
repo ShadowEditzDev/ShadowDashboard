@@ -106,6 +106,16 @@ async function checkDiscordLogin() {
             loginStatus === "cancelled"
         ) {
 
+            shadowSession = null;
+
+            localStorage.removeItem(
+                "shadow_session"
+            );
+
+            currentUser = null;
+            currentGuilds = [];
+            selectedGuild = null;
+
             showLoginScreen();
 
             showToast(
@@ -114,6 +124,12 @@ async function checkDiscordLogin() {
 
             return;
         }
+
+        console.log(
+            "🔐 Showing Discord login first..."
+        );
+
+        showLoginScreen();
 
         console.log(
             "🔍 Checking Discord session..."
@@ -126,12 +142,15 @@ async function checkDiscordLogin() {
 
         if (!response.ok) {
 
-            shadowSession =
-                null;
+            shadowSession = null;
 
             localStorage.removeItem(
                 "shadow_session"
             );
+
+            currentUser = null;
+            currentGuilds = [];
+            selectedGuild = null;
 
             showLoginScreen();
 
@@ -173,23 +192,27 @@ async function checkDiscordLogin() {
             await loadGuilds();
 
             if (
-                loginStatus ===
-                "success"
+                currentGuilds.length > 0
             ) {
 
-                setTimeout(
-                    () => {
+                openServerScreen();
 
-                        openServerScreen();
+                if (
+                    loginStatus ===
+                    "success"
+                ) {
 
-                        showToast(
-                            "👋 Welcome, " +
-                            username +
-                            "!"
-                        );
+                    showToast(
+                        "👋 Welcome, " +
+                        username +
+                        "! Select your server."
+                    );
+                }
 
-                    },
-                    250
+            } else {
+
+                showToast(
+                    "⚠️ No manageable servers found."
                 );
             }
 
@@ -641,7 +664,8 @@ function animateNumberChange(
             value.toLocaleString();
 
         if (
-            progress < 1
+            progress <
+            1
         ) {
 
             requestAnimationFrame(
@@ -1308,6 +1332,10 @@ async function selectServer(
 
         await loadRealStats();
 
+        showPage(
+            "overview"
+        );
+
     } catch (error) {
 
         console.error(
@@ -1738,6 +1766,9 @@ async function logout() {
         currentUser =
             null;
 
+        currentGuilds =
+            [];
+
         selectedGuild =
             null;
 
@@ -1755,6 +1786,10 @@ async function logout() {
                 null;
         }
 
+        resetDisplayedStats();
+
+        showLoginScreen();
+
         window.location.href =
             window.location.pathname;
     }
@@ -1768,6 +1803,21 @@ function showPage(
     pageId,
     button = null
 ) {
+
+    if (
+        pageId !== "server" &&
+        pageId !== "overview" &&
+        !selectedGuild
+    ) {
+
+        showToast(
+            "⚠️ Select a server first."
+        );
+
+        openServerScreen();
+
+        return;
+    }
 
     const pages =
         document.querySelectorAll(
@@ -2456,7 +2506,9 @@ function setupKeyboardShortcuts() {
 
                 event.preventDefault();
 
-                openServerScreen();
+                if (currentUser) {
+                    openServerScreen();
+                }
             }
         }
     );
