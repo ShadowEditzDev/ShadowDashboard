@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://shadoweditzdev.github.io/ShadowDashboard/sitemap.xml
