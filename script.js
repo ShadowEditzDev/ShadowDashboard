@@ -92,22 +92,6 @@ async function checkDiscordLogin() {
             params.get("session");
 
         // -----------------------------------------------------
-        // REMOVE OAUTH PARAMETERS IMMEDIATELY
-        // -----------------------------------------------------
-
-        if (
-            loginStatus ||
-            sessionFromURL
-        ) {
-
-            cleanURL();
-
-            console.log(
-                "🧹 OAuth parameters removed from URL."
-            );
-        }
-
-        // -----------------------------------------------------
         // GET SESSION FROM OAUTH URL
         // -----------------------------------------------------
 
@@ -123,6 +107,22 @@ async function checkDiscordLogin() {
 
             console.log(
                 "🔑 Session received from OAuth."
+            );
+        }
+
+        // -----------------------------------------------------
+        // REMOVE OAUTH PARAMETERS IMMEDIATELY
+        // -----------------------------------------------------
+
+        if (
+            loginStatus ||
+            sessionFromURL
+        ) {
+
+            cleanURL();
+
+            console.log(
+                "🧹 OAuth parameters removed from URL."
             );
         }
 
@@ -233,7 +233,7 @@ async function checkDiscordLogin() {
             await loadRealStats();
 
             // -------------------------------------------------
-            // SUCCESS TOAST
+            // OPEN SERVER SELECTOR AFTER SUCCESSFUL LOGIN
             // -------------------------------------------------
 
             if (
@@ -241,8 +241,17 @@ async function checkDiscordLogin() {
                 "success"
             ) {
 
-                showToast(
-                    `👋 Welcome, ${username}!`
+                setTimeout(
+                    () => {
+
+                        openServerScreen();
+
+                        showToast(
+                            `👋 Welcome, ${username}!`
+                        );
+
+                    },
+                    250
                 );
             }
 
@@ -1036,7 +1045,12 @@ function openServerScreen() {
 
         filterServers();
 
-        search.focus();
+        setTimeout(
+            () => {
+                search.focus();
+            },
+            100
+        );
     }
 }
 
@@ -1247,13 +1261,10 @@ function cleanURL() {
 
     try {
 
-        const cleanPath =
-            window.location.pathname;
-
         window.history.replaceState(
             {},
             document.title,
-            cleanPath
+            window.location.pathname
         );
 
     } catch (error) {
