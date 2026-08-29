@@ -1,18 +1,18 @@
 // 🌑 ShadowDashboard
 // Discord OAuth + Secure Session + Server Selector
-// Premium UI + Real Discord Member Count
+// Premium UI + Real Discord Statistics
 
 const BACKEND_URL =
-    "https://shadowapi.jonhcena-co.workers.dev";
+"https://shadowapi.jonhcena-co.workers.dev";
 
 // =========================================================
 // GLOBAL STATE
 // =========================================================
 
 let shadowSession =
-    localStorage.getItem(
-        "shadow_session"
-    ) || null;
+localStorage.getItem(
+"shadow_session"
+) || null;
 
 let shadowStatsInterval = null;
 let shadowToastTimer = null;
@@ -27,12 +27,13 @@ let selectedGuild = null;
 
 function loginWithDiscord() {
 
-    console.log(
-        "🔐 Opening Discord OAuth..."
-    );
+console.log(
+    "🔐 Opening Discord OAuth..."
+);
 
-    window.location.href =
-        `${BACKEND_URL}/auth/discord`;
+window.location.href =
+    `${BACKEND_URL}/auth/discord`;
+
 }
 
 // =========================================================
@@ -40,36 +41,35 @@ function loginWithDiscord() {
 // =========================================================
 
 async function apiFetch(
-    endpoint,
-    options = {}
+endpoint,
+options = {}
 ) {
 
-    const headers = {
-        "Accept":
-            "application/json",
+const headers = {
+    "Accept":
+        "application/json",
 
-        ...(options.headers || {})
-    };
+    ...(options.headers || {})
+};
 
-    if (shadowSession) {
+if (shadowSession) {
 
-        headers[
-            "Authorization"
-        ] =
-            `Bearer ${shadowSession}`;
+    headers[
+        "Authorization"
+    ] =
+        `Bearer ${shadowSession}`;
+}
+
+return fetch(
+    BACKEND_URL + endpoint,
+    {
+        ...options,
+        headers,
+        credentials:
+            "include"
     }
+);
 
-    return fetch(
-        BACKEND_URL + endpoint,
-        {
-            ...options,
-
-            headers,
-
-            credentials:
-                "include"
-        }
-    );
 }
 
 // =========================================================
@@ -78,197 +78,174 @@ async function apiFetch(
 
 async function checkDiscordLogin() {
 
-    try {
+try {
 
-        const params =
-            new URLSearchParams(
-                window.location.search
-            );
+    const params =
+        new URLSearchParams(
+            window.location.search
+        );
 
-        const loginStatus =
-            params.get("login");
+    const loginStatus =
+        params.get("login");
 
-        const sessionFromURL =
-            params.get("session");
+    const sessionFromURL =
+        params.get("session");
 
-        // -----------------------------------------------------
-        // GET SESSION FROM OAUTH URL
-        // -----------------------------------------------------
+    if (sessionFromURL) {
 
-        if (sessionFromURL) {
+        shadowSession =
+            sessionFromURL;
 
-            shadowSession =
-                sessionFromURL;
-
-            localStorage.setItem(
-                "shadow_session",
-                sessionFromURL
-            );
-
-            console.log(
-                "🔑 Session received from OAuth."
-            );
-        }
-
-        // -----------------------------------------------------
-        // REMOVE OAUTH PARAMETERS IMMEDIATELY
-        // -----------------------------------------------------
-
-        if (
-            loginStatus ||
+        localStorage.setItem(
+            "shadow_session",
             sessionFromURL
-        ) {
-
-            cleanURL();
-
-            console.log(
-                "🧹 OAuth parameters removed from URL."
-            );
-        }
-
-        // -----------------------------------------------------
-        // OAUTH FAILURE
-        // -----------------------------------------------------
-
-        if (
-            loginStatus === "failed" ||
-            loginStatus === "error" ||
-            loginStatus === "cancelled"
-        ) {
-
-            console.error(
-                "❌ Discord OAuth failed:",
-                loginStatus
-            );
-
-            showLoginScreen();
-
-            showToast(
-                "❌ Discord login failed."
-            );
-
-            return;
-        }
-
-        // -----------------------------------------------------
-        // CHECK SESSION
-        // -----------------------------------------------------
-
-        console.log(
-            "🔍 Checking Discord session..."
         );
 
-        const response =
-            await apiFetch(
-                "/api/me"
-            );
+        console.log(
+            "🔑 Session received from OAuth."
+        );
+    }
 
-        if (!response.ok) {
+    if (
+        loginStatus ||
+        sessionFromURL
+    ) {
 
-            console.log(
-                "🔒 Invalid dashboard session:",
-                response.status
-            );
-
-            shadowSession =
-                null;
-
-            localStorage.removeItem(
-                "shadow_session"
-            );
-
-            showLoginScreen();
-
-            return;
-        }
-
-        const data =
-            await response.json();
+        cleanURL();
 
         console.log(
-            "📡 Session response:",
-            data
+            "🧹 OAuth parameters removed from URL."
         );
+    }
 
-        // -----------------------------------------------------
-        // LOGGED IN
-        // -----------------------------------------------------
-
-        if (
-            data.loggedIn &&
-            data.user
-        ) {
-
-            currentUser =
-                data.user;
-
-            const username =
-                data.user.global_name ||
-                data.user.username ||
-                "Discord User";
-
-            console.log(
-                "✅ Logged in as:",
-                username
-            );
-
-            updateElementText(
-                "topUsername",
-                username
-            );
-
-            updateElementText(
-                "dashboardUsername",
-                username
-            );
-
-            updateUserAvatar(
-                data.user
-            );
-
-            hideLoginScreen();
-
-            await loadGuilds();
-
-            await loadRealStats();
-
-            // -------------------------------------------------
-            // OPEN SERVER SELECTOR AFTER SUCCESSFUL LOGIN
-            // -------------------------------------------------
-
-            if (
-                loginStatus ===
-                "success"
-            ) {
-
-                setTimeout(
-                    () => {
-
-                        openServerScreen();
-
-                        showToast(
-                            `👋 Welcome, ${username}!`
-                        );
-
-                    },
-                    250
-                );
-            }
-
-            return;
-        }
-
-        showLoginScreen();
-
-    } catch (error) {
+    if (
+        loginStatus === "failed" ||
+        loginStatus === "error" ||
+        loginStatus === "cancelled"
+    ) {
 
         console.error(
-            "❌ Login check failed:",
-            error
+            "❌ Discord OAuth failed:",
+            loginStatus
         );
 
         showLoginScreen();
+
+        showToast(
+            "❌ Discord login failed."
+        );
+
+        return;
     }
+
+    console.log(
+        "🔍 Checking Discord session..."
+    );
+
+    const response =
+        await apiFetch(
+            "/api/me"
+        );
+
+    if (!response.ok) {
+
+        console.log(
+            "🔒 Invalid dashboard session:",
+            response.status
+        );
+
+        shadowSession =
+            null;
+
+        localStorage.removeItem(
+            "shadow_session"
+        );
+
+        showLoginScreen();
+
+        return;
+    }
+
+    const data =
+        await response.json();
+
+    console.log(
+        "📡 Session response:",
+        data
+    );
+
+    if (
+        data.loggedIn &&
+        data.user
+    ) {
+
+        currentUser =
+            data.user;
+
+        const username =
+            data.user.global_name ||
+            data.user.username ||
+            "Discord User";
+
+        console.log(
+            "✅ Logged in as:",
+            username
+        );
+
+        updateElementText(
+            "topUsername",
+            username
+        );
+
+        updateElementText(
+            "dashboardUsername",
+            username
+        );
+
+        updateUserAvatar(
+            data.user
+        );
+
+        hideLoginScreen();
+
+        await loadGuilds();
+
+        await loadRealStats();
+
+        if (
+            loginStatus ===
+            "success"
+        ) {
+
+            setTimeout(
+                () => {
+
+                    openServerScreen();
+
+                    showToast(
+                        `👋 Welcome, ${username}!`
+                    );
+
+                },
+                250
+            );
+        }
+
+        return;
+    }
+
+    showLoginScreen();
+
+} catch (error) {
+
+    console.error(
+        "❌ Login check failed:",
+        error
+    );
+
+    showLoginScreen();
+}
+
 }
 
 // =========================================================
@@ -277,30 +254,32 @@ async function checkDiscordLogin() {
 
 function showLoginScreen() {
 
-    const loginScreen =
-        document.getElementById(
-            "loginScreen"
-        );
+const loginScreen =
+    document.getElementById(
+        "loginScreen"
+    );
 
-    if (loginScreen) {
+if (loginScreen) {
 
-        loginScreen.style.display =
-            "flex";
-    }
+    loginScreen.style.display =
+        "flex";
+}
+
 }
 
 function hideLoginScreen() {
 
-    const loginScreen =
-        document.getElementById(
-            "loginScreen"
-        );
+const loginScreen =
+    document.getElementById(
+        "loginScreen"
+    );
 
-    if (loginScreen) {
+if (loginScreen) {
 
-        loginScreen.style.display =
-            "none";
-    }
+    loginScreen.style.display =
+        "none";
+}
+
 }
 
 // =========================================================
@@ -308,18 +287,19 @@ function hideLoginScreen() {
 // =========================================================
 
 function updateElementText(
-    id,
-    value
+id,
+value
 ) {
 
-    const element =
-        document.getElementById(id);
+const element =
+    document.getElementById(id);
 
-    if (element) {
+if (element) {
 
-        element.textContent =
-            value;
-    }
+    element.textContent =
+        value;
+}
+
 }
 
 // =========================================================
@@ -328,98 +308,205 @@ function updateElementText(
 
 async function loadRealStats() {
 
-    try {
+try {
 
-        console.log(
-            "📊 Loading real Discord member count..."
+    console.log(
+        "📊 Loading real ShadowBot statistics..."
+    );
+
+    const response =
+        await apiFetch(
+            "/stats"
         );
 
-        const response =
-            await apiFetch(
-                "/stats"
-            );
+    if (!response.ok) {
 
-        if (!response.ok) {
+        console.error(
+            "❌ Stats request failed:",
+            response.status
+        );
 
-            console.error(
-                "❌ Stats request failed:",
-                response.status
-            );
+        return;
+    }
 
-            return;
-        }
+    const data =
+        await response.json();
 
-        const data =
-            await response.json();
+    console.log(
+        "📡 Stats response:",
+        data
+    );
 
-        const members =
-            Number(
-                data.members
-            );
+    // =====================================================
+    // MEMBERS
+    // =====================================================
 
-        if (
-            !Number.isFinite(
-                members
-            ) ||
-            members < 0
-        ) {
+    const members =
+        Number(
+            data.members
+        );
 
-            console.error(
-                "❌ Invalid member count:",
-                data.members
-            );
-
-            return;
-        }
+    if (
+        Number.isFinite(members) &&
+        members >= 0
+    ) {
 
         const memberNumber =
             findMemberStatElement();
 
-        if (!memberNumber) {
+        if (memberNumber) {
 
-            console.error(
-                "❌ Could not find Members stat."
+            const previousValue =
+                Number(
+                    memberNumber.dataset.realMembers ||
+                    0
+                );
+
+            memberNumber.dataset.realMembers =
+                String(members);
+
+            animateNumberChange(
+                memberNumber,
+                previousValue,
+                members,
+                650
             );
-
-            return;
         }
+    }
 
-        const previousValue =
+    // =====================================================
+    // TOTAL XP
+    // =====================================================
+
+    const totalXP =
+        Number(
+            data.totalXP ??
+            data.xp ??
+            0
+        );
+
+    const xpElement =
+        document.getElementById(
+            "xpCount"
+        );
+
+    if (
+        xpElement &&
+        Number.isFinite(totalXP) &&
+        totalXP >= 0
+    ) {
+
+        const previousXP =
             Number(
-                memberNumber.dataset.realMembers ||
+                xpElement.dataset.realXP ||
                 0
             );
 
-        memberNumber.dataset.realMembers =
-            String(members);
+        xpElement.dataset.realXP =
+            String(totalXP);
 
         animateNumberChange(
-            memberNumber,
-            previousValue,
-            members,
+            xpElement,
+            previousXP,
+            totalXP,
             650
         );
+    }
 
-        console.log(
-            `✅ REAL MEMBER COUNT: ${members.toLocaleString()}`
+    // =====================================================
+    // GAMES PLAYED
+    // =====================================================
+
+    const gamesPlayed =
+        Number(
+            data.gamesPlayed ??
+            0
         );
 
-        if (!shadowStatsInterval) {
+    const gameElement =
+        document.getElementById(
+            "gameCount"
+        );
 
-            shadowStatsInterval =
-                setInterval(
-                    loadRealStats,
-                    60000
-                );
-        }
+    if (
+        gameElement &&
+        Number.isFinite(gamesPlayed) &&
+        gamesPlayed >= 0
+    ) {
 
-    } catch (error) {
+        const previousGames =
+            Number(
+                gameElement.dataset.realGames ||
+                0
+            );
 
-        console.error(
-            "❌ Failed to load stats:",
-            error
+        gameElement.dataset.realGames =
+            String(gamesPlayed);
+
+        animateNumberChange(
+            gameElement,
+            previousGames,
+            gamesPlayed,
+            650
         );
     }
+
+    // =====================================================
+    // GAMES PAGE
+    // =====================================================
+
+    const gamesPageElement =
+        document.getElementById(
+            "gamesPlayedCount"
+        );
+
+    if (
+        gamesPageElement &&
+        Number.isFinite(gamesPlayed) &&
+        gamesPlayed >= 0
+    ) {
+
+        gamesPageElement.textContent =
+            gamesPlayed.toLocaleString();
+    }
+
+    console.log(
+        "✅ REAL SHADOWBOT STATS:",
+        {
+            members:
+                Number.isFinite(members)
+                    ? members
+                    : 0,
+
+            totalXP:
+                Number.isFinite(totalXP)
+                    ? totalXP
+                    : 0,
+
+            gamesPlayed:
+                Number.isFinite(gamesPlayed)
+                    ? gamesPlayed
+                    : 0
+        }
+    );
+
+    if (!shadowStatsInterval) {
+
+        shadowStatsInterval =
+            setInterval(
+                loadRealStats,
+                60000
+            );
+    }
+
+} catch (error) {
+
+    console.error(
+        "❌ Failed to load ShadowBot stats:",
+        error
+    );
+}
+
 }
 
 // =========================================================
@@ -428,43 +515,43 @@ async function loadRealStats() {
 
 function findMemberStatElement() {
 
-    const statCards =
-        document.querySelectorAll(
-            ".stat-card"
-        );
+const statCards =
+    document.querySelectorAll(
+        ".stat-card"
+    );
 
-    for (
-        const card
-        of statCards
+for (
+    const card of statCards
+) {
+
+    const text =
+        card.textContent
+            .toLowerCase();
+
+    if (
+        text.includes("members") ||
+        text.includes("member")
     ) {
 
-        const text =
-            card.textContent
-                .toLowerCase();
+        const strong =
+            card.querySelector(
+                "strong"
+            );
 
-        if (
-            text.includes("members") ||
-            text.includes("member")
-        ) {
+        if (strong) {
 
-            const strong =
-                card.querySelector(
-                    "strong"
-                );
-
-            if (strong) {
-
-                return strong;
-            }
+            return strong;
         }
     }
+}
 
-    const fallback =
-        document.querySelector(
-            ".stat-card strong"
-        );
+const fallback =
+    document.querySelector(
+        ".stat-card strong"
+    );
 
-    return fallback || null;
+return fallback || null;
+
 }
 
 // =========================================================
@@ -472,66 +559,79 @@ function findMemberStatElement() {
 // =========================================================
 
 function animateNumberChange(
-    element,
-    from,
-    to,
-    duration = 700
+element,
+from,
+to,
+duration = 700
 ) {
 
-    if (!element) {
-        return;
+if (!element) {
+    return;
+}
+
+if (
+    !Number.isFinite(from)
+) {
+    from = 0;
+}
+
+if (
+    !Number.isFinite(to)
+) {
+    to = 0;
+}
+
+if (from === to) {
+
+    element.textContent =
+        to.toLocaleString();
+
+    return;
+}
+
+const start =
+    performance.now();
+
+function frame(time) {
+
+    const progress =
+        Math.min(
+            (time - start) /
+                duration,
+            1
+        );
+
+    const eased =
+        1 -
+        Math.pow(
+            1 - progress,
+            3
+        );
+
+    const value =
+        Math.round(
+            from +
+            (to - from) *
+            eased
+        );
+
+    element.textContent =
+        value.toLocaleString();
+
+    if (
+        progress < 1
+    ) {
+
+        requestAnimationFrame(
+            frame
+        );
     }
+}
 
-    if (from === to) {
+requestAnimationFrame(
+    frame
+);
 
-        element.textContent =
-            to.toLocaleString();
-
-        return;
-    }
-
-    const start =
-        performance.now();
-
-    function frame(time) {
-
-        const progress =
-            Math.min(
-                (time - start) /
-                    duration,
-                1
-            );
-
-        const eased =
-            1 -
-            Math.pow(
-                1 - progress,
-                3
-            );
-
-        const value =
-            Math.round(
-                from +
-                (to - from) *
-                eased
-            );
-
-        element.textContent =
-            value.toLocaleString();
-
-        if (
-            progress < 1
-        ) {
-
-            requestAnimationFrame(
-                frame
-            );
-        }
-    }
-
-    requestAnimationFrame(
-        frame
-    );
 }
 
 // =========================================================
@@ -539,110 +639,111 @@ function animateNumberChange(
 // =========================================================
 
 function updateUserAvatar(
-    user
+user
 ) {
 
-    const avatar =
-        document.getElementById(
-            "userAvatar"
+const avatar =
+    document.getElementById(
+        "userAvatar"
+    );
+
+if (!avatar) {
+    return;
+}
+
+let avatarURL =
+    null;
+
+if (
+    typeof user.avatar ===
+        "string" &&
+    user.avatar.startsWith(
+        "http"
+    )
+) {
+
+    avatarURL =
+        user.avatar;
+
+} else if (
+    user.avatar &&
+    user.id
+) {
+
+    avatarURL =
+        `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png?size=128`;
+
+} else if (
+    user.id
+) {
+
+    const discriminator =
+        Number(
+            user.discriminator ||
+            0
         );
 
-    if (!avatar) {
-        return;
-    }
+    avatarURL =
+        `https://cdn.discordapp.com/embed/avatars/${discriminator % 5}.png`;
+}
 
-    let avatarURL =
-        null;
+if (!avatarURL) {
 
-    if (
-        typeof user.avatar ===
-            "string" &&
-        user.avatar.startsWith(
-            "http"
-        )
-    ) {
+    avatar.textContent =
+        "👤";
 
-        avatarURL =
-            user.avatar;
-    }
+    return;
+}
 
-    else if (
-        user.avatar &&
-        user.id
-    ) {
+avatar.innerHTML =
+    "";
 
-        avatarURL =
-            `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png?size=128`;
-    }
+const img =
+    document.createElement(
+        "img"
+    );
 
-    else if (user.id) {
+img.src =
+    avatarURL;
 
-        const discriminator =
-            Number(
-                user.discriminator ||
-                0
-            );
+img.alt =
+    "Discord Avatar";
 
-        avatarURL =
-            `https://cdn.discordapp.com/embed/avatars/${discriminator % 5}.png`;
-    }
+img.width =
+    128;
 
-    if (!avatarURL) {
+img.height =
+    128;
+
+img.loading =
+    "eager";
+
+img.draggable =
+    false;
+
+img.style.width =
+    "100%";
+
+img.style.height =
+    "100%";
+
+img.style.objectFit =
+    "cover";
+
+img.style.borderRadius =
+    "inherit";
+
+img.onerror =
+    () => {
 
         avatar.textContent =
             "👤";
+    };
 
-        return;
-    }
+avatar.appendChild(
+    img
+);
 
-    avatar.innerHTML =
-        "";
-
-    const img =
-        document.createElement(
-            "img"
-        );
-
-    img.src =
-        avatarURL;
-
-    img.alt =
-        "Discord Avatar";
-
-    img.width =
-        128;
-
-    img.height =
-        128;
-
-    img.loading =
-        "eager";
-
-    img.draggable =
-        false;
-
-    img.style.width =
-        "100%";
-
-    img.style.height =
-        "100%";
-
-    img.style.objectFit =
-        "cover";
-
-    img.style.borderRadius =
-        "inherit";
-
-    img.onerror =
-        () => {
-
-            avatar.textContent =
-                "👤";
-        };
-
-    avatar.appendChild(
-        img
-    );
 }
 
 // =========================================================
@@ -651,55 +752,56 @@ function updateUserAvatar(
 
 async function loadGuilds() {
 
-    try {
+try {
 
-        console.log(
-            "🏠 Loading Discord servers..."
+    console.log(
+        "🏠 Loading Discord servers..."
+    );
+
+    const response =
+        await apiFetch(
+            "/api/guilds"
         );
 
-        const response =
-            await apiFetch(
-                "/api/guilds"
-            );
-
-        if (!response.ok) {
-
-            console.error(
-                "❌ Guild loading failed:",
-                response.status
-            );
-
-            return;
-        }
-
-        const data =
-            await response.json();
-
-        const guilds =
-            Array.isArray(
-                data.guilds
-            )
-                ? data.guilds
-                : [];
-
-        currentGuilds =
-            guilds;
-
-        renderServerScreen(
-            guilds
-        );
-
-        console.log(
-            `✅ Loaded ${guilds.length} servers.`
-        );
-
-    } catch (error) {
+    if (!response.ok) {
 
         console.error(
             "❌ Guild loading failed:",
-            error
+            response.status
         );
+
+        return;
     }
+
+    const data =
+        await response.json();
+
+    const guilds =
+        Array.isArray(
+            data.guilds
+        )
+            ? data.guilds
+            : [];
+
+    currentGuilds =
+        guilds;
+
+    renderServerScreen(
+        guilds
+    );
+
+    console.log(
+        `✅ Loaded ${guilds.length} servers.`
+    );
+
+} catch (error) {
+
+    console.error(
+        "❌ Guild loading failed:",
+        error
+    );
+}
+
 }
 
 // =========================================================
@@ -707,174 +809,175 @@ async function loadGuilds() {
 // =========================================================
 
 function renderServerScreen(
-    guilds
+guilds
 ) {
 
-    const serverList =
-        document.getElementById(
-            "serverList"
-        );
+const serverList =
+    document.getElementById(
+        "serverList"
+    );
 
-    if (!serverList) {
-        return;
-    }
+if (!serverList) {
+    return;
+}
 
-    serverList.innerHTML =
-        "";
+serverList.innerHTML =
+    "";
 
-    if (!guilds.length) {
+if (!guilds.length) {
 
-        serverList.innerHTML = `
-            <div class="server-empty">
-                <div class="server-empty-icon">🏠</div>
-                <h3>No servers found</h3>
-                <p>You don't have any manageable servers.</p>
-            </div>
-        `;
+    serverList.innerHTML = `
+        <div class="server-empty">
+            <div class="server-empty-icon">🏠</div>
+            <h3>No servers found</h3>
+            <p>You don't have any manageable servers.</p>
+        </div>
+    `;
 
-        return;
-    }
+    return;
+}
 
-    guilds.forEach(
-        guild => {
+guilds.forEach(
+    guild => {
 
-            const card =
-                document.createElement(
-                    "div"
-                );
+        const card =
+            document.createElement(
+                "div"
+            );
 
-            card.className =
-                "server-card";
+        card.className =
+            "server-card";
 
-            let iconURL =
-                "Goku.png";
+        let iconURL =
+            "Goku.png";
+
+        if (
+            guild.icon
+        ) {
 
             if (
-                guild.icon
+                guild.icon.startsWith(
+                    "http"
+                )
             ) {
 
-                if (
-                    guild.icon.startsWith(
-                        "http"
-                    )
-                ) {
+                iconURL =
+                    guild.icon;
 
-                    iconURL =
-                        guild.icon;
+            } else {
 
-                } else {
-
-                    iconURL =
-                        `https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png?size=128`;
-                }
+                iconURL =
+                    `https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png?size=128`;
             }
+        }
 
-            card.innerHTML = `
-                <img
-                    class="server-icon"
-                    src="${escapeHTML(iconURL)}"
-                    alt="${escapeHTML(guild.name)}"
-                    loading="lazy"
-                    draggable="false"
-                    onerror="this.src='Goku.png'"
-                >
+        card.innerHTML = `
+            <img
+                class="server-icon"
+                src="${escapeHTML(iconURL)}"
+                alt="${escapeHTML(guild.name)}"
+                loading="lazy"
+                draggable="false"
+                onerror="this.src='Goku.png'"
+            >
 
-                <div class="server-info">
+            <div class="server-info">
 
-                    <span class="server-name">
-                        ${escapeHTML(guild.name)}
-                    </span>
+                <span class="server-name">
+                    ${escapeHTML(guild.name)}
+                </span>
 
-                    <div class="server-badges">
+                <div class="server-badges">
 
-                        ${
-                            guild.owner
-                                ? `<span class="server-badge owner">👑 OWNER</span>`
-                                : ""
-                        }
+                    ${
+                        guild.owner
+                            ? `<span class="server-badge owner">👑 OWNER</span>`
+                            : ""
+                    }
 
-                        ${
-                            guild.admin
-                                ? `<span class="server-badge admin">🛡️ ADMIN</span>`
-                                : ""
-                        }
+                    ${
+                        guild.admin
+                            ? `<span class="server-badge admin">🛡️ ADMIN</span>`
+                            : ""
+                    }
 
-                        ${
-                            guild.botInstalled
-                                ? `<span class="server-badge bot">✓ BOT INSTALLED</span>`
-                                : `<span class="server-badge not-installed">⚠ BOT NOT INSTALLED</span>`
-                        }
-
-                    </div>
+                    ${
+                        guild.botInstalled
+                            ? `<span class="server-badge bot">✓ BOT INSTALLED</span>`
+                            : `<span class="server-badge not-installed">⚠ BOT NOT INSTALLED</span>`
+                    }
 
                 </div>
 
-                ${
-                    guild.botInstalled
-                        ? `
-                            <button
-                                class="manage-server-btn"
-                                type="button"
-                                data-action="manage"
-                                data-guild-id="${escapeHTML(guild.id)}"
-                            >
-                                Manage
-                            </button>
-                        `
-                        : `
-                            <button
-                                class="manage-server-btn"
-                                type="button"
-                                data-action="invite"
-                                data-guild-id="${escapeHTML(guild.id)}"
-                            >
-                                Add Bot
-                            </button>
-                        `
-                }
-            `;
+            </div>
 
-            const button =
-                card.querySelector(
-                    ".manage-server-btn"
-                );
-
-            if (button) {
-
-                button.addEventListener(
-                    "click",
-                    () => {
-
-                        const action =
-                            button.dataset.action;
-
-                        const guildId =
-                            button.dataset.guildId;
-
-                        if (
-                            action ===
-                            "invite"
-                        ) {
-
-                            inviteBotToGuild(
-                                guildId
-                            );
-
-                        } else {
-
-                            selectServer(
-                                guildId
-                            );
-                        }
-                    }
-                );
+            ${
+                guild.botInstalled
+                    ? `
+                        <button
+                            class="manage-server-btn"
+                            type="button"
+                            data-action="manage"
+                            data-guild-id="${escapeHTML(guild.id)}"
+                        >
+                            Manage
+                        </button>
+                    `
+                    : `
+                        <button
+                            class="manage-server-btn"
+                            type="button"
+                            data-action="invite"
+                            data-guild-id="${escapeHTML(guild.id)}"
+                        >
+                            Add Bot
+                        </button>
+                    `
             }
+        `;
 
-            serverList.appendChild(
-                card
+        const button =
+            card.querySelector(
+                ".manage-server-btn"
+            );
+
+        if (button) {
+
+            button.addEventListener(
+                "click",
+                () => {
+
+                    const action =
+                        button.dataset.action;
+
+                    const guildId =
+                        button.dataset.guildId;
+
+                    if (
+                        action ===
+                        "invite"
+                    ) {
+
+                        inviteBotToGuild(
+                            guildId
+                        );
+
+                    } else {
+
+                        selectServer(
+                            guildId
+                        );
+                    }
+                }
             );
         }
-    );
+
+        serverList.appendChild(
+            card
+        );
+    }
+);
+
 }
 
 // =========================================================
@@ -882,32 +985,33 @@ function renderServerScreen(
 // =========================================================
 
 function escapeHTML(
-    value
+value
 ) {
 
-    return String(
-        value || ""
+return String(
+    value || ""
+)
+    .replace(
+        /&/g,
+        "&amp;"
     )
-        .replace(
-            /&/g,
-            "&amp;"
-        )
-        .replace(
-            /</g,
-            "&lt;"
-        )
-        .replace(
-            />/g,
-            "&gt;"
-        )
-        .replace(
-            /"/g,
-            "&quot;"
-        )
-        .replace(
-            /'/g,
-            "&#039;"
-        );
+    .replace(
+        /</g,
+        "&lt;"
+    )
+    .replace(
+        />/g,
+        "&gt;"
+    )
+    .replace(
+        /"/g,
+        "&quot;"
+    )
+    .replace(
+        /'/g,
+        "&#039;"
+    );
+
 }
 
 // =========================================================
@@ -916,92 +1020,93 @@ function escapeHTML(
 
 function filterServers() {
 
-    const search =
-        document.getElementById(
-            "serverSearch"
-        );
-
-    if (!search) {
-        return;
-    }
-
-    const cards =
-        document.querySelectorAll(
-            "#serverList .server-card"
-        );
-
-    const query =
-        search.value
-            .trim()
-            .toLowerCase();
-
-    let visibleCount =
-        0;
-
-    cards.forEach(
-        card => {
-
-            const name =
-                card
-                    .querySelector(
-                        ".server-name"
-                    )
-                    ?.textContent
-                    .toLowerCase() ||
-                "";
-
-            const visible =
-                name.includes(
-                    query
-                );
-
-            card.style.display =
-                visible
-                    ? "flex"
-                    : "none";
-
-            if (visible) {
-                visibleCount++;
-            }
-        }
+const search =
+    document.getElementById(
+        "serverSearch"
     );
 
-    const existing =
-        document.querySelector(
-            "#serverList .search-empty"
+if (!search) {
+    return;
+}
+
+const cards =
+    document.querySelectorAll(
+        "#serverList .server-card"
+    );
+
+const query =
+    search.value
+        .trim()
+        .toLowerCase();
+
+let visibleCount =
+    0;
+
+cards.forEach(
+    card => {
+
+        const name =
+            card
+                .querySelector(
+                    ".server-name"
+                )
+                ?.textContent
+                .toLowerCase() ||
+            "";
+
+        const visible =
+            name.includes(
+                query
+            );
+
+        card.style.display =
+            visible
+                ? "flex"
+                : "none";
+
+        if (visible) {
+            visibleCount++;
+        }
+    }
+);
+
+const existing =
+    document.querySelector(
+        "#serverList .search-empty"
+    );
+
+if (existing) {
+    existing.remove();
+}
+
+if (
+    cards.length &&
+    visibleCount === 0
+) {
+
+    const empty =
+        document.createElement(
+            "div"
         );
 
-    if (existing) {
-        existing.remove();
-    }
+    empty.className =
+        "server-empty search-empty";
 
-    if (
-        cards.length &&
-        visibleCount === 0
-    ) {
+    empty.innerHTML = `
+        <div class="server-empty-icon">🔎</div>
+        <h3>No matching servers</h3>
+        <p>Try another server name.</p>
+    `;
 
-        const empty =
-            document.createElement(
-                "div"
-            );
+    document
+        .getElementById(
+            "serverList"
+        )
+        ?.appendChild(
+            empty
+        );
+}
 
-        empty.className =
-            "server-empty search-empty";
-
-        empty.innerHTML = `
-            <div class="server-empty-icon">🔎</div>
-            <h3>No matching servers</h3>
-            <p>Try another server name.</p>
-        `;
-
-        document
-            .getElementById(
-                "serverList"
-            )
-            ?.appendChild(
-                empty
-            );
-    }
 }
 
 // =========================================================
@@ -1010,48 +1115,49 @@ function filterServers() {
 
 function openServerScreen() {
 
-    const screen =
-        document.getElementById(
-            "serverScreen"
-        );
-
-    if (!screen) {
-        return;
-    }
-
-    screen.style.display =
-        "flex";
-
-    screen.style.opacity =
-        "0";
-
-    requestAnimationFrame(
-        () => {
-
-            screen.style.opacity =
-                "1";
-        }
+const screen =
+    document.getElementById(
+        "serverScreen"
     );
 
-    const search =
-        document.getElementById(
-            "serverSearch"
-        );
+if (!screen) {
+    return;
+}
 
-    if (search) {
+screen.style.display =
+    "flex";
 
-        search.value =
-            "";
+screen.style.opacity =
+    "0";
 
-        filterServers();
+requestAnimationFrame(
+    () => {
 
-        setTimeout(
-            () => {
-                search.focus();
-            },
-            100
-        );
+        screen.style.opacity =
+            "1";
     }
+);
+
+const search =
+    document.getElementById(
+        "serverSearch"
+    );
+
+if (search) {
+
+    search.value =
+        "";
+
+    filterServers();
+
+    setTimeout(
+        () => {
+            search.focus();
+        },
+        100
+    );
+}
+
 }
 
 // =========================================================
@@ -1060,29 +1166,31 @@ function openServerScreen() {
 
 function closeServerScreen() {
 
-    const screen =
-        document.getElementById(
-            "serverScreen"
-        );
-
-    if (!screen) {
-        return;
-    }
-
-    screen.style.opacity =
-        "0";
-
-    setTimeout(
-        () => {
-
-            screen.style.display =
-                "none";
-
-            screen.style.opacity =
-                "";
-        },
-        180
+const screen =
+    document.getElementById(
+        "serverScreen"
     );
+
+if (!screen) {
+    return;
+}
+
+screen.style.opacity =
+    "0";
+
+setTimeout(
+    () => {
+
+        screen.style.display =
+            "none";
+
+        screen.style.opacity =
+            "";
+
+    },
+    180
+);
+
 }
 
 // =========================================================
@@ -1090,75 +1198,339 @@ function closeServerScreen() {
 // =========================================================
 
 async function selectServer(
-    guildId
+guildId
 ) {
 
-    if (!guildId) {
-        return;
-    }
+if (!guildId) {
+    return;
+}
 
-    try {
+try {
 
-        const response =
-            await apiFetch(
-                `/api/guild/${encodeURIComponent(guildId)}`
-            );
-
-        const data =
-            await response.json();
-
-        if (!response.ok) {
-
-            console.error(
-                "❌ Server selection failed:",
-                data
-            );
-
-            showToast(
-                data.error ||
-                "❌ Could not select server."
-            );
-
-            return;
-        }
-
-        selectedGuild =
-            currentGuilds.find(
-                guild =>
-                    String(
-                        guild.id
-                    ) ===
-                    String(
-                        guildId
-                    )
-            ) || data;
-
-        updateSelectedServerUI(
-            selectedGuild
+    const response =
+        await apiFetch(
+            `/api/guild/${encodeURIComponent(guildId)}`
         );
 
-        closeServerScreen();
+    const data =
+        await response.json();
 
-        showToast(
-            `🏠 ${data.name} selected`
-        );
+    if (!response.ok) {
 
-        console.log(
-            "🏠 Selected server:",
+        console.error(
+            "❌ Server selection failed:",
             data
         );
 
-    } catch (error) {
+        showToast(
+            data.error ||
+            "❌ Could not select server."
+        );
+
+        return;
+    }
+
+    selectedGuild =
+        currentGuilds.find(
+            guild =>
+                String(
+                    guild.id
+                ) ===
+                String(
+                    guildId
+                )
+        ) || data;
+
+    updateSelectedServerUI(
+        selectedGuild
+    );
+
+    closeServerScreen();
+
+    showToast(
+        `🏠 ${data.name} selected`
+    );
+
+    console.log(
+        "🏠 Selected server:",
+        data
+    );
+
+    // Load server-specific settings
+    await loadServerSettings();
+
+} catch (error) {
+
+    console.error(
+        "❌ Server selection error:",
+        error
+    );
+
+    showToast(
+        "❌ Server selection failed."
+    );
+}
+
+}
+
+// =========================================================
+// LOAD SERVER MANAGEMENT SETTINGS
+// =========================================================
+
+async function loadServerSettings() {
+
+if (
+    !selectedGuild ||
+    !selectedGuild.id
+) {
+
+    return;
+}
+
+try {
+
+    const response =
+        await apiFetch(
+            `/api/guild/${encodeURIComponent(selectedGuild.id)}/settings`
+        );
+
+    const data =
+        await response.json();
+
+    if (!response.ok) {
 
         console.error(
-            "❌ Server selection error:",
-            error
+            "❌ Server settings load failed:",
+            data
+        );
+
+        return;
+    }
+
+    const welcomeToggle =
+        document.getElementById(
+            "welcomeToggle"
+        );
+
+    const leaveToggle =
+        document.getElementById(
+            "leaveToggle"
+        );
+
+    const announcementsToggle =
+        document.getElementById(
+            "announcementsToggle"
+        );
+
+    if (welcomeToggle) {
+
+        welcomeToggle.checked =
+            data.welcomeEnabled !== false;
+    }
+
+    if (leaveToggle) {
+
+        leaveToggle.checked =
+            data.leaveEnabled !== false;
+    }
+
+    if (announcementsToggle) {
+
+        announcementsToggle.checked =
+            data.announcementsEnabled !== false;
+    }
+
+    console.log(
+        "✅ Server settings loaded:",
+        data
+    );
+
+} catch (error) {
+
+    console.error(
+        "❌ Failed to load server settings:",
+        error
+    );
+}
+
+}
+
+// =========================================================
+// SAVE SERVER MANAGEMENT SETTINGS
+// =========================================================
+
+async function saveServerManagementSettings() {
+
+if (
+    !selectedGuild ||
+    !selectedGuild.id
+) {
+
+    showToast(
+        "⚠️ Select a server first."
+    );
+
+    return false;
+}
+
+const welcomeToggle =
+    document.getElementById(
+        "welcomeToggle"
+    );
+
+const leaveToggle =
+    document.getElementById(
+        "leaveToggle"
+    );
+
+const announcementsToggle =
+    document.getElementById(
+        "announcementsToggle"
+    );
+
+const body = {
+
+    welcomeEnabled:
+        welcomeToggle
+            ? welcomeToggle.checked
+            : true,
+
+    leaveEnabled:
+        leaveToggle
+            ? leaveToggle.checked
+            : true,
+
+    announcementsEnabled:
+        announcementsToggle
+            ? announcementsToggle.checked
+            : true
+};
+
+try {
+
+    const response =
+        await apiFetch(
+            `/api/guild/${encodeURIComponent(selectedGuild.id)}/settings`,
+            {
+                method:
+                    "POST",
+
+                headers: {
+                    "Content-Type":
+                        "application/json"
+                },
+
+                body:
+                    JSON.stringify(
+                        body
+                    )
+            }
+        );
+
+    const data =
+        await response.json();
+
+    if (!response.ok) {
+
+        console.error(
+            "❌ Server settings save failed:",
+            data
         );
 
         showToast(
-            "❌ Server selection failed."
+            data.message ||
+            data.error ||
+            "❌ Failed to save server settings."
+        );
+
+        return false;
+    }
+
+    console.log(
+        "✅ Server settings saved:",
+        data
+    );
+
+    showToast(
+        "💾 Server settings saved!"
+    );
+
+    return true;
+
+} catch (error) {
+
+    console.error(
+        "❌ Server settings save error:",
+        error
+    );
+
+    showToast(
+        "❌ Could not save server settings."
+    );
+
+    return false;
+}
+
+}
+
+// =========================================================
+// SERVER MANAGEMENT TOGGLE LISTENERS
+// =========================================================
+
+function setupServerManagementSettings() {
+
+const toggles = [
+    document.getElementById(
+        "welcomeToggle"
+    ),
+
+    document.getElementById(
+        "leaveToggle"
+    ),
+
+    document.getElementById(
+        "announcementsToggle"
+    )
+];
+
+toggles.forEach(
+    toggle => {
+
+        if (!toggle) {
+            return;
+        }
+
+        if (
+            toggle.dataset.serverSettingsBound
+        ) {
+            return;
+        }
+
+        toggle.dataset.serverSettingsBound =
+            "true";
+
+        toggle.addEventListener(
+            "change",
+            async () => {
+
+                if (!selectedGuild) {
+
+                    showToast(
+                        "⚠️ Select a server first."
+                    );
+
+                    toggle.checked =
+                        !toggle.checked;
+
+                    return;
+                }
+
+                await saveServerManagementSettings();
+            }
         );
     }
+);
+
 }
 
 // =========================================================
@@ -1166,65 +1538,66 @@ async function selectServer(
 // =========================================================
 
 async function inviteBotToGuild(
-    guildId
+guildId
 ) {
 
-    if (!guildId) {
+if (!guildId) {
+    return;
+}
+
+try {
+
+    showToast(
+        "🤖 Opening Discord bot invite..."
+    );
+
+    const response =
+        await apiFetch(
+            `/api/invite/${encodeURIComponent(guildId)}`
+        );
+
+    const data =
+        await response.json();
+
+    if (!response.ok) {
+
+        console.error(
+            "❌ Invite error:",
+            data
+        );
+
+        showToast(
+            data.error ||
+            "❌ Could not create bot invite."
+        );
+
         return;
     }
 
-    try {
+    if (!data.url) {
 
         showToast(
-            "🤖 Opening Discord bot invite..."
+            "❌ Discord invite URL missing."
         );
 
-        const response =
-            await apiFetch(
-                `/api/invite/${encodeURIComponent(guildId)}`
-            );
-
-        const data =
-            await response.json();
-
-        if (!response.ok) {
-
-            console.error(
-                "❌ Invite error:",
-                data
-            );
-
-            showToast(
-                data.error ||
-                "❌ Could not create bot invite."
-            );
-
-            return;
-        }
-
-        if (!data.url) {
-
-            showToast(
-                "❌ Discord invite URL missing."
-            );
-
-            return;
-        }
-
-        window.location.href =
-            data.url;
-
-    } catch (error) {
-
-        console.error(
-            "❌ Bot invite error:",
-            error
-        );
-
-        showToast(
-            "❌ Failed to open bot invite."
-        );
+        return;
     }
+
+    window.location.href =
+        data.url;
+
+} catch (error) {
+
+    console.error(
+        "❌ Bot invite error:",
+        error
+    );
+
+    showToast(
+        "❌ Failed to open bot invite."
+    );
+}
+
 }
 
 // =========================================================
@@ -1232,25 +1605,26 @@ async function inviteBotToGuild(
 // =========================================================
 
 function updateSelectedServerUI(
-    guild
+guild
 ) {
 
-    if (!guild) {
-        return;
-    }
+if (!guild) {
+    return;
+}
 
-    document
-        .querySelectorAll(
-            "[data-selected-server]"
-        )
-        .forEach(
-            element => {
+document
+    .querySelectorAll(
+        "[data-selected-server]"
+    )
+    .forEach(
+        element => {
 
-                element.textContent =
-                    guild.name ||
-                    "Selected Server";
-            }
-        );
+            element.textContent =
+                guild.name ||
+                "Selected Server";
+        }
+    );
+
 }
 
 // =========================================================
@@ -1259,21 +1633,22 @@ function updateSelectedServerUI(
 
 function cleanURL() {
 
-    try {
+try {
 
-        window.history.replaceState(
-            {},
-            document.title,
-            window.location.pathname
-        );
+    window.history.replaceState(
+        {},
+        document.title,
+        window.location.pathname
+    );
 
-    } catch (error) {
+} catch (error) {
 
-        console.warn(
-            "⚠️ Could not clean OAuth URL:",
-            error
-        );
-    }
+    console.warn(
+        "⚠️ Could not clean OAuth URL:",
+        error
+    );
+}
+
 }
 
 // =========================================================
@@ -1282,45 +1657,46 @@ function cleanURL() {
 
 async function logout() {
 
-    try {
+try {
 
-        await apiFetch(
-            "/auth/logout",
-            {
-                method:
-                    "POST"
-            }
-        );
+    await apiFetch(
+        "/auth/logout",
+        {
+            method:
+                "POST"
+        }
+    );
 
-    } catch (error) {
+} catch (error) {
 
-        console.error(
-            "❌ Logout request failed:",
-            error
-        );
+    console.error(
+        "❌ Logout request failed:",
+        error
+    );
 
-    } finally {
+} finally {
 
-        shadowSession =
-            null;
+    shadowSession =
+        null;
 
-        currentUser =
-            null;
+    currentUser =
+        null;
 
-        selectedGuild =
-            null;
+    selectedGuild =
+        null;
 
-        localStorage.removeItem(
-            "shadow_session"
-        );
+    localStorage.removeItem(
+        "shadow_session"
+    );
 
-        console.log(
-            "👋 Logged out."
-        );
+    console.log(
+        "👋 Logged out."
+    );
 
-        window.location.href =
-            window.location.pathname;
-    }
+    window.location.href =
+        window.location.pathname;
+}
+
 }
 
 // =========================================================
@@ -1328,144 +1704,145 @@ async function logout() {
 // =========================================================
 
 function showPage(
-    pageId,
-    button = null
+pageId,
+button = null
 ) {
 
-    const pages =
-        document.querySelectorAll(
-            ".page"
+const pages =
+    document.querySelectorAll(
+        ".page"
+    );
+
+const navButtons =
+    document.querySelectorAll(
+        ".nav-btn"
+    );
+
+pages.forEach(
+    page => {
+
+        page.classList.remove(
+            "active"
         );
+    }
+);
 
-    const navButtons =
-        document.querySelectorAll(
-            ".nav-btn"
+navButtons.forEach(
+    btn => {
+
+        btn.classList.remove(
+            "active"
         );
+    }
+);
 
-    pages.forEach(
-        page => {
+const page =
+    document.getElementById(
+        pageId
+    );
 
-            page.classList.remove(
-                "active"
+if (page) {
+
+    page.classList.add(
+        "active"
+    );
+
+    page.classList.remove(
+        "page-enter"
+    );
+
+    requestAnimationFrame(
+        () => {
+
+            page.classList.add(
+                "page-enter"
             );
         }
     );
+}
+
+if (button) {
+
+    button.classList.add(
+        "active"
+    );
+
+} else {
 
     navButtons.forEach(
         btn => {
 
-            btn.classList.remove(
-                "active"
-            );
-        }
-    );
+            const onclick =
+                btn.getAttribute(
+                    "onclick"
+                ) || "";
 
-    const page =
-        document.getElementById(
-            pageId
-        );
+            if (
+                onclick.includes(
+                    `showPage('${pageId}'`
+                ) ||
+                onclick.includes(
+                    `showPage("${pageId}"`
+                )
+            ) {
 
-    if (page) {
-
-        page.classList.add(
-            "active"
-        );
-
-        page.classList.remove(
-            "page-enter"
-        );
-
-        requestAnimationFrame(
-            () => {
-
-                page.classList.add(
-                    "page-enter"
+                btn.classList.add(
+                    "active"
                 );
             }
-        );
-    }
+        }
+    );
+}
 
-    if (button) {
+const pageTitle =
+    document.getElementById(
+        "pageTitle"
+    );
 
-        button.classList.add(
-            "active"
-        );
+const titles = {
 
-    } else {
+    overview:
+        "Dashboard Overview",
 
-        navButtons.forEach(
-            btn => {
+    server:
+        "Server Management",
 
-                const onclick =
-                    btn.getAttribute(
-                        "onclick"
-                    ) || "";
+    xp:
+        "XP & Levels",
 
-                if (
-                    onclick.includes(
-                        `showPage('${pageId}'`
-                    ) ||
-                    onclick.includes(
-                        `showPage("${pageId}"`
-                    )
-                ) {
+    games:
+        "Games",
 
-                    btn.classList.add(
-                        "active"
-                    );
-                }
-            }
-        );
-    }
+    moderation:
+        "Moderation",
 
-    const pageTitle =
-        document.getElementById(
-            "pageTitle"
-        );
+    verification:
+        "Verification",
 
-    const titles = {
+    polls:
+        "Polls",
 
-        overview:
-            "Dashboard Overview",
+    settings:
+        "Settings"
+};
 
-        server:
-            "Server Management",
+if (
+    pageTitle &&
+    titles[pageId]
+) {
 
-        xp:
-            "XP & Levels",
+    pageTitle.textContent =
+        titles[pageId];
+}
 
-        games:
-            "Games",
+window.scrollTo({
+    top:
+        0,
 
-        moderation:
-            "Moderation",
+    behavior:
+        "smooth"
+});
 
-        verification:
-            "Verification",
-
-        polls:
-            "Polls",
-
-        settings:
-            "Settings"
-    };
-
-    if (
-        pageTitle &&
-        titles[pageId]
-    ) {
-
-        pageTitle.textContent =
-            titles[pageId];
-    }
-
-    window.scrollTo({
-        top:
-            0,
-
-        behavior:
-            "smooth"
-    });
 }
 
 // =========================================================
@@ -1473,19 +1850,20 @@ function showPage(
 // =========================================================
 
 document.addEventListener(
-    "click",
-    event => {
+"click",
+event => {
 
-        const target =
-            event.target.closest(
-                "[data-open-server]"
-            );
+    const target =
+        event.target.closest(
+            "[data-open-server]"
+        );
 
-        if (target) {
+    if (target) {
 
-            openServerScreen();
-        }
+        openServerScreen();
     }
+}
+
 );
 
 // =========================================================
@@ -1493,37 +1871,51 @@ document.addEventListener(
 // =========================================================
 
 document.addEventListener(
-    "DOMContentLoaded",
-    () => {
+"DOMContentLoaded",
+() => {
 
-        checkDiscordLogin();
+    checkDiscordLogin();
 
-        setupRipples();
-        setupSwitches();
-        setupCardTilt();
-        setupHeroParallax();
-        setupOnlineAnimation();
-        setupInputEffects();
-        setupKeyboardShortcuts();
-        setupScrollEffects();
-        setupMobileNavigation();
-        animateInitialCounters();
+    setupRipples();
 
-        setTimeout(
-            () => {
+    setupSwitches();
 
-                document.body.classList.add(
-                    "dashboard-loaded"
-                );
+    setupServerManagementSettings();
 
-            },
-            100
-        );
+    setupCardTilt();
 
-        console.log(
-            "🌑 ShadowDashboard loaded successfully."
-        );
-    }
+    setupHeroParallax();
+
+    setupOnlineAnimation();
+
+    setupInputEffects();
+
+    setupKeyboardShortcuts();
+
+    setupScrollEffects();
+
+    setupMobileNavigation();
+
+    animateInitialCounters();
+
+    loadSavedTheme();
+
+    setTimeout(
+        () => {
+
+            document.body.classList.add(
+                "dashboard-loaded"
+            );
+
+        },
+        100
+    );
+
+    console.log(
+        "🌑 ShadowDashboard loaded successfully."
+    );
+}
+
 );
 
 // =========================================================
@@ -1532,74 +1924,76 @@ document.addEventListener(
 
 function setupRipples() {
 
-    document
-        .querySelectorAll(
-            "button"
-        )
-        .forEach(
-            button => {
+document
+    .querySelectorAll(
+        "button"
+    )
+    .forEach(
+        button => {
 
-                if (
-                    button.dataset.rippleBound
-                ) {
-                    return;
-                }
-
-                button.dataset.rippleBound =
-                    "true";
-
-                button.addEventListener(
-                    "click",
-                    function(event) {
-
-                        createButtonRipple(
-                            this,
-                            event
-                        );
-                    }
-                );
+            if (
+                button.dataset.rippleBound
+            ) {
+                return;
             }
-        );
+
+            button.dataset.rippleBound =
+                "true";
+
+            button.addEventListener(
+                "click",
+                function(event) {
+
+                    createButtonRipple(
+                        this,
+                        event
+                    );
+                }
+            );
+        }
+    );
+
 }
 
 function createButtonRipple(
-    element,
-    event
+element,
+event
 ) {
 
-    if (!element) {
-        return;
-    }
+if (!element) {
+    return;
+}
 
-    const rect =
-        element.getBoundingClientRect();
+const rect =
+    element.getBoundingClientRect();
 
-    const ripple =
-        document.createElement(
-            "span"
-        );
-
-    ripple.className =
-        "click-ripple";
-
-    ripple.style.left =
-        `${event.clientX - rect.left}px`;
-
-    ripple.style.top =
-        `${event.clientY - rect.top}px`;
-
-    element.appendChild(
-        ripple
+const ripple =
+    document.createElement(
+        "span"
     );
 
-    setTimeout(
-        () => {
+ripple.className =
+    "click-ripple";
 
-            ripple.remove();
+ripple.style.left =
+    `${event.clientX - rect.left}px`;
 
-        },
-        650
-    );
+ripple.style.top =
+    `${event.clientY - rect.top}px`;
+
+element.appendChild(
+    ripple
+);
+
+setTimeout(
+    () => {
+
+        ripple.remove();
+
+    },
+    650
+);
+
 }
 
 // =========================================================
@@ -1608,26 +2002,39 @@ function createButtonRipple(
 
 function setupSwitches() {
 
-    document
-        .querySelectorAll(
-            ".switch input"
-        )
-        .forEach(
-            toggle => {
+document
+    .querySelectorAll(
+        ".switch input"
+    )
+    .forEach(
+        toggle => {
 
-                toggle.addEventListener(
-                    "change",
-                    () => {
+            if (
+                toggle.id ===
+                    "welcomeToggle" ||
+                toggle.id ===
+                    "leaveToggle" ||
+                toggle.id ===
+                    "announcementsToggle"
+            ) {
 
-                        showToast(
-                            toggle.checked
-                                ? "🟣 Feature enabled"
-                                : "⚫ Feature disabled"
-                        );
-                    }
-                );
+                return;
             }
-        );
+
+            toggle.addEventListener(
+                "change",
+                () => {
+
+                    showToast(
+                        toggle.checked
+                            ? "🟣 Feature enabled"
+                            : "⚫ Feature disabled"
+                    );
+                }
+            );
+        }
+    );
+
 }
 
 // =========================================================
@@ -1636,70 +2043,71 @@ function setupSwitches() {
 
 function setupCardTilt() {
 
-    const cards =
-        document.querySelectorAll(
-            ".stat-card, .setting-card, .game-panel"
+const cards =
+    document.querySelectorAll(
+        ".stat-card, .setting-card, .game-panel"
+    );
+
+cards.forEach(
+    card => {
+
+        card.addEventListener(
+            "mousemove",
+            event => {
+
+                if (
+                    window.innerWidth <
+                    850
+                ) {
+                    return;
+                }
+
+                const rect =
+                    card.getBoundingClientRect();
+
+                const x =
+                    event.clientX -
+                    rect.left;
+
+                const y =
+                    event.clientY -
+                    rect.top;
+
+                const rotateX =
+                    (
+                        y /
+                            rect.height -
+                        0.5
+                    ) *
+                    -3;
+
+                const rotateY =
+                    (
+                        x /
+                            rect.width -
+                        0.5
+                    ) *
+                    3;
+
+                card.style.transform =
+                    `perspective(800px)
+                     rotateX(${rotateX}deg)
+                     rotateY(${rotateY}deg)
+                     translateY(-4px)`;
+            }
         );
 
-    cards.forEach(
-        card => {
+        card.addEventListener(
+            "mouseleave",
+            () => {
 
-            card.addEventListener(
-                "mousemove",
-                event => {
+                card.style.transform =
+                    "";
+            }
+        );
+    }
+);
 
-                    if (
-                        window.innerWidth <
-                        850
-                    ) {
-                        return;
-                    }
-
-                    const rect =
-                        card.getBoundingClientRect();
-
-                    const x =
-                        event.clientX -
-                        rect.left;
-
-                    const y =
-                        event.clientY -
-                        rect.top;
-
-                    const rotateX =
-                        (
-                            y /
-                            rect.height -
-                            0.5
-                        ) *
-                        -3;
-
-                    const rotateY =
-                        (
-                            x /
-                            rect.width -
-                            0.5
-                        ) *
-                        3;
-
-                    card.style.transform =
-                        `perspective(800px)
-                         rotateX(${rotateX}deg)
-                         rotateY(${rotateY}deg)
-                         translateY(-4px)`;
-                }
-            );
-
-            card.addEventListener(
-                "mouseleave",
-                () => {
-
-                    card.style.transform =
-                        "";
-                }
-            );
-        }
-    );
 }
 
 // =========================================================
@@ -1708,87 +2116,88 @@ function setupCardTilt() {
 
 function setupHeroParallax() {
 
-    const hero =
-        document.querySelector(
-            ".hero"
-        );
+const hero =
+    document.querySelector(
+        ".hero"
+    );
 
-    if (!hero) {
-        return;
+if (!hero) {
+    return;
+}
+
+hero.addEventListener(
+    "mousemove",
+    event => {
+
+        if (
+            window.innerWidth <
+            850
+        ) {
+            return;
+        }
+
+        const rect =
+            hero.getBoundingClientRect();
+
+        const x =
+            (
+                event.clientX -
+                rect.left
+            ) /
+            rect.width;
+
+        const y =
+            (
+                event.clientY -
+                rect.top
+            ) /
+            rect.height;
+
+        const moveX =
+            (x - 0.5) * 8;
+
+        const moveY =
+            (y - 0.5) * 8;
+
+        hero.style.backgroundPosition =
+            `${50 + moveX}% ${50 + moveY}%`;
+
+        const symbol =
+            hero.querySelector(
+                ".hero-symbol"
+            );
+
+        if (symbol) {
+
+            symbol.style.transform =
+                `translate(
+                    ${moveX * 0.6}px,
+                    ${moveY * 0.6}px
+                )`;
+        }
     }
+);
 
-    hero.addEventListener(
-        "mousemove",
-        event => {
+hero.addEventListener(
+    "mouseleave",
+    () => {
 
-            if (
-                window.innerWidth <
-                850
-            ) {
-                return;
-            }
+        hero.style.backgroundPosition =
+            "center";
 
-            const rect =
-                hero.getBoundingClientRect();
+        const symbol =
+            hero.querySelector(
+                ".hero-symbol"
+            );
 
-            const x =
-                (
-                    event.clientX -
-                    rect.left
-                ) /
-                rect.width;
+        if (symbol) {
 
-            const y =
-                (
-                    event.clientY -
-                    rect.top
-                ) /
-                rect.height;
-
-            const moveX =
-                (x - 0.5) * 8;
-
-            const moveY =
-                (y - 0.5) * 8;
-
-            hero.style.backgroundPosition =
-                `${50 + moveX}% ${50 + moveY}%`;
-
-            const symbol =
-                hero.querySelector(
-                    ".hero-symbol"
-                );
-
-            if (symbol) {
-
-                symbol.style.transform =
-                    `translate(
-                        ${moveX * 0.6}px,
-                        ${moveY * 0.6}px
-                    )`;
-            }
+            symbol.style.transform =
+                "";
         }
-    );
+    }
+);
 
-    hero.addEventListener(
-        "mouseleave",
-        () => {
-
-            hero.style.backgroundPosition =
-                "center";
-
-            const symbol =
-                hero.querySelector(
-                    ".hero-symbol"
-                );
-
-            if (symbol) {
-
-                symbol.style.transform =
-                    "";
-            }
-        }
-    );
 }
 
 // =========================================================
@@ -1797,36 +2206,37 @@ function setupHeroParallax() {
 
 function setupOnlineAnimation() {
 
-    const online =
-        document.querySelector(
-            ".online-badge"
+const online =
+    document.querySelector(
+        ".online-badge"
+    );
+
+if (!online) {
+    return;
+}
+
+setInterval(
+    () => {
+
+        online.classList.add(
+            "status-pulse"
         );
 
-    if (!online) {
-        return;
-    }
+        setTimeout(
+            () => {
 
-    setInterval(
-        () => {
+                online.classList.remove(
+                    "status-pulse"
+                );
 
-            online.classList.add(
-                "status-pulse"
-            );
+            },
+            350
+        );
 
-            setTimeout(
-                () => {
+    },
+    2500
+);
 
-                    online.classList.remove(
-                        "status-pulse"
-                    );
-
-                },
-                350
-            );
-
-        },
-        2500
-    );
 }
 
 // =========================================================
@@ -1835,67 +2245,69 @@ function setupOnlineAnimation() {
 
 function animateInitialCounters() {
 
-    document
-        .querySelectorAll(
-            ".stat-card strong"
-        )
-        .forEach(
-            number => {
+document
+    .querySelectorAll(
+        ".stat-card strong"
+    )
+    .forEach(
+        number => {
 
-                const card =
-                    number.closest(
-                        ".stat-card"
-                    );
-
-                const text =
-                    card
-                        ?.textContent
-                        .toLowerCase() ||
-                    "";
-
-                if (
-                    text.includes(
-                        "members"
-                    ) ||
-                    text.includes(
-                        "member"
-                    )
-                ) {
-                    return;
-                }
-
-                const numberText =
-                    number.textContent.trim();
-
-                const match =
-                    numberText.match(
-                        /^([\d,]+)$/
-                    );
-
-                if (!match) {
-                    return;
-                }
-
-                const target =
-                    Number(
-                        match[1].replace(
-                            /,/g,
-                            ""
-                        )
-                    );
-
-                if (!target) {
-                    return;
-                }
-
-                animateNumberChange(
-                    number,
-                    0,
-                    target,
-                    850
+            const card =
+                number.closest(
+                    ".stat-card"
                 );
+
+            const text =
+                card
+                    ?.textContent
+                    .toLowerCase() ||
+                "";
+
+            if (
+                text.includes(
+                    "members"
+                ) ||
+                text.includes(
+                    "member"
+                )
+            ) {
+
+                return;
             }
-        );
+
+            const numberText =
+                number.textContent.trim();
+
+            const match =
+                numberText.match(
+                    /^([\d,]+)$/
+                );
+
+            if (!match) {
+                return;
+            }
+
+            const target =
+                Number(
+                    match[1].replace(
+                        /,/g,
+                        ""
+                    )
+                );
+
+            if (!target) {
+                return;
+            }
+
+            animateNumberChange(
+                number,
+                0,
+                target,
+                850
+            );
+        }
+    );
+
 }
 
 // =========================================================
@@ -1904,34 +2316,35 @@ function animateInitialCounters() {
 
 function setupInputEffects() {
 
-    document
-        .querySelectorAll(
-            ".text-input, .number-input, select, input:not([type='checkbox'])"
-        )
-        .forEach(
-            input => {
+document
+    .querySelectorAll(
+        ".text-input, .number-input, select, input:not([type='checkbox'])"
+    )
+    .forEach(
+        input => {
 
-                input.addEventListener(
-                    "focus",
-                    () => {
+            input.addEventListener(
+                "focus",
+                () => {
 
-                        input.classList.add(
-                            "input-focused"
-                        );
-                    }
-                );
+                    input.classList.add(
+                        "input-focused"
+                    );
+                }
+            );
 
-                input.addEventListener(
-                    "blur",
-                    () => {
+            input.addEventListener(
+                "blur",
+                () => {
 
-                        input.classList.remove(
-                            "input-focused"
-                        );
-                    }
-                );
-            }
-        );
+                    input.classList.remove(
+                        "input-focused"
+                    );
+                }
+            );
+        }
+    );
+
 }
 
 // =========================================================
@@ -1940,30 +2353,31 @@ function setupInputEffects() {
 
 function setupKeyboardShortcuts() {
 
-    document.addEventListener(
-        "keydown",
-        event => {
+document.addEventListener(
+    "keydown",
+    event => {
 
-            if (
-                event.key ===
-                "Escape"
-            ) {
+        if (
+            event.key ===
+            "Escape"
+        ) {
 
-                closeServerScreen();
-            }
-
-            if (
-                event.ctrlKey &&
-                event.key.toLowerCase() ===
-                "k"
-            ) {
-
-                event.preventDefault();
-
-                openServerScreen();
-            }
+            closeServerScreen();
         }
-    );
+
+        if (
+            event.ctrlKey &&
+            event.key.toLowerCase() ===
+            "k"
+        ) {
+
+            event.preventDefault();
+
+            openServerScreen();
+        }
+    }
+);
+
 }
 
 // =========================================================
@@ -1972,40 +2386,41 @@ function setupKeyboardShortcuts() {
 
 function setupScrollEffects() {
 
-    const topbar =
-        document.querySelector(
-            ".topbar"
-        );
-
-    if (!topbar) {
-        return;
-    }
-
-    window.addEventListener(
-        "scroll",
-        () => {
-
-            if (
-                window.scrollY >
-                12
-            ) {
-
-                topbar.classList.add(
-                    "scrolled"
-                );
-
-            } else {
-
-                topbar.classList.remove(
-                    "scrolled"
-                );
-            }
-        },
-        {
-            passive:
-                true
-        }
+const topbar =
+    document.querySelector(
+        ".topbar"
     );
+
+if (!topbar) {
+    return;
+}
+
+window.addEventListener(
+    "scroll",
+    () => {
+
+        if (
+            window.scrollY >
+            12
+        ) {
+
+            topbar.classList.add(
+                "scrolled"
+            );
+
+        } else {
+
+            topbar.classList.remove(
+                "scrolled"
+            );
+        }
+    },
+    {
+        passive:
+            true
+    }
+);
+
 }
 
 // =========================================================
@@ -2014,36 +2429,37 @@ function setupScrollEffects() {
 
 function setupMobileNavigation() {
 
-    const sidebar =
-        document.querySelector(
-            ".sidebar"
-        );
-
-    if (!sidebar) {
-        return;
-    }
-
-    document.addEventListener(
-        "click",
-        event => {
-
-            const navButton =
-                event.target.closest(
-                    ".nav-btn"
-                );
-
-            if (
-                navButton &&
-                window.innerWidth <=
-                850
-            ) {
-
-                sidebar.classList.remove(
-                    "mobile-open"
-                );
-            }
-        }
+const sidebar =
+    document.querySelector(
+        ".sidebar"
     );
+
+if (!sidebar) {
+    return;
+}
+
+document.addEventListener(
+    "click",
+    event => {
+
+        const navButton =
+            event.target.closest(
+                ".nav-btn"
+            );
+
+        if (
+            navButton &&
+            window.innerWidth <=
+            850
+        ) {
+
+            sidebar.classList.remove(
+                "mobile-open"
+            );
+        }
+    }
+);
+
 }
 
 // =========================================================
@@ -2051,68 +2467,87 @@ function setupMobileNavigation() {
 // =========================================================
 
 function showToast(
-    message
+message
 ) {
 
-    let toast =
-        document.querySelector(
-            ".toast"
+let toast =
+    document.querySelector(
+        ".toast"
+    );
+
+if (!toast) {
+
+    toast =
+        document.createElement(
+            "div"
         );
 
-    if (!toast) {
+    toast.className =
+        "toast";
 
-        toast =
-            document.createElement(
-                "div"
+    document.body.appendChild(
+        toast
+    );
+}
+
+toast.textContent =
+    message;
+
+toast.classList.remove(
+    "show"
+);
+
+void toast.offsetWidth;
+
+toast.classList.add(
+    "show"
+);
+
+clearTimeout(
+    shadowToastTimer
+);
+
+shadowToastTimer =
+    setTimeout(
+        () => {
+
+            toast.classList.remove(
+                "show"
             );
 
-        toast.className =
-            "toast";
-
-        document.body.appendChild(
-            toast
-        );
-    }
-
-    toast.textContent =
-        message;
-
-    toast.classList.remove(
-        "show"
+        },
+        2800
     );
 
-    void toast.offsetWidth;
-
-    toast.classList.add(
-        "show"
-    );
-
-    clearTimeout(
-        shadowToastTimer
-    );
-
-    shadowToastTimer =
-        setTimeout(
-            () => {
-
-                toast.classList.remove(
-                    "show"
-                );
-
-            },
-            2800
-        );
 }
 
 // =========================================================
 // SAVE SETTINGS
 // =========================================================
 
-function saveSettings() {
+async function saveSettings() {
 
-    showToast(
-        "💾 Settings saved successfully!"
-    );
+if (
+    document.getElementById(
+        "welcomeToggle"
+    ) ||
+    document.getElementById(
+        "leaveToggle"
+    ) ||
+    document.getElementById(
+        "announcementsToggle"
+    )
+) {
+
+    await saveServerManagementSettings();
+
+    return;
+}
+
+showToast(
+    "💾 Settings saved successfully!"
+);
+
 }
 
 // =========================================================
@@ -2121,43 +2556,44 @@ function saveSettings() {
 
 function createPoll() {
 
-    const question =
-        document.getElementById(
-            "pollQuestion"
-        );
-
-    const message =
-        document.getElementById(
-            "pollMessage"
-        );
-
-    if (!question) {
-        return;
-    }
-
-    if (
-        !question.value.trim()
-    ) {
-
-        showToast(
-            "⚠️ Enter a poll question first."
-        );
-
-        return;
-    }
-
-    if (message) {
-
-        message.textContent =
-            "🗳️ Poll created successfully!";
-    }
-
-    showToast(
-        "🗳️ Poll created!"
+const question =
+    document.getElementById(
+        "pollQuestion"
     );
 
-    question.value =
-        "";
+const message =
+    document.getElementById(
+        "pollMessage"
+    );
+
+if (!question) {
+    return;
+}
+
+if (
+    !question.value.trim()
+) {
+
+    showToast(
+        "⚠️ Enter a poll question first."
+    );
+
+    return;
+}
+
+if (message) {
+
+    message.textContent =
+        "🗳️ Poll created successfully!";
+}
+
+showToast(
+    "🗳️ Poll created!"
+);
+
+question.value =
+    "";
+
 }
 
 // =========================================================
@@ -2166,38 +2602,39 @@ function createPoll() {
 
 function changeTheme() {
 
-    const select =
-        document.getElementById(
-            "themeSelect"
-        );
-
-    if (!select) {
-        return;
-    }
-
-    const theme =
-        select.value;
-
-    document.body.dataset.theme =
-        theme;
-
-    try {
-
-        localStorage.setItem(
-            "shadow-theme",
-            theme
-        );
-
-    } catch (error) {
-
-        console.warn(
-            "Theme storage unavailable."
-        );
-    }
-
-    showToast(
-        `🎨 Theme changed to ${theme}`
+const select =
+    document.getElementById(
+        "themeSelect"
     );
+
+if (!select) {
+    return;
+}
+
+const theme =
+    select.value;
+
+document.body.dataset.theme =
+    theme;
+
+try {
+
+    localStorage.setItem(
+        "shadow-theme",
+        theme
+    );
+
+} catch (error) {
+
+    console.warn(
+        "Theme storage unavailable."
+    );
+}
+
+showToast(
+    `🎨 Theme changed to ${theme}`
+);
+
 }
 
 // =========================================================
@@ -2206,37 +2643,38 @@ function changeTheme() {
 
 function loadSavedTheme() {
 
-    try {
+try {
 
-        const theme =
-            localStorage.getItem(
-                "shadow-theme"
-            );
-
-        if (!theme) {
-            return;
-        }
-
-        document.body.dataset.theme =
-            theme;
-
-        const select =
-            document.getElementById(
-                "themeSelect"
-            );
-
-        if (select) {
-
-            select.value =
-                theme;
-        }
-
-    } catch (error) {
-
-        console.warn(
-            "Could not load saved theme."
+    const theme =
+        localStorage.getItem(
+            "shadow-theme"
         );
+
+    if (!theme) {
+        return;
     }
+
+    document.body.dataset.theme =
+        theme;
+
+    const select =
+        document.getElementById(
+            "themeSelect"
+        );
+
+    if (select) {
+
+        select.value =
+            theme;
+    }
+
+} catch (error) {
+
+    console.warn(
+        "Could not load saved theme."
+    );
+}
+
 }
 
 // =========================================================
@@ -2244,24 +2682,17 @@ function loadSavedTheme() {
 // =========================================================
 
 document.addEventListener(
-    "visibilitychange",
-    () => {
+"visibilitychange",
+() => {
 
-        if (
-            !document.hidden &&
-            currentUser
-        ) {
+    if (
+        !document.hidden &&
+        currentUser
+    ) {
 
-            loadRealStats();
-        }
+        loadRealStats();
     }
-);
 
-// =========================================================
-// THEME ON START
-// =========================================================
+}
 
-document.addEventListener(
-    "DOMContentLoaded",
-    loadSavedTheme
 );
