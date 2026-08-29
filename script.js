@@ -1,9 +1,7 @@
 const BACKEND_URL =
     "https://shadowapi.jonhcena-co.workers.dev";
 
-let shadowSession =
-    localStorage.getItem("shadow_session") || null;
-
+let shadowSession = null;
 let shadowStatsInterval = null;
 let shadowToastTimer = null;
 
@@ -11,322 +9,150 @@ let currentUser = null;
 let currentGuilds = [];
 let selectedGuild = null;
 
-// =========================================================
-// DISCORD LOGIN
-// =========================================================
-
 function loginWithDiscord() {
-
-    console.log(
-        "🔐 Opening Discord OAuth..."
-    );
-
-    window.location.href =
-        BACKEND_URL + "/auth/discord";
+    window.location.href = BACKEND_URL + "/auth/discord";
 }
 
-// =========================================================
-// API REQUEST
-// =========================================================
-
-async function apiFetch(
-    endpoint,
-    options = {}
-) {
-
+async function apiFetch(endpoint, options = {}) {
     const headers = {
-        "Accept":
-            "application/json",
-
+        "Accept": "application/json",
         ...(options.headers || {})
     };
 
-    if (shadowSession) {
-
-        headers["Authorization"] =
-            "Bearer " + shadowSession;
-    }
-
-    return fetch(
-        BACKEND_URL + endpoint,
-        {
-            ...options,
-            headers,
-            credentials:
-                "include"
-        }
-    );
+    return fetch(BACKEND_URL + endpoint, {
+        ...options,
+        headers,
+        credentials: "include"
+    });
 }
-
-// =========================================================
-// CHECK LOGIN
-// =========================================================
 
 async function checkDiscordLogin() {
+    const params = new URLSearchParams(window.location.search);
+    const loginStatus = params.get("login");
+
+    if (
+        loginStatus === "failed" ||
+        loginStatus === "error" ||
+        loginStatus === "cancelled"
+    ) {
+        cleanURL();
+        shadowSession = null;
+        currentUser = null;
+        currentGuilds = [];
+        selectedGuild = null;
+        showLoginScreen();
+        showToast("❌ Discord login failed.");
+        return;
+    }
+
+    // Every normal visit starts at Continue with Discord.
+    if (loginStatus !== "success") {
+        shadowSession = null;
+        currentUser = null;
+        currentGuilds = [];
+        selectedGuild = null;
+        showLoginScreen();
+        return;
+    }
+
+    cleanURL();
 
     try {
-
-        const params =
-            new URLSearchParams(
-                window.location.search
-            );
-
-        const loginStatus =
-            params.get("login");
-
-        const sessionFromURL =
-            params.get("session");
-
-        if (sessionFromURL) {
-
-            shadowSession =
-                sessionFromURL;
-
-            localStorage.setItem(
-                "shadow_session",
-                sessionFromURL
-            );
-
-            console.log(
-                "🔑 Session received from OAuth."
-            );
-        }
-
-        if (
-            loginStatus ||
-            sessionFromURL
-        ) {
-
-            cleanURL();
-        }
-
-        if (
-            loginStatus === "failed" ||
-            loginStatus === "error" ||
-            loginStatus === "cancelled"
-        ) {
-
-            shadowSession = null;
-
-            localStorage.removeItem(
-                "shadow_session"
-            );
-
-            currentUser = null;
-            currentGuilds = [];
-            selectedGuild = null;
-
-            showLoginScreen();
-
-            showToast(
-                "❌ Discord login failed."
-            );
-
-            return;
-        }
-
-        console.log(
-            "🔐 Showing Discord login first..."
-        );
-
-        showLoginScreen();
-
-        console.log(
-            "🔍 Checking Discord session..."
-        );
-
-        const response =
-            await apiFetch(
-                "/api/me"
-            );
+        const response = await apiFetch("/api/me");
 
         if (!response.ok) {
-
             shadowSession = null;
-
-            localStorage.removeItem(
-                "shadow_session"
-            );
-
             currentUser = null;
             currentGuilds = [];
             selectedGuild = null;
-
             showLoginScreen();
-
+            showToast("❌ Discord session is invalid. Please login again.");
             return;
         }
 
-        const data =
-            await response.json();
+        const data = await response.json();
 
-        if (
-            data.loggedIn &&
-            data.user
-        ) {
-
-            currentUser =
-                data.user;
-
-            const username =
-                data.user.global_name ||
-                data.user.username ||
-                "Discord User";
-
-            updateElementText(
-                "topUsername",
-                username
-            );
-
-            updateElementText(
-                "dashboardUsername",
-                username
-            );
-
-            updateUserAvatar(
-                data.user
-            );
-
-            hideLoginScreen();
-
-            await loadGuilds();
-
-            if (
-                currentGuilds.length > 0
-            ) {
-
-                openServerScreen();
-
-                if (
-                    loginStatus ===
-                    "success"
-                ) {
-
-                    showToast(
-                        "👋 Welcome, " +
-                        username +
-                        "! Select your server."
-                    );
-                }
-
-            } else {
-
-                showToast(
-                    "⚠️ No manageable servers found."
-                );
-            }
-
+        if (!data.loggedIn || !data.user) {
+            showLoginScreen();
             return;
         }
 
-        showLoginScreen();
+        currentUser = data.user;
 
-    } catch (error) {
+        const username =
+            data.user.global_name ||
+            data.user.username ||
+            "Discord User";
 
-        console.error(
-            "❌ Login check failed:",
-            error
+        updateElementText("topUsername", username);
+        updateElementText("dashboardUsername", username);
+        updateUserAvatar(data.user);
+
+        hideLoginScreen();
+
+        await loadGuilds();
+
+        if (!currentGuilds.length) {
+            showToast("⚠️ No manageable servers found.");
+            return;
+        }
+
+        // Discord login -> server selector -> dashboard.
+        openServerScreen();
+
+        showToast(
+            "👋 Welcome, " +
+            username +
+            "! Select your server."
         );
 
+    } catch (error) {
+        console.error("❌ Login check failed:", error);
         showLoginScreen();
+        showToast("❌ Could not verify Discord login.");
     }
 }
 
-// =========================================================
-// LOGIN SCREEN
-// =========================================================
-
 function showLoginScreen() {
-
-    const loginScreen =
-        document.getElementById(
-            "loginScreen"
-        );
+    const loginScreen = document.getElementById("loginScreen");
 
     if (loginScreen) {
-
-        loginScreen.style.display =
-            "flex";
+        loginScreen.style.display = "flex";
     }
 }
 
 function hideLoginScreen() {
-
-    const loginScreen =
-        document.getElementById(
-            "loginScreen"
-        );
+    const loginScreen = document.getElementById("loginScreen");
 
     if (loginScreen) {
-
-        loginScreen.style.display =
-            "none";
+        loginScreen.style.display = "none";
     }
 }
 
-// =========================================================
-// ELEMENT HELPER
-// =========================================================
-
-function updateElementText(
-    id,
-    value
-) {
-
-    const element =
-        document.getElementById(id);
+function updateElementText(id, value) {
+    const element = document.getElementById(id);
 
     if (element) {
-
-        element.textContent =
-            value;
+        element.textContent = value;
     }
 }
 
-// =========================================================
-// REAL SERVER STATS
-// =========================================================
-
 async function loadRealStats() {
-
-    if (
-        !selectedGuild ||
-        !selectedGuild.id
-    ) {
-
-        console.log(
-            "ℹ️ Stats waiting for server selection."
-        );
-
+    if (!selectedGuild || !selectedGuild.id) {
         return;
     }
 
     try {
+        const guildId = String(selectedGuild.id);
 
-        const guildId =
-            String(
-                selectedGuild.id
-            );
-
-        console.log(
-            "📊 Loading stats for server " +
-            guildId +
-            "..."
+        const response = await apiFetch(
+            "/stats?guildId=" +
+            encodeURIComponent(guildId)
         );
 
-        const response =
-            await apiFetch(
-                "/stats?guildId=" +
-                encodeURIComponent(
-                    guildId
-                )
-            );
-
-        const data =
-            await response.json();
+        const data = await response.json();
 
         if (!response.ok) {
-
             console.error(
                 "❌ Stats request failed:",
                 response.status,
@@ -342,36 +168,18 @@ async function loadRealStats() {
             return;
         }
 
-        console.log(
-            "📡 Server stats response:",
-            data
-        );
+        const members = Number(data.members);
 
-        const members =
-            Number(
-                data.members
-            );
-
-        if (
-            Number.isFinite(members) &&
-            members >= 0
-        ) {
-
-            const memberNumber =
-                findMemberStatElement();
+        if (Number.isFinite(members) && members >= 0) {
+            const memberNumber = findMemberStatElement();
 
             if (memberNumber) {
-
-                const previousValue =
-                    Number(
-                        memberNumber.dataset.realMembers ||
-                        0
-                    );
+                const previousValue = Number(
+                    memberNumber.dataset.realMembers || 0
+                );
 
                 memberNumber.dataset.realMembers =
-                    String(
-                        members
-                    );
+                    String(members);
 
                 animateNumberChange(
                     memberNumber,
@@ -382,34 +190,23 @@ async function loadRealStats() {
             }
         }
 
-        const totalXP =
-            Number(
-                data.totalXP ??
-                data.xp ??
-                0
-            );
+        const totalXP = Number(
+            data.totalXP ?? data.xp ?? 0
+        );
 
-        const xpElement =
-            document.getElementById(
-                "xpCount"
-            );
+        const xpElement = document.getElementById("xpCount");
 
         if (
             xpElement &&
             Number.isFinite(totalXP) &&
             totalXP >= 0
         ) {
-
-            const previousXP =
-                Number(
-                    xpElement.dataset.realXP ||
-                    0
-                );
+            const previousXP = Number(
+                xpElement.dataset.realXP || 0
+            );
 
             xpElement.dataset.realXP =
-                String(
-                    totalXP
-                );
+                String(totalXP);
 
             animateNumberChange(
                 xpElement,
@@ -419,33 +216,25 @@ async function loadRealStats() {
             );
         }
 
-        const gamesPlayed =
-            Number(
-                data.gamesPlayed ??
-                0
-            );
+        const gamesPlayed = Number(
+            data.gamesPlayed ?? 0
+        );
 
-        const gameElement =
-            document.getElementById(
-                "gameCount"
-            );
+        const gameElement = document.getElementById(
+            "gameCount"
+        );
 
         if (
             gameElement &&
             Number.isFinite(gamesPlayed) &&
             gamesPlayed >= 0
         ) {
-
-            const previousGames =
-                Number(
-                    gameElement.dataset.realGames ||
-                    0
-                );
+            const previousGames = Number(
+                gameElement.dataset.realGames || 0
+            );
 
             gameElement.dataset.realGames =
-                String(
-                    gamesPlayed
-                );
+                String(gamesPlayed);
 
             animateNumberChange(
                 gameElement,
@@ -455,17 +244,15 @@ async function loadRealStats() {
             );
         }
 
-        const gamesPageElement =
-            document.getElementById(
-                "gamesPlayedCount"
-            );
+        const gamesPageElement = document.getElementById(
+            "gamesPlayedCount"
+        );
 
         if (
             gamesPageElement &&
             Number.isFinite(gamesPlayed) &&
             gamesPlayed >= 0
         ) {
-
             gamesPageElement.textContent =
                 gamesPlayed.toLocaleString();
         }
@@ -482,18 +269,17 @@ async function loadRealStats() {
         );
 
         if (!shadowStatsInterval) {
-
-            shadowStatsInterval =
-                setInterval(
-                    () => {
+            shadowStatsInterval = setInterval(
+                () => {
+                    if (currentUser && selectedGuild) {
                         loadRealStats();
-                    },
-                    60000
-                );
+                    }
+                },
+                60000
+            );
         }
 
     } catch (error) {
-
         console.error(
             "❌ Failed to load server stats:",
             error
@@ -501,111 +287,53 @@ async function loadRealStats() {
     }
 }
 
-// =========================================================
-// RESET DISPLAYED STATS
-// =========================================================
-
 function resetDisplayedStats() {
-
-    const memberElement =
-        findMemberStatElement();
-
-    const xpElement =
-        document.getElementById(
-            "xpCount"
-        );
-
-    const gameElement =
-        document.getElementById(
-            "gameCount"
-        );
-
+    const memberElement = findMemberStatElement();
+    const xpElement = document.getElementById("xpCount");
+    const gameElement = document.getElementById("gameCount");
     const gamesPageElement =
-        document.getElementById(
-            "gamesPlayedCount"
-        );
+        document.getElementById("gamesPlayedCount");
 
     if (memberElement) {
-
-        memberElement.dataset.realMembers =
-            "0";
-
-        memberElement.textContent =
-            "0";
+        memberElement.dataset.realMembers = "0";
+        memberElement.textContent = "0";
     }
 
     if (xpElement) {
-
-        xpElement.dataset.realXP =
-            "0";
-
-        xpElement.textContent =
-            "0";
+        xpElement.dataset.realXP = "0";
+        xpElement.textContent = "0";
     }
 
     if (gameElement) {
-
-        gameElement.dataset.realGames =
-            "0";
-
-        gameElement.textContent =
-            "0";
+        gameElement.dataset.realGames = "0";
+        gameElement.textContent = "0";
     }
 
     if (gamesPageElement) {
-
-        gamesPageElement.textContent =
-            "0";
+        gamesPageElement.textContent = "0";
     }
 }
 
-// =========================================================
-// FIND MEMBER STAT
-// =========================================================
-
 function findMemberStatElement() {
+    const statCards = document.querySelectorAll(".stat-card");
 
-    const statCards =
-        document.querySelectorAll(
-            ".stat-card"
-        );
-
-    for (
-        const card of statCards
-    ) {
-
-        const text =
-            card.textContent
-                .toLowerCase();
+    for (const card of statCards) {
+        const text = card.textContent.toLowerCase();
 
         if (
             text.includes("members") ||
             text.includes("member")
         ) {
-
-            const strong =
-                card.querySelector(
-                    "strong"
-                );
+            const strong = card.querySelector("strong");
 
             if (strong) {
-
                 return strong;
             }
         }
     }
 
-    const fallback =
-        document.querySelector(
-            ".stat-card strong"
-        );
-
-    return fallback || null;
+    return document.querySelector(".stat-card strong") || null;
 }
-
-// =========================================================
-// NUMBER ANIMATION
-// =========================================================
 
 function animateNumberChange(
     element,
@@ -613,7 +341,6 @@ function animateNumberChange(
     to,
     duration = 700
 ) {
-
     if (!element) {
         return;
     }
@@ -627,110 +354,61 @@ function animateNumberChange(
     }
 
     if (from === to) {
-
-        element.textContent =
-            to.toLocaleString();
-
+        element.textContent = to.toLocaleString();
         return;
     }
 
-    const start =
-        performance.now();
+    const start = performance.now();
 
     function frame(time) {
-
-        const progress =
-            Math.min(
-                (time - start) /
-                    duration,
-                1
-            );
+        const progress = Math.min(
+            (time - start) / duration,
+            1
+        );
 
         const eased =
-            1 -
-            Math.pow(
-                1 - progress,
-                3
-            );
+            1 - Math.pow(1 - progress, 3);
 
-        const value =
-            Math.round(
-                from +
-                (to - from) *
-                eased
-            );
+        const value = Math.round(
+            from + (to - from) * eased
+        );
 
         element.textContent =
             value.toLocaleString();
 
-        if (
-            progress <
-            1
-        ) {
-
-            requestAnimationFrame(
-                frame
-            );
+        if (progress < 1) {
+            requestAnimationFrame(frame);
         }
     }
 
-    requestAnimationFrame(
-        frame
-    );
+    requestAnimationFrame(frame);
 }
 
-// =========================================================
-// USER AVATAR
-// =========================================================
-
-function updateUserAvatar(
-    user
-) {
-
-    const avatar =
-        document.getElementById(
-            "userAvatar"
-        );
+function updateUserAvatar(user) {
+    const avatar = document.getElementById("userAvatar");
 
     if (!avatar) {
         return;
     }
 
-    let avatarURL =
-        null;
+    let avatarURL = null;
 
     if (
-        typeof user.avatar ===
-            "string" &&
-        user.avatar.startsWith(
-            "http"
-        )
+        typeof user.avatar === "string" &&
+        user.avatar.startsWith("http")
     ) {
-
-        avatarURL =
-            user.avatar;
-
-    } else if (
-        user.avatar &&
-        user.id
-    ) {
-
+        avatarURL = user.avatar;
+    } else if (user.avatar && user.id) {
         avatarURL =
             "https://cdn.discordapp.com/avatars/" +
             user.id +
             "/" +
             user.avatar +
             ".png?size=128";
-
-    } else if (
-        user.id
-    ) {
-
-        const discriminator =
-            Number(
-                user.discriminator ||
-                0
-            );
+    } else if (user.id) {
+        const discriminator = Number(
+            user.discriminator || 0
+        );
 
         avatarURL =
             "https://cdn.discordapp.com/embed/avatars/" +
@@ -739,82 +417,40 @@ function updateUserAvatar(
     }
 
     if (!avatarURL) {
-
-        avatar.textContent =
-            "👤";
-
+        avatar.textContent = "👤";
         return;
     }
 
-    avatar.innerHTML =
-        "";
+    avatar.innerHTML = "";
 
-    const img =
-        document.createElement(
-            "img"
-        );
+    const img = document.createElement("img");
 
-    img.src =
-        avatarURL;
+    img.src = avatarURL;
+    img.alt = "Discord Avatar";
+    img.width = 128;
+    img.height = 128;
+    img.loading = "eager";
+    img.draggable = false;
 
-    img.alt =
-        "Discord Avatar";
+    img.style.width = "100%";
+    img.style.height = "100%";
+    img.style.objectFit = "cover";
+    img.style.borderRadius = "inherit";
 
-    img.width =
-        128;
+    img.onerror = () => {
+        avatar.textContent = "👤";
+    };
 
-    img.height =
-        128;
-
-    img.loading =
-        "eager";
-
-    img.draggable =
-        false;
-
-    img.style.width =
-        "100%";
-
-    img.style.height =
-        "100%";
-
-    img.style.objectFit =
-        "cover";
-
-    img.style.borderRadius =
-        "inherit";
-
-    img.onerror =
-        () => {
-
-            avatar.textContent =
-                "👤";
-        };
-
-    avatar.appendChild(
-        img
-    );
+    avatar.appendChild(img);
 }
 
-// =========================================================
-// LOAD GUILDS
-// =========================================================
-
 async function loadGuilds() {
-
     try {
+        console.log("🏠 Loading Discord servers...");
 
-        console.log(
-            "🏠 Loading Discord servers..."
-        );
-
-        const response =
-            await apiFetch(
-                "/api/guilds"
-            );
+        const response = await apiFetch("/api/guilds");
 
         if (!response.ok) {
-
             console.error(
                 "❌ Guild loading failed:",
                 response.status
@@ -823,31 +459,22 @@ async function loadGuilds() {
             return;
         }
 
-        const data =
-            await response.json();
+        const data = await response.json();
 
-        const guilds =
-            Array.isArray(
-                data.guilds
-            )
+        currentGuilds =
+            Array.isArray(data.guilds)
                 ? data.guilds
                 : [];
 
-        currentGuilds =
-            guilds;
-
-        renderServerScreen(
-            guilds
-        );
+        renderServerScreen(currentGuilds);
 
         console.log(
             "✅ Loaded " +
-            guilds.length +
+            currentGuilds.length +
             " servers."
         );
 
     } catch (error) {
-
         console.error(
             "❌ Guild loading failed:",
             error
@@ -855,28 +482,17 @@ async function loadGuilds() {
     }
 }
 
-// =========================================================
-// RENDER SERVER SCREEN
-// =========================================================
-
-function renderServerScreen(
-    guilds
-) {
-
+function renderServerScreen(guilds) {
     const serverList =
-        document.getElementById(
-            "serverList"
-        );
+        document.getElementById("serverList");
 
     if (!serverList) {
         return;
     }
 
-    serverList.innerHTML =
-        "";
+    serverList.innerHTML = "";
 
     if (!guilds.length) {
-
         serverList.innerHTML =
             '<div class="server-empty">' +
             '<div class="server-empty-icon">🏠</div>' +
@@ -887,211 +503,113 @@ function renderServerScreen(
         return;
     }
 
-    guilds.forEach(
-        guild => {
+    guilds.forEach(guild => {
+        const card =
+            document.createElement("div");
 
-            const card =
-                document.createElement(
-                    "div"
-                );
+        card.className =
+            "server-card";
 
-            card.className =
-                "server-card";
+        let iconURL = "Goku.png";
 
-            let iconURL =
-                "Goku.png";
-
-            if (guild.icon) {
-
-                if (
-                    guild.icon.startsWith(
-                        "http"
-                    )
-                ) {
-
-                    iconURL =
-                        guild.icon;
-
-                } else {
-
-                    iconURL =
-                        "https://cdn.discordapp.com/icons/" +
-                        guild.id +
-                        "/" +
-                        guild.icon +
-                        ".png?size=128";
-                }
-            }
-
-            let badges =
-                "";
-
-            if (guild.owner) {
-
-                badges +=
-                    '<span class="server-badge owner">👑 OWNER</span>';
-            }
-
-            if (guild.admin) {
-
-                badges +=
-                    '<span class="server-badge admin">🛡️ ADMIN</span>';
-            }
-
-            if (guild.botInstalled) {
-
-                badges +=
-                    '<span class="server-badge bot">✓ BOT INSTALLED</span>';
-
+        if (guild.icon) {
+            if (guild.icon.startsWith("http")) {
+                iconURL = guild.icon;
             } else {
-
-                badges +=
-                    '<span class="server-badge not-installed">⚠ BOT NOT INSTALLED</span>';
+                iconURL =
+                    "https://cdn.discordapp.com/icons/" +
+                    guild.id +
+                    "/" +
+                    guild.icon +
+                    ".png?size=128";
             }
+        }
 
-            let actionButton =
-                "";
+        let badges = "";
 
-            if (guild.botInstalled) {
+        if (guild.owner) {
+            badges +=
+                '<span class="server-badge owner">👑 OWNER</span>';
+        }
 
-                actionButton =
-                    '<button ' +
-                    'class="manage-server-btn" ' +
-                    'type="button" ' +
-                    'data-action="manage" ' +
-                    'data-guild-id="' +
-                    escapeHTML(guild.id) +
-                    '">' +
-                    'Manage' +
-                    '</button>';
+        if (guild.admin) {
+            badges +=
+                '<span class="server-badge admin">🛡️ ADMIN</span>';
+        }
 
-            } else {
+        if (guild.botInstalled) {
+            badges +=
+                '<span class="server-badge bot">✓ BOT INSTALLED</span>';
+        } else {
+            badges +=
+                '<span class="server-badge not-installed">⚠ BOT NOT INSTALLED</span>';
+        }
 
-                actionButton =
-                    '<button ' +
-                    'class="manage-server-btn" ' +
-                    'type="button" ' +
-                    'data-action="invite" ' +
-                    'data-guild-id="' +
-                    escapeHTML(guild.id) +
-                    '">' +
-                    'Add Bot' +
-                    '</button>';
-            }
+        const actionButton =
+            guild.botInstalled
+                ? '<button class="manage-server-btn" type="button" data-action="manage" data-guild-id="' +
+                  escapeHTML(guild.id) +
+                  '">Manage</button>'
+                : '<button class="manage-server-btn" type="button" data-action="invite" data-guild-id="' +
+                  escapeHTML(guild.id) +
+                  '">Add Bot</button>';
 
-            card.innerHTML =
-                '<img ' +
-                'class="server-icon" ' +
-                'src="' +
-                escapeHTML(iconURL) +
-                '" ' +
-                'alt="' +
-                escapeHTML(guild.name) +
-                '" ' +
-                'loading="lazy" ' +
-                'draggable="false" ' +
-                'onerror="this.src=\'Goku.png\'">' +
+        card.innerHTML =
+            '<img class="server-icon" src="' +
+            escapeHTML(iconURL) +
+            '" alt="' +
+            escapeHTML(guild.name) +
+            '" loading="lazy" draggable="false" onerror="this.src=\'Goku.png\'">' +
+            '<div class="server-info">' +
+            '<span class="server-name">' +
+            escapeHTML(guild.name) +
+            '</span>' +
+            '<div class="server-badges">' +
+            badges +
+            '</div>' +
+            '</div>' +
+            actionButton;
 
-                '<div class="server-info">' +
+        const button =
+            card.querySelector(
+                ".manage-server-btn"
+            );
 
-                '<span class="server-name">' +
-                escapeHTML(guild.name) +
-                '</span>' +
+        if (button) {
+            button.addEventListener(
+                "click",
+                () => {
+                    const action =
+                        button.dataset.action;
 
-                '<div class="server-badges">' +
-                badges +
-                '</div>' +
+                    const guildId =
+                        button.dataset.guildId;
 
-                '</div>' +
-
-                actionButton;
-
-            const button =
-                card.querySelector(
-                    ".manage-server-btn"
-                );
-
-            if (button) {
-
-                button.addEventListener(
-                    "click",
-                    () => {
-
-                        const action =
-                            button.dataset.action;
-
-                        const guildId =
-                            button.dataset.guildId;
-
-                        if (
-                            action ===
-                            "invite"
-                        ) {
-
-                            inviteBotToGuild(
-                                guildId
-                            );
-
-                        } else {
-
-                            selectServer(
-                                guildId
-                            );
-                        }
+                    if (action === "invite") {
+                        inviteBotToGuild(guildId);
+                    } else {
+                        selectServer(guildId);
                     }
-                );
-            }
-
-            serverList.appendChild(
-                card
+                }
             );
         }
-    );
+
+        serverList.appendChild(card);
+    });
 }
 
-// =========================================================
-// ESCAPE HTML
-// =========================================================
-
-function escapeHTML(
-    value
-) {
-
-    return String(
-        value || ""
-    )
-        .replace(
-            /&/g,
-            "&amp;"
-        )
-        .replace(
-            /</g,
-            "&lt;"
-        )
-        .replace(
-            />/g,
-            "&gt;"
-        )
-        .replace(
-            /"/g,
-            "&quot;"
-        )
-        .replace(
-            /'/g,
-            "&#039;"
-        );
+function escapeHTML(value) {
+    return String(value || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
 }
-
-// =========================================================
-// SEARCH SERVERS
-// =========================================================
 
 function filterServers() {
-
     const search =
-        document.getElementById(
-            "serverSearch"
-        );
+        document.getElementById("serverSearch");
 
     if (!search) {
         return;
@@ -1107,36 +625,25 @@ function filterServers() {
             .trim()
             .toLowerCase();
 
-    let visibleCount =
-        0;
+    let visibleCount = 0;
 
-    cards.forEach(
-        card => {
+    cards.forEach(card => {
+        const name =
+            card
+                .querySelector(".server-name")
+                ?.textContent
+                .toLowerCase() || "";
 
-            const name =
-                card
-                    .querySelector(
-                        ".server-name"
-                    )
-                    ?.textContent
-                    .toLowerCase() ||
-                "";
+        const visible =
+            name.includes(query);
 
-            const visible =
-                name.includes(
-                    query
-                );
+        card.style.display =
+            visible ? "flex" : "none";
 
-            card.style.display =
-                visible
-                    ? "flex"
-                    : "none";
-
-            if (visible) {
-                visibleCount++;
-            }
+        if (visible) {
+            visibleCount++;
         }
-    );
+    });
 
     const existing =
         document.querySelector(
@@ -1147,15 +654,9 @@ function filterServers() {
         existing.remove();
     }
 
-    if (
-        cards.length &&
-        visibleCount === 0
-    ) {
-
+    if (cards.length && visibleCount === 0) {
         const empty =
-            document.createElement(
-                "div"
-            );
+            document.createElement("div");
 
         empty.className =
             "server-empty search-empty";
@@ -1166,124 +667,72 @@ function filterServers() {
             '<p>Try another server name.</p>';
 
         document
-            .getElementById(
-                "serverList"
-            )
-            ?.appendChild(
-                empty
-            );
+            .getElementById("serverList")
+            ?.appendChild(empty);
     }
 }
 
-// =========================================================
-// OPEN SERVER SELECTOR
-// =========================================================
-
 function openServerScreen() {
-
     const screen =
-        document.getElementById(
-            "serverScreen"
-        );
+        document.getElementById("serverScreen");
 
     if (!screen) {
         return;
     }
 
-    screen.style.display =
-        "flex";
+    screen.style.display = "flex";
+    screen.style.opacity = "0";
 
-    screen.style.opacity =
-        "0";
-
-    requestAnimationFrame(
-        () => {
-
-            screen.style.opacity =
-                "1";
-        }
-    );
+    requestAnimationFrame(() => {
+        screen.style.opacity = "1";
+    });
 
     const search =
-        document.getElementById(
-            "serverSearch"
-        );
+        document.getElementById("serverSearch");
 
     if (search) {
-
-        search.value =
-            "";
-
+        search.value = "";
         filterServers();
 
         setTimeout(
-            () => {
-                search.focus();
-            },
+            () => search.focus(),
             100
         );
     }
 }
 
-// =========================================================
-// CLOSE SERVER SELECTOR
-// =========================================================
-
 function closeServerScreen() {
-
     const screen =
-        document.getElementById(
-            "serverScreen"
-        );
+        document.getElementById("serverScreen");
 
     if (!screen) {
         return;
     }
 
-    screen.style.opacity =
-        "0";
+    screen.style.opacity = "0";
 
-    setTimeout(
-        () => {
-
-            screen.style.display =
-                "none";
-
-            screen.style.opacity =
-                "";
-
-        },
-        180
-    );
+    setTimeout(() => {
+        screen.style.display = "none";
+        screen.style.opacity = "";
+    }, 180);
 }
 
-// =========================================================
-// SELECT SERVER
-// =========================================================
-
-async function selectServer(
-    guildId
-) {
-
+async function selectServer(guildId) {
     if (!guildId) {
         return;
     }
 
     try {
-
         const response =
             await apiFetch(
                 "/api/guild/" +
-                encodeURIComponent(
-                    guildId
-                )
+                encodeURIComponent(guildId)
             );
 
         const data =
             await response.json();
 
         if (!response.ok) {
-
             console.error(
                 "❌ Server selection failed:",
                 data
@@ -1301,12 +750,8 @@ async function selectServer(
         selectedGuild =
             currentGuilds.find(
                 guild =>
-                    String(
-                        guild.id
-                    ) ===
-                    String(
-                        guildId
-                    )
+                    String(guild.id) ===
+                    String(guildId)
             ) || data;
 
         updateSelectedServerUI(
@@ -1317,27 +762,21 @@ async function selectServer(
 
         closeServerScreen();
 
+        await loadServerSettings();
+        await loadRealStats();
+
+        showPage("overview");
+
         showToast(
             "🏠 " +
-            (data.name || "Server") +
+            (
+                selectedGuild.name ||
+                "Server"
+            ) +
             " selected"
         );
 
-        console.log(
-            "🏠 Selected server:",
-            data
-        );
-
-        await loadServerSettings();
-
-        await loadRealStats();
-
-        showPage(
-            "overview"
-        );
-
     } catch (error) {
-
         console.error(
             "❌ Server selection error:",
             error
@@ -1349,22 +788,15 @@ async function selectServer(
     }
 }
 
-// =========================================================
-// LOAD SERVER SETTINGS
-// =========================================================
-
 async function loadServerSettings() {
-
     if (
         !selectedGuild ||
         !selectedGuild.id
     ) {
-
         return;
     }
 
     try {
-
         const response =
             await apiFetch(
                 "/api/guild/" +
@@ -1378,12 +810,6 @@ async function loadServerSettings() {
             await response.json();
 
         if (!response.ok) {
-
-            console.error(
-                "❌ Server settings load failed:",
-                data
-            );
-
             return;
         }
 
@@ -1403,30 +829,21 @@ async function loadServerSettings() {
             );
 
         if (welcomeToggle) {
-
             welcomeToggle.checked =
                 data.welcomeEnabled !== false;
         }
 
         if (leaveToggle) {
-
             leaveToggle.checked =
                 data.leaveEnabled !== false;
         }
 
         if (announcementsToggle) {
-
             announcementsToggle.checked =
                 data.announcementsEnabled !== false;
         }
 
-        console.log(
-            "✅ Server settings loaded:",
-            data
-        );
-
     } catch (error) {
-
         console.error(
             "❌ Failed to load server settings:",
             error
@@ -1434,17 +851,11 @@ async function loadServerSettings() {
     }
 }
 
-// =========================================================
-// SAVE SERVER MANAGEMENT SETTINGS
-// =========================================================
-
 async function saveServerManagementSettings() {
-
     if (
         !selectedGuild ||
         !selectedGuild.id
     ) {
-
         showToast(
             "⚠️ Select a server first."
         );
@@ -1468,7 +879,6 @@ async function saveServerManagementSettings() {
         );
 
     const body = {
-
         welcomeEnabled:
             welcomeToggle
                 ? welcomeToggle.checked
@@ -1486,7 +896,6 @@ async function saveServerManagementSettings() {
     };
 
     try {
-
         const response =
             await apiFetch(
                 "/api/guild/" +
@@ -1495,18 +904,13 @@ async function saveServerManagementSettings() {
                 ) +
                 "/settings",
                 {
-                    method:
-                        "POST",
-
+                    method: "POST",
                     headers: {
                         "Content-Type":
                             "application/json"
                     },
-
                     body:
-                        JSON.stringify(
-                            body
-                        )
+                        JSON.stringify(body)
                 }
             );
 
@@ -1514,12 +918,6 @@ async function saveServerManagementSettings() {
             await response.json();
 
         if (!response.ok) {
-
-            console.error(
-                "❌ Server settings save failed:",
-                data
-            );
-
             showToast(
                 data.message ||
                 data.error ||
@@ -1529,11 +927,6 @@ async function saveServerManagementSettings() {
             return false;
         }
 
-        console.log(
-            "✅ Server settings saved:",
-            data
-        );
-
         showToast(
             "💾 Server settings saved!"
         );
@@ -1541,7 +934,6 @@ async function saveServerManagementSettings() {
         return true;
 
     } catch (error) {
-
         console.error(
             "❌ Server settings save error:",
             error
@@ -1555,81 +947,51 @@ async function saveServerManagementSettings() {
     }
 }
 
-// =========================================================
-// SERVER MANAGEMENT TOGGLES
-// =========================================================
-
 function setupServerManagementSettings() {
-
     const toggles = [
-
-        document.getElementById(
-            "welcomeToggle"
-        ),
-
-        document.getElementById(
-            "leaveToggle"
-        ),
-
-        document.getElementById(
-            "announcementsToggle"
-        )
+        document.getElementById("welcomeToggle"),
+        document.getElementById("leaveToggle"),
+        document.getElementById("announcementsToggle")
     ];
 
-    toggles.forEach(
-        toggle => {
-
-            if (!toggle) {
-                return;
-            }
-
-            if (
-                toggle.dataset.serverSettingsBound
-            ) {
-
-                return;
-            }
-
-            toggle.dataset.serverSettingsBound =
-                "true";
-
-            toggle.addEventListener(
-                "change",
-                async () => {
-
-                    if (!selectedGuild) {
-
-                        showToast(
-                            "⚠️ Select a server first."
-                        );
-
-                        toggle.checked =
-                            !toggle.checked;
-
-                        return;
-                    }
-
-                    await saveServerManagementSettings();
-                }
-            );
+    toggles.forEach(toggle => {
+        if (!toggle) {
+            return;
         }
-    );
+
+        if (toggle.dataset.serverSettingsBound) {
+            return;
+        }
+
+        toggle.dataset.serverSettingsBound =
+            "true";
+
+        toggle.addEventListener(
+            "change",
+            async () => {
+                if (!selectedGuild) {
+                    showToast(
+                        "⚠️ Select a server first."
+                    );
+
+                    toggle.checked =
+                        !toggle.checked;
+
+                    return;
+                }
+
+                await saveServerManagementSettings();
+            }
+        );
+    });
 }
 
-// =========================================================
-// INVITE BOT
-// =========================================================
-
-async function inviteBotToGuild(
-    guildId
-) {
-
+async function inviteBotToGuild(guildId) {
     if (!guildId) {
         return;
     }
 
     try {
-
         showToast(
             "🤖 Opening Discord bot invite..."
         );
@@ -1637,21 +999,13 @@ async function inviteBotToGuild(
         const response =
             await apiFetch(
                 "/api/invite/" +
-                encodeURIComponent(
-                    guildId
-                )
+                encodeURIComponent(guildId)
             );
 
         const data =
             await response.json();
 
         if (!response.ok) {
-
-            console.error(
-                "❌ Invite error:",
-                data
-            );
-
             showToast(
                 data.message ||
                 data.error ||
@@ -1662,7 +1016,6 @@ async function inviteBotToGuild(
         }
 
         if (!data.url) {
-
             showToast(
                 "❌ Discord invite URL missing."
             );
@@ -1674,7 +1027,6 @@ async function inviteBotToGuild(
             data.url;
 
     } catch (error) {
-
         console.error(
             "❌ Bot invite error:",
             error
@@ -1686,14 +1038,7 @@ async function inviteBotToGuild(
     }
 }
 
-// =========================================================
-// SELECTED SERVER UI
-// =========================================================
-
-function updateSelectedServerUI(
-    guild
-) {
-
+function updateSelectedServerUI(guild) {
     if (!guild) {
         return;
     }
@@ -1704,7 +1049,6 @@ function updateSelectedServerUI(
         )
         .forEach(
             element => {
-
                 element.textContent =
                     guild.name ||
                     "Selected Server";
@@ -1712,22 +1056,14 @@ function updateSelectedServerUI(
         );
 }
 
-// =========================================================
-// CLEAN URL
-// =========================================================
-
 function cleanURL() {
-
     try {
-
         window.history.replaceState(
             {},
             document.title,
             window.location.pathname
         );
-
     } catch (error) {
-
         console.warn(
             "⚠️ Could not clean OAuth URL:",
             error
@@ -1735,59 +1071,34 @@ function cleanURL() {
     }
 }
 
-// =========================================================
-// LOGOUT
-// =========================================================
-
 async function logout() {
-
     try {
-
         await apiFetch(
             "/auth/logout",
             {
-                method:
-                    "POST"
+                method: "POST"
             }
         );
-
     } catch (error) {
-
         console.error(
             "❌ Logout request failed:",
             error
         );
-
     } finally {
-
-        shadowSession =
-            null;
-
-        currentUser =
-            null;
-
-        currentGuilds =
-            [];
-
-        selectedGuild =
-            null;
-
-        localStorage.removeItem(
-            "shadow_session"
-        );
+        shadowSession = null;
+        currentUser = null;
+        currentGuilds = [];
+        selectedGuild = null;
 
         if (shadowStatsInterval) {
-
             clearInterval(
                 shadowStatsInterval
             );
 
-            shadowStatsInterval =
-                null;
+            shadowStatsInterval = null;
         }
 
         resetDisplayedStats();
-
         showLoginScreen();
 
         window.location.href =
@@ -1795,21 +1106,15 @@ async function logout() {
     }
 }
 
-// =========================================================
-// PAGE NAVIGATION
-// =========================================================
-
 function showPage(
     pageId,
     button = null
 ) {
-
     if (
         pageId !== "server" &&
         pageId !== "overview" &&
         !selectedGuild
     ) {
-
         showToast(
             "⚠️ Select a server first."
         );
@@ -1831,7 +1136,6 @@ function showPage(
 
     pages.forEach(
         page => {
-
             page.classList.remove(
                 "active"
             );
@@ -1840,7 +1144,6 @@ function showPage(
 
     navButtons.forEach(
         btn => {
-
             btn.classList.remove(
                 "active"
             );
@@ -1853,7 +1156,6 @@ function showPage(
         );
 
     if (page) {
-
         page.classList.add(
             "active"
         );
@@ -1864,7 +1166,6 @@ function showPage(
 
         requestAnimationFrame(
             () => {
-
                 page.classList.add(
                     "page-enter"
                 );
@@ -1873,16 +1174,12 @@ function showPage(
     }
 
     if (button) {
-
         button.classList.add(
             "active"
         );
-
     } else {
-
         navButtons.forEach(
             btn => {
-
                 const onclick =
                     btn.getAttribute(
                         "onclick"
@@ -1900,7 +1197,6 @@ function showPage(
                         "\""
                     )
                 ) {
-
                     btn.classList.add(
                         "active"
                     );
@@ -1915,111 +1211,71 @@ function showPage(
         );
 
     const titles = {
-
-        overview:
-            "Dashboard Overview",
-
-        server:
-            "Server Management",
-
-        xp:
-            "XP & Levels",
-
-        games:
-            "Games",
-
-        moderation:
-            "Moderation",
-
-        verification:
-            "Verification",
-
-        polls:
-            "Polls",
-
-        settings:
-            "Settings"
+        overview: "Dashboard Overview",
+        server: "Server Management",
+        xp: "XP & Levels",
+        games: "Games",
+        moderation: "Moderation",
+        verification: "Verification",
+        polls: "Polls",
+        settings: "Settings"
     };
 
     if (
         pageTitle &&
         titles[pageId]
     ) {
-
         pageTitle.textContent =
             titles[pageId];
     }
 
     window.scrollTo({
-        top:
-            0,
-
-        behavior:
-            "smooth"
+        top: 0,
+        behavior: "smooth"
     });
 }
-
-// =========================================================
-// OPEN SERVER FROM DATA ATTRIBUTE
-// =========================================================
 
 document.addEventListener(
     "click",
     event => {
-
         const target =
             event.target.closest(
                 "[data-open-server]"
             );
 
         if (target) {
-
-            openServerScreen();
+            if (currentUser) {
+                openServerScreen();
+            } else {
+                showLoginScreen();
+            }
         }
     }
 );
 
-// =========================================================
-// DOM READY
-// =========================================================
-
 document.addEventListener(
     "DOMContentLoaded",
     () => {
-
         checkDiscordLogin();
 
         setupRipples();
-
         setupSwitches();
-
         setupServerManagementSettings();
-
         setupCardTilt();
-
         setupHeroParallax();
-
         setupOnlineAnimation();
-
         setupInputEffects();
-
         setupKeyboardShortcuts();
-
         setupScrollEffects();
-
         setupMobileNavigation();
-
         animateInitialCounters();
-
         loadSavedTheme();
 
         setTimeout(
             () => {
-
                 document.body.classList.add(
                     "dashboard-loaded"
                 );
-
             },
             100
         );
@@ -2030,23 +1286,16 @@ document.addEventListener(
     }
 );
 
-// =========================================================
-// RIPPLE
-// =========================================================
-
 function setupRipples() {
-
     document
         .querySelectorAll(
             "button"
         )
         .forEach(
             button => {
-
                 if (
                     button.dataset.rippleBound
                 ) {
-
                     return;
                 }
 
@@ -2056,7 +1305,6 @@ function setupRipples() {
                 button.addEventListener(
                     "click",
                     function(event) {
-
                         createButtonRipple(
                             this,
                             event
@@ -2071,7 +1319,6 @@ function createButtonRipple(
     element,
     event
 ) {
-
     if (!element) {
         return;
     }
@@ -2107,27 +1354,19 @@ function createButtonRipple(
 
     setTimeout(
         () => {
-
             ripple.remove();
-
         },
         650
     );
 }
 
-// =========================================================
-// SWITCHES
-// =========================================================
-
 function setupSwitches() {
-
     document
         .querySelectorAll(
             ".switch input"
         )
         .forEach(
             toggle => {
-
                 if (
                     toggle.id ===
                         "welcomeToggle" ||
@@ -2136,14 +1375,12 @@ function setupSwitches() {
                     toggle.id ===
                         "announcementsToggle"
                 ) {
-
                     return;
                 }
 
                 toggle.addEventListener(
                     "change",
                     () => {
-
                         showToast(
                             toggle.checked
                                 ? "🟣 Feature enabled"
@@ -2155,12 +1392,7 @@ function setupSwitches() {
         );
 }
 
-// =========================================================
-// CARD TILT
-// =========================================================
-
 function setupCardTilt() {
-
     const cards =
         document.querySelectorAll(
             ".stat-card, .setting-card, .game-panel"
@@ -2168,16 +1400,13 @@ function setupCardTilt() {
 
     cards.forEach(
         card => {
-
             card.addEventListener(
                 "mousemove",
                 event => {
-
                     if (
                         window.innerWidth <
                         850
                     ) {
-
                         return;
                     }
 
@@ -2223,7 +1452,6 @@ function setupCardTilt() {
             card.addEventListener(
                 "mouseleave",
                 () => {
-
                     card.style.transform =
                         "";
                 }
@@ -2232,12 +1460,7 @@ function setupCardTilt() {
     );
 }
 
-// =========================================================
-// HERO PARALLAX
-// =========================================================
-
 function setupHeroParallax() {
-
     const hero =
         document.querySelector(
             ".hero"
@@ -2250,12 +1473,10 @@ function setupHeroParallax() {
     hero.addEventListener(
         "mousemove",
         event => {
-
             if (
                 window.innerWidth <
                 850
             ) {
-
                 return;
             }
 
@@ -2300,7 +1521,6 @@ function setupHeroParallax() {
                 );
 
             if (symbol) {
-
                 symbol.style.transform =
                     "translate(" +
                     (
@@ -2318,7 +1538,6 @@ function setupHeroParallax() {
     hero.addEventListener(
         "mouseleave",
         () => {
-
             hero.style.backgroundPosition =
                 "center";
 
@@ -2328,7 +1547,6 @@ function setupHeroParallax() {
                 );
 
             if (symbol) {
-
                 symbol.style.transform =
                     "";
             }
@@ -2336,12 +1554,7 @@ function setupHeroParallax() {
     );
 }
 
-// =========================================================
-// ONLINE ANIMATION
-// =========================================================
-
 function setupOnlineAnimation() {
-
     const online =
         document.querySelector(
             ".online-badge"
@@ -2353,40 +1566,30 @@ function setupOnlineAnimation() {
 
     setInterval(
         () => {
-
             online.classList.add(
                 "status-pulse"
             );
 
             setTimeout(
                 () => {
-
                     online.classList.remove(
                         "status-pulse"
                     );
-
                 },
                 350
             );
-
         },
         2500
     );
 }
 
-// =========================================================
-// INITIAL COUNTERS
-// =========================================================
-
 function animateInitialCounters() {
-
     document
         .querySelectorAll(
             ".stat-card strong"
         )
         .forEach(
             number => {
-
                 const card =
                     number.closest(
                         ".stat-card"
@@ -2406,7 +1609,6 @@ function animateInitialCounters() {
                         "member"
                     )
                 ) {
-
                     return;
                 }
 
@@ -2444,23 +1646,16 @@ function animateInitialCounters() {
         );
 }
 
-// =========================================================
-// INPUT EFFECTS
-// =========================================================
-
 function setupInputEffects() {
-
     document
         .querySelectorAll(
             ".text-input, .number-input, select, input:not([type='checkbox'])"
         )
         .forEach(
             input => {
-
                 input.addEventListener(
                     "focus",
                     () => {
-
                         input.classList.add(
                             "input-focused"
                         );
@@ -2470,7 +1665,6 @@ function setupInputEffects() {
                 input.addEventListener(
                     "blur",
                     () => {
-
                         input.classList.remove(
                             "input-focused"
                         );
@@ -2480,21 +1674,14 @@ function setupInputEffects() {
         );
 }
 
-// =========================================================
-// KEYBOARD SHORTCUTS
-// =========================================================
-
 function setupKeyboardShortcuts() {
-
     document.addEventListener(
         "keydown",
         event => {
-
             if (
                 event.key ===
                 "Escape"
             ) {
-
                 closeServerScreen();
             }
 
@@ -2503,7 +1690,6 @@ function setupKeyboardShortcuts() {
                 event.key.toLowerCase() ===
                 "k"
             ) {
-
                 event.preventDefault();
 
                 if (currentUser) {
@@ -2514,12 +1700,7 @@ function setupKeyboardShortcuts() {
     );
 }
 
-// =========================================================
-// SCROLL EFFECT
-// =========================================================
-
 function setupScrollEffects() {
-
     const topbar =
         document.querySelector(
             ".topbar"
@@ -2532,36 +1713,26 @@ function setupScrollEffects() {
     window.addEventListener(
         "scroll",
         () => {
-
             if (
                 window.scrollY >
                 12
             ) {
-
                 topbar.classList.add(
                     "scrolled"
                 );
-
             } else {
-
                 topbar.classList.remove(
                     "scrolled"
                 );
             }
         },
         {
-            passive:
-                true
+            passive: true
         }
     );
 }
 
-// =========================================================
-// MOBILE NAV
-// =========================================================
-
 function setupMobileNavigation() {
-
     const sidebar =
         document.querySelector(
             ".sidebar"
@@ -2574,7 +1745,6 @@ function setupMobileNavigation() {
     document.addEventListener(
         "click",
         event => {
-
             const navButton =
                 event.target.closest(
                     ".nav-btn"
@@ -2585,7 +1755,6 @@ function setupMobileNavigation() {
                 window.innerWidth <=
                 850
             ) {
-
                 sidebar.classList.remove(
                     "mobile-open"
                 );
@@ -2594,21 +1763,13 @@ function setupMobileNavigation() {
     );
 }
 
-// =========================================================
-// TOAST
-// =========================================================
-
-function showToast(
-    message
-) {
-
+function showToast(message) {
     let toast =
         document.querySelector(
             ".toast"
         );
 
     if (!toast) {
-
         toast =
             document.createElement(
                 "div"
@@ -2642,22 +1803,15 @@ function showToast(
     shadowToastTimer =
         setTimeout(
             () => {
-
                 toast.classList.remove(
                     "show"
                 );
-
             },
             2800
         );
 }
 
-// =========================================================
-// SAVE SETTINGS
-// =========================================================
-
 async function saveSettings() {
-
     const hasServerSettings =
         document.getElementById(
             "welcomeToggle"
@@ -2684,9 +1838,7 @@ async function saveSettings() {
         hasServerSettings &&
         serverActive
     ) {
-
         await saveServerManagementSettings();
-
         return;
     }
 
@@ -2695,12 +1847,7 @@ async function saveSettings() {
     );
 }
 
-// =========================================================
-// CREATE POLL
-// =========================================================
-
 function createPoll() {
-
     const question =
         document.getElementById(
             "pollQuestion"
@@ -2718,7 +1865,6 @@ function createPoll() {
     if (
         !question.value.trim()
     ) {
-
         showToast(
             "⚠️ Enter a poll question first."
         );
@@ -2727,7 +1873,6 @@ function createPoll() {
     }
 
     if (message) {
-
         message.textContent =
             "🗳️ Poll created successfully!";
     }
@@ -2740,12 +1885,7 @@ function createPoll() {
         "";
 }
 
-// =========================================================
-// THEME
-// =========================================================
-
 function changeTheme() {
-
     const select =
         document.getElementById(
             "themeSelect"
@@ -2762,14 +1902,11 @@ function changeTheme() {
         theme;
 
     try {
-
         localStorage.setItem(
             "shadow-theme",
             theme
         );
-
     } catch (error) {
-
         console.warn(
             "Theme storage unavailable."
         );
@@ -2781,14 +1918,8 @@ function changeTheme() {
     );
 }
 
-// =========================================================
-// LOAD SAVED THEME
-// =========================================================
-
 function loadSavedTheme() {
-
     try {
-
         const theme =
             localStorage.getItem(
                 "shadow-theme"
@@ -2807,33 +1938,25 @@ function loadSavedTheme() {
             );
 
         if (select) {
-
             select.value =
                 theme;
         }
 
     } catch (error) {
-
         console.warn(
             "Could not load saved theme."
         );
     }
 }
 
-// =========================================================
-// VISIBILITY CHANGE
-// =========================================================
-
 document.addEventListener(
     "visibilitychange",
     () => {
-
         if (
             !document.hidden &&
             currentUser &&
             selectedGuild
         ) {
-
             loadRealStats();
         }
     }
