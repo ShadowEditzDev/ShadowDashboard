@@ -1,20 +1,90 @@
 const BACKEND_URL =
     "https://shadowapi.jonhcena-co.workers.dev";
 
-let shadowSession = null;
-let shadowStatsInterval = null;
-let shadowToastTimer = null;
-
-let currentUser = null;
-let currentGuilds = [];
-let selectedGuild = null;
+const SESSION_KEY =
+    "shadow_dashboard_session";
 
 const PENDING_GUILD_KEY =
     "shadow_pending_bot_guild";
 
+let shadowSession =
+    null;
+
+let shadowStatsInterval =
+    null;
+
+let shadowToastTimer =
+    null;
+
+let currentUser =
+    null;
+
+let currentGuilds =
+    [];
+
+let selectedGuild =
+    null;
+
+function getStoredSession() {
+    try {
+        return localStorage.getItem(
+            SESSION_KEY
+        );
+    } catch (error) {
+        console.warn(
+            "Could not read stored dashboard session.",
+            error
+        );
+
+        return null;
+    }
+}
+
+function saveStoredSession(
+    sessionId
+) {
+    if (!sessionId) {
+        return;
+    }
+
+    shadowSession =
+        String(sessionId);
+
+    try {
+        localStorage.setItem(
+            SESSION_KEY,
+            shadowSession
+        );
+    } catch (error) {
+        console.warn(
+            "Could not save dashboard session.",
+            error
+        );
+    }
+}
+
+function clearStoredSession() {
+    shadowSession =
+        null;
+
+    try {
+        localStorage.removeItem(
+            SESSION_KEY
+        );
+    } catch (error) {
+        console.warn(
+            "Could not clear dashboard session.",
+            error
+        );
+    }
+}
+
 function loginWithDiscord() {
+    clearStoredSession();
+
     window.location.href =
-        BACKEND_URL + "/auth/discord";
+        BACKEND_URL +
+        "/auth/discord";
 }
 
 async function apiFetch(
@@ -22,21 +92,36 @@ async function apiFetch(
     options = {}
 ) {
     const headers = {
-        "Accept": "application/json",
+        "Accept":
+            "application/json",
         ...(options.headers || {})
     };
 
+    const session =
+        shadowSession ||
+        getStoredSession();
+
+    if (session) {
+        headers.Authorization =
+            "Bearer " +
+            session;
+    }
+
     return fetch(
-        BACKEND_URL + endpoint,
+        BACKEND_URL +
+        endpoint,
         {
             ...options,
             headers,
-            credentials: "include"
+            credentials:
+                "include"
         }
     );
 }
 
 async function checkDiscordLogin() {
+    hideDashboard();
+
     const params =
         new URLSearchParams(
             window.location.search
@@ -45,22 +130,34 @@ async function checkDiscordLogin() {
     const loginStatus =
         params.get("login");
 
+    const returnedSession =
+        params.get("session");
+
     const returnedGuildId =
         params.get("guildId") ||
         params.get("guild_id");
 
     if (
-        loginStatus === "failed" ||
-        loginStatus === "error" ||
-        loginStatus === "cancelled"
+        loginStatus ===
+            "failed" ||
+        loginStatus ===
+            "error" ||
+        loginStatus ===
+            "cancelled"
     ) {
         clearPendingBotGuild();
+        clearStoredSession();
+
         cleanURL();
 
-        shadowSession = null;
-        currentUser = null;
-        currentGuilds = [];
-        selectedGuild = null;
+        currentUser =
+            null;
+
+        currentGuilds =
+            [];
+
+        selectedGuild =
+            null;
 
         showLoginScreen();
         revealDashboard();
@@ -73,49 +170,69 @@ async function checkDiscordLogin() {
     }
 
     /*
-     * Normal page visit:
-     * show the login screen and do not flash the
-     * dashboard underneath it.
+     * Callback from Discord:
+     * save the fresh KV session ID first.
      */
-    if (loginStatus !== "success") {
-        shadowSession = null;
-        currentUser = null;
-        currentGuilds = [];
-        selectedGuild = null;
-
-        showLoginScreen();
-        revealDashboard();
-
-        return;
+    if (returnedSession) {
+        saveStoredSession(
+            returnedSession
+        );
     }
 
     const pendingGuildId =
         returnedGuildId ||
         getPendingBotGuild();
 
-    cleanURL();
+    /*
+     * No callback and no saved session:
+     * show the login page.
+     */
+    if (
+        !loginStatus &&
+        !shadowSession &&
+        !getStoredSession()
+    ) {
+        showLoginScreen();
+        revealDashboard();
+
+        return;
+    }
 
     /*
-     * Keep the dashboard hidden until we know
-     * whether we are opening the server selector.
+     * Do not leave session= in the address bar.
      */
-    hideDashboard();
+    if (
+        loginStatus ||
+        returnedSession ||
+        returnedGuildId
+    ) {
+        cleanURL();
+    }
 
     try {
         const response =
-            await apiFetch("/api/me");
+            await apiFetch(
+                "/api/me"
+            );
 
         if (!response.ok) {
-            shadowSession = null;
-            currentUser = null;
-            currentGuilds = [];
-            selectedGuild = null;
+            clearPendingBotGuild();
+            clearStoredSession();
+
+            currentUser =
+                null;
+
+            currentGuilds =
+                [];
+
+            selectedGuild =
+                null;
 
             showLoginScreen();
             revealDashboard();
 
             showToast(
-                "❌ Discord session is invalid. Please login again."
+                "❌ Discord session expired. Please login again."
             );
 
             return;
@@ -128,8 +245,11 @@ async function checkDiscordLogin() {
             !data.loggedIn ||
             !data.user
         ) {
+            clearStoredSession();
+
             showLoginScreen();
             revealDashboard();
+
             return;
         }
 
@@ -155,27 +275,31 @@ async function checkDiscordLogin() {
             data.user
         );
 
+        hideLoginScreen();
+
+        /*
+         * Load servers BEFORE revealing dashboard.
+         * This prevents the dashboard flash.
+         */
         await loadGuilds();
 
-        if (!currentGuilds.length) {
-            showLoginScreen();
-            revealDashboard();
-
-            clearPendingBotGuild();
-
+        if (
+            !currentGuilds.length
+        ) {
             showToast(
                 "⚠️ No manageable servers found."
             );
 
+            clearPendingBotGuild();
+
+            revealDashboard();
+
             return;
         }
 
-        /*
-         * Normal login and Add Bot both arrive
-         * here. The guild ID identifies the server
-         * that was just authorized for the bot.
-         */
-        if (pendingGuildId) {
+        if (
+            pendingGuildId
+        ) {
             await refreshGuildsAfterBotAuthorization(
                 pendingGuildId
             );
@@ -184,19 +308,24 @@ async function checkDiscordLogin() {
         }
 
         /*
-         * IMPORTANT:
-         * Reveal only after the selector is ready.
-         * This prevents the dashboard flash.
+         * Server selector is now opened first.
          */
         openServerScreen();
+
         revealDashboard();
 
-        if (pendingGuildId) {
+        if (
+            pendingGuildId
+        ) {
             const addedGuild =
                 currentGuilds.find(
                     guild =>
-                        String(guild.id) ===
-                        String(pendingGuildId)
+                        String(
+                            guild.id
+                        ) ===
+                        String(
+                            pendingGuildId
+                        )
                 );
 
             if (
@@ -204,7 +333,7 @@ async function checkDiscordLogin() {
                 addedGuild.botInstalled
             ) {
                 showToast(
-                    "🤖 ShadowBot is now installed in " +
+                    "✅ ShadowBot installed in " +
                     (
                         addedGuild.name ||
                         "your server"
@@ -213,7 +342,7 @@ async function checkDiscordLogin() {
                 );
             } else {
                 showToast(
-                    "⚠️ Discord authorization completed. Checking server status..."
+                    "⚠️ Authorization completed. Checking ShadowBot status..."
                 );
 
                 setTimeout(
@@ -239,6 +368,17 @@ async function checkDiscordLogin() {
             error
         );
 
+        clearStoredSession();
+
+        currentUser =
+            null;
+
+        currentGuilds =
+            [];
+
+        selectedGuild =
+            null;
+
         showLoginScreen();
         revealDashboard();
 
@@ -249,9 +389,6 @@ async function checkDiscordLogin() {
 }
 
 function hideDashboard() {
-    document.body.dataset.shadowAuthLoading =
-        "true";
-
     document.body.style.visibility =
         "hidden";
 }
@@ -259,8 +396,6 @@ function hideDashboard() {
 function revealDashboard() {
     document.body.style.visibility =
         "";
-
-    delete document.body.dataset.shadowAuthLoading;
 }
 
 function showLoginScreen() {
@@ -292,7 +427,9 @@ function updateElementText(
     value
 ) {
     const element =
-        document.getElementById(id);
+        document.getElementById(
+            id
+        );
 
     if (element) {
         element.textContent =
@@ -310,7 +447,9 @@ async function loadRealStats() {
 
     try {
         const guildId =
-            String(selectedGuild.id);
+            String(
+                selectedGuild.id
+            );
 
         const response =
             await apiFetch(
@@ -340,10 +479,14 @@ async function loadRealStats() {
         }
 
         const members =
-            Number(data.members);
+            Number(
+                data.members
+            );
 
         if (
-            Number.isFinite(members) &&
+            Number.isFinite(
+                members
+            ) &&
             members >= 0
         ) {
             const memberNumber =
@@ -357,7 +500,9 @@ async function loadRealStats() {
                     );
 
                 memberNumber.dataset.realMembers =
-                    String(members);
+                    String(
+                        members
+                    );
 
                 animateNumberChange(
                     memberNumber,
@@ -382,7 +527,9 @@ async function loadRealStats() {
 
         if (
             xpElement &&
-            Number.isFinite(totalXP) &&
+            Number.isFinite(
+                totalXP
+            ) &&
             totalXP >= 0
         ) {
             const previousXP =
@@ -392,7 +539,9 @@ async function loadRealStats() {
                 );
 
             xpElement.dataset.realXP =
-                String(totalXP);
+                String(
+                    totalXP
+                );
 
             animateNumberChange(
                 xpElement,
@@ -415,7 +564,9 @@ async function loadRealStats() {
 
         if (
             gameElement &&
-            Number.isFinite(gamesPlayed) &&
+            Number.isFinite(
+                gamesPlayed
+            ) &&
             gamesPlayed >= 0
         ) {
             const previousGames =
@@ -425,7 +576,9 @@ async function loadRealStats() {
                 );
 
             gameElement.dataset.realGames =
-                String(gamesPlayed);
+                String(
+                    gamesPlayed
+                );
 
             animateNumberChange(
                 gameElement,
@@ -442,7 +595,9 @@ async function loadRealStats() {
 
         if (
             gamesPageElement &&
-            Number.isFinite(gamesPlayed) &&
+            Number.isFinite(
+                gamesPlayed
+            ) &&
             gamesPlayed >= 0
         ) {
             gamesPageElement.textContent =
@@ -463,7 +618,9 @@ async function loadRealStats() {
             }
         );
 
-        if (!shadowStatsInterval) {
+        if (
+            !shadowStatsInterval
+        ) {
             shadowStatsInterval =
                 setInterval(
                     () => {
@@ -541,14 +698,20 @@ function findMemberStatElement() {
             ".stat-card"
         );
 
-    for (const card of statCards) {
+    for (
+        const card of statCards
+    ) {
         const text =
             card.textContent
                 .toLowerCase();
 
         if (
-            text.includes("members") ||
-            text.includes("member")
+            text.includes(
+                "members"
+            ) ||
+            text.includes(
+                "member"
+            )
         ) {
             const strong =
                 card.querySelector(
@@ -643,7 +806,8 @@ function updateUserAvatar(
         return;
     }
 
-    let avatarURL = null;
+    let avatarURL =
+        null;
 
     if (
         typeof user.avatar ===
@@ -794,7 +958,7 @@ async function refreshGuildsAfterBotAuthorization(
     }
 
     console.log(
-        "🔄 Refreshing /api/guilds after bot authorization for guild:",
+        "🔄 Refreshing /api/guilds for guild:",
         guildId
     );
 
@@ -822,7 +986,8 @@ async function refreshGuildsAfterBotAuthorization(
         1000,
         2000,
         3000,
-        5000
+        5000,
+        7000
     ];
 
     for (
@@ -842,8 +1007,12 @@ async function refreshGuildsAfterBotAuthorization(
         guild =
             currentGuilds.find(
                 item =>
-                    String(item.id) ===
-                    String(guildId)
+                    String(
+                        item.id
+                    ) ===
+                    String(
+                        guildId
+                    )
             );
 
         if (
@@ -942,7 +1111,9 @@ function renderServerScreen(
                     '<span class="server-badge admin">🛡️ ADMIN</span>';
             }
 
-            if (guild.botInstalled) {
+            if (
+                guild.botInstalled
+            ) {
                 badges +=
                     '<span class="server-badge bot">✓ BOT INSTALLED</span>';
             } else {
@@ -1406,10 +1577,12 @@ async function saveServerManagementSettings() {
                 {
                     method:
                         "POST",
+
                     headers: {
                         "Content-Type":
                             "application/json"
                     },
+
                     body:
                         JSON.stringify(
                             body
@@ -1564,19 +1737,6 @@ async function inviteBotToGuild(
             return;
         }
 
-        /*
-         * Full OAuth2 Add Bot flow:
-         *
-         * Add Bot
-         * ↓
-         * Discord
-         * ↓
-         * Authorize
-         * ↓
-         * /auth/discord/callback
-         * ↓
-         * Dashboard ?login=success&guildId=...
-         */
         window.location.href =
             data.url;
 
@@ -1600,12 +1760,16 @@ function savePendingBotGuild(
     try {
         sessionStorage.setItem(
             PENDING_GUILD_KEY,
-            String(guildId)
+            String(
+                guildId
+            )
         );
 
         localStorage.setItem(
             PENDING_GUILD_KEY,
-            String(guildId)
+            String(
+                guildId
+            )
         );
 
     } catch (error) {
@@ -1710,11 +1874,16 @@ async function logout() {
 
     } finally {
         clearPendingBotGuild();
+        clearStoredSession();
 
-        shadowSession = null;
-        currentUser = null;
-        currentGuilds = [];
-        selectedGuild = null;
+        currentUser =
+            null;
+
+        currentGuilds =
+            [];
+
+        selectedGuild =
+            null;
 
         if (
             shadowStatsInterval
@@ -1730,7 +1899,6 @@ async function logout() {
         resetDisplayedStats();
 
         showLoginScreen();
-
         revealDashboard();
 
         window.location.href =
@@ -1846,18 +2014,25 @@ function showPage(
     const titles = {
         overview:
             "Dashboard Overview",
+
         server:
             "Server Management",
+
         xp:
             "XP & Levels",
+
         games:
             "Games",
+
         moderation:
             "Moderation",
+
         verification:
             "Verification",
+
         polls:
             "Polls",
+
         settings:
             "Settings"
     };
@@ -1897,10 +2072,6 @@ document.addEventListener(
 document.addEventListener(
     "DOMContentLoaded",
     () => {
-        hideDashboard();
-
-        checkDiscordLogin();
-
         setupRipples();
         setupSwitches();
         setupServerManagementSettings();
@@ -1913,6 +2084,8 @@ document.addEventListener(
         setupMobileNavigation();
         animateInitialCounters();
         loadSavedTheme();
+
+        checkDiscordLogin();
 
         setTimeout(
             () => {
@@ -2555,7 +2728,6 @@ function changeTheme() {
             "shadow-theme",
             theme
         );
-
     } catch (error) {
         console.warn(
             "Theme storage unavailable."
