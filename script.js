@@ -78,14 +78,17 @@ async function checkDiscordLogin() {
     const params = new URLSearchParams(window.location.search);
     const loginStatus = params.get("login");
     const returnedSession = params.get("session");
-    const returnedGuildId = params.get("guildId") || params.get("guild_id");
+    const returnedGuildId =
+        params.get("guildId") ||
+        params.get("guild_id");
 
     if (returnedSession) {
         saveStoredSession(returnedSession);
     }
 
     const pendingGuildId =
-        returnedGuildId || getPendingBotGuild();
+        returnedGuildId ||
+        getPendingBotGuild();
 
     if (
         loginStatus === "failed" ||
@@ -161,7 +164,10 @@ async function checkDiscordLogin() {
         }
 
         if (pendingGuildId) {
-            await refreshGuildsAfterBotAuthorization(pendingGuildId);
+            await refreshGuildsAfterBotAuthorization(
+                pendingGuildId
+            );
+
             clearPendingBotGuild();
         }
 
@@ -179,7 +185,10 @@ async function checkDiscordLogin() {
                         String(pendingGuildId)
                 );
 
-            if (addedGuild && addedGuild.botInstalled) {
+            if (
+                addedGuild &&
+                addedGuild.botInstalled
+            ) {
                 showToast(
                     "🤖 ShadowBot is now installed in " +
                     (addedGuild.name || "your server") +
@@ -196,16 +205,20 @@ async function checkDiscordLogin() {
                     );
                 }, 1500);
             }
-        } else if (loginStatus === "success") {
+        } else if (
+            loginStatus === "success"
+        ) {
             showToast(
                 "👋 Welcome, " +
                 username +
                 "! Select your server."
             );
         }
-
     } catch (error) {
-        console.error("❌ Login check failed:", error);
+        console.error(
+            "❌ Login check failed:",
+            error
+        );
 
         clearStoredSession();
 
@@ -216,7 +229,9 @@ async function checkDiscordLogin() {
         showLoginScreen();
         revealDashboard();
 
-        showToast("❌ Could not verify Discord login.");
+        showToast(
+            "❌ Could not verify Discord login."
+        );
     }
 }
 
@@ -229,7 +244,8 @@ function revealDashboard() {
 }
 
 function showLoginScreen() {
-    const loginScreen = document.getElementById("loginScreen");
+    const loginScreen =
+        document.getElementById("loginScreen");
 
     if (loginScreen) {
         loginScreen.style.display = "flex";
@@ -237,7 +253,8 @@ function showLoginScreen() {
 }
 
 function hideLoginScreen() {
-    const loginScreen = document.getElementById("loginScreen");
+    const loginScreen =
+        document.getElementById("loginScreen");
 
     if (loginScreen) {
         loginScreen.style.display = "none";
@@ -245,7 +262,8 @@ function hideLoginScreen() {
 }
 
 function updateElementText(id, value) {
-    const element = document.getElementById(id);
+    const element =
+        document.getElementById(id);
 
     if (element) {
         element.textContent = value;
@@ -258,35 +276,53 @@ async function loadRealStats() {
     }
 
     try {
-        const guildId = String(selectedGuild.id);
+        const guildId =
+            String(selectedGuild.id);
 
-        const response = await apiFetch(
-            "/stats?guildId=" + encodeURIComponent(guildId)
-        );
+        const response =
+            await apiFetch(
+                "/stats?guildId=" +
+                encodeURIComponent(guildId)
+            );
 
-        const data = await response.json();
+        const data =
+            await response.json();
 
         if (!response.ok) {
-            console.error("❌ Stats request failed:", response.status, data);
+            console.error(
+                "❌ Stats request failed:",
+                response.status,
+                data
+            );
 
             showToast(
                 data.message ||
                 data.error ||
                 "❌ Failed to load server stats."
             );
+
             return;
         }
 
-        const members = Number(data.members);
+        const members =
+            Number(data.members);
 
-        if (Number.isFinite(members) && members >= 0) {
-            const memberNumber = findMemberStatElement();
+        if (
+            Number.isFinite(members) &&
+            members >= 0
+        ) {
+            const memberNumber =
+                findMemberStatElement();
 
             if (memberNumber) {
                 const previousValue =
-                    Number(memberNumber.dataset.realMembers || 0);
+                    Number(
+                        memberNumber.dataset.realMembers ||
+                        0
+                    );
 
-                memberNumber.dataset.realMembers = String(members);
+                memberNumber.dataset.realMembers =
+                    String(members);
 
                 animateNumberChange(
                     memberNumber,
@@ -297,11 +333,15 @@ async function loadRealStats() {
             }
         }
 
-        const totalXP = Number(
-            data.totalXP ?? data.xp ?? 0
-        );
+        const totalXP =
+            Number(
+                data.totalXP ??
+                data.xp ??
+                0
+            );
 
-        const xpElement = document.getElementById("xpCount");
+        const xpElement =
+            document.getElementById("xpCount");
 
         if (
             xpElement &&
@@ -309,9 +349,13 @@ async function loadRealStats() {
             totalXP >= 0
         ) {
             const previousXP =
-                Number(xpElement.dataset.realXP || 0);
+                Number(
+                    xpElement.dataset.realXP ||
+                    0
+                );
 
-            xpElement.dataset.realXP = String(totalXP);
+            xpElement.dataset.realXP =
+                String(totalXP);
 
             animateNumberChange(
                 xpElement,
@@ -321,9 +365,11 @@ async function loadRealStats() {
             );
         }
 
-        const gamesPlayed = Number(
-            data.gamesPlayed ?? 0
-        );
+        const gamesPlayed =
+            Number(
+                data.gamesPlayed ??
+                0
+            );
 
         const gameElement =
             document.getElementById("gameCount");
@@ -334,7 +380,10 @@ async function loadRealStats() {
             gamesPlayed >= 0
         ) {
             const previousGames =
-                Number(gameElement.dataset.realGames || 0);
+                Number(
+                    gameElement.dataset.realGames ||
+                    0
+                );
 
             gameElement.dataset.realGames =
                 String(gamesPlayed);
@@ -348,7 +397,9 @@ async function loadRealStats() {
         }
 
         const gamesPageElement =
-            document.getElementById("gamesPlayedCount");
+            document.getElementById(
+                "gamesPlayedCount"
+            );
 
         if (
             gamesPageElement &&
@@ -361,7 +412,10 @@ async function loadRealStats() {
 
         console.log(
             "✅ Stats loaded for " +
-            (selectedGuild.name || "Selected Server") +
+            (
+                selectedGuild.name ||
+                "Selected Server"
+            ) +
             ":",
             {
                 members,
@@ -371,56 +425,89 @@ async function loadRealStats() {
         );
 
         if (!shadowStatsInterval) {
-            shadowStatsInterval = setInterval(() => {
-                if (currentUser && selectedGuild) {
-                    loadRealStats();
-                }
-            }, 60000);
+            shadowStatsInterval =
+                setInterval(() => {
+                    if (
+                        currentUser &&
+                        selectedGuild
+                    ) {
+                        loadRealStats();
+                    }
+                }, 60000);
         }
-
     } catch (error) {
-        console.error("❌ Failed to load server stats:", error);
+        console.error(
+            "❌ Failed to load server stats:",
+            error
+        );
     }
 }
 
 function resetDisplayedStats() {
-    const memberElement = findMemberStatElement();
-    const xpElement = document.getElementById("xpCount");
-    const gameElement = document.getElementById("gameCount");
+    const memberElement =
+        findMemberStatElement();
+
+    const xpElement =
+        document.getElementById(
+            "xpCount"
+        );
+
+    const gameElement =
+        document.getElementById(
+            "gameCount"
+        );
+
     const gamesPageElement =
-        document.getElementById("gamesPlayedCount");
+        document.getElementById(
+            "gamesPlayedCount"
+        );
 
     if (memberElement) {
-        memberElement.dataset.realMembers = "0";
-        memberElement.textContent = "0";
+        memberElement.dataset.realMembers =
+            "0";
+
+        memberElement.textContent =
+            "0";
     }
 
     if (xpElement) {
-        xpElement.dataset.realXP = "0";
-        xpElement.textContent = "0";
+        xpElement.dataset.realXP =
+            "0";
+
+        xpElement.textContent =
+            "0";
     }
 
     if (gameElement) {
-        gameElement.dataset.realGames = "0";
-        gameElement.textContent = "0";
+        gameElement.dataset.realGames =
+            "0";
+
+        gameElement.textContent =
+            "0";
     }
 
     if (gamesPageElement) {
-        gamesPageElement.textContent = "0";
+        gamesPageElement.textContent =
+            "0";
     }
 }
 
 function findMemberStatElement() {
-    const statCards = document.querySelectorAll(".stat-card");
+    const statCards =
+        document.querySelectorAll(
+            ".stat-card"
+        );
 
     for (const card of statCards) {
-        const text = card.textContent.toLowerCase();
+        const text =
+            card.textContent.toLowerCase();
 
         if (
             text.includes("members") ||
             text.includes("member")
         ) {
-            const strong = card.querySelector("strong");
+            const strong =
+                card.querySelector("strong");
 
             if (strong) {
                 return strong;
@@ -428,10 +515,17 @@ function findMemberStatElement() {
         }
     }
 
-    return document.querySelector(".stat-card strong") || null;
+    return document.querySelector(
+        ".stat-card strong"
+    ) || null;
 }
 
-function animateNumberChange(element, from, to, duration = 700) {
+function animateNumberChange(
+    element,
+    from,
+    to,
+    duration = 700
+) {
     if (!element) {
         return;
     }
@@ -445,24 +539,36 @@ function animateNumberChange(element, from, to, duration = 700) {
     }
 
     if (from === to) {
-        element.textContent = to.toLocaleString();
+        element.textContent =
+            to.toLocaleString();
+
         return;
     }
 
-    const start = performance.now();
+    const start =
+        performance.now();
 
     function frame(time) {
-        const progress = Math.min(
-            (time - start) / duration,
-            1
-        );
+        const progress =
+            Math.min(
+                (time - start) /
+                duration,
+                1
+            );
 
         const eased =
-            1 - Math.pow(1 - progress, 3);
+            1 -
+            Math.pow(
+                1 - progress,
+                3
+            );
 
-        const value = Math.round(
-            from + (to - from) * eased
-        );
+        const value =
+            Math.round(
+                from +
+                (to - from) *
+                eased
+            );
 
         element.textContent =
             value.toLocaleString();
@@ -476,7 +582,10 @@ function animateNumberChange(element, from, to, duration = 700) {
 }
 
 function updateUserAvatar(user) {
-    const avatar = document.getElementById("userAvatar");
+    const avatar =
+        document.getElementById(
+            "userAvatar"
+        );
 
     if (!avatar) {
         return;
@@ -485,25 +594,36 @@ function updateUserAvatar(user) {
     let avatarURL = null;
 
     if (
-        typeof user.avatar === "string" &&
+        typeof user.avatar ===
+            "string" &&
         user.avatar.startsWith("http")
     ) {
-        avatarURL = user.avatar;
-    } else if (user.avatar && user.id) {
+        avatarURL =
+            user.avatar;
+
+    } else if (
+        user.avatar &&
+        user.id
+    ) {
         avatarURL =
             "https://cdn.discordapp.com/avatars/" +
             user.id +
             "/" +
             user.avatar +
             ".png?size=128";
+
     } else if (user.id) {
-        const discriminator = Number(
-            user.discriminator || 0
-        );
+        const discriminator =
+            Number(
+                user.discriminator ||
+                0
+            );
 
         avatarURL =
             "https://cdn.discordapp.com/embed/avatars/" +
-            (discriminator % 5) +
+            (
+                discriminator % 5
+            ) +
             ".png";
     }
 
@@ -514,56 +634,84 @@ function updateUserAvatar(user) {
 
     avatar.innerHTML = "";
 
-    const img = document.createElement("img");
+    const img =
+        document.createElement("img");
 
-    img.src = avatarURL;
-    img.alt = "Discord Avatar";
-    img.width = 128;
-    img.height = 128;
-    img.loading = "eager";
-    img.draggable = false;
+    img.src =
+        avatarURL;
 
-    img.style.width = "100%";
-    img.style.height = "100%";
-    img.style.objectFit = "cover";
-    img.style.borderRadius = "inherit";
+    img.alt =
+        "Discord Avatar";
 
-    img.onerror = () => {
-        avatar.textContent = "👤";
-    };
+    img.width =
+        128;
+
+    img.height =
+        128;
+
+    img.loading =
+        "eager";
+
+    img.draggable =
+        false;
+
+    img.style.width =
+        "100%";
+
+    img.style.height =
+        "100%";
+
+    img.style.objectFit =
+        "cover";
+
+    img.style.borderRadius =
+        "inherit";
+
+    img.onerror =
+        () => {
+            avatar.textContent = "👤";
+        };
 
     avatar.appendChild(img);
 }
 
 async function loadGuilds() {
     try {
-        console.log("🏠 Loading Discord servers...");
+        console.log(
+            "🏠 Loading Discord servers..."
+        );
 
-        const response = await apiFetch("/api/guilds");
+        const response =
+            await apiFetch(
+                "/api/guilds"
+            );
 
         if (!response.ok) {
             console.error(
                 "❌ Guild loading failed:",
                 response.status
             );
+
             return;
         }
 
-        const data = await response.json();
+        const data =
+            await response.json();
 
         currentGuilds =
             Array.isArray(data.guilds)
                 ? data.guilds
                 : [];
 
-        renderServerScreen(currentGuilds);
+        renderServerScreen(
+            currentGuilds
+        );
 
         console.log(
             "✅ Loaded " +
             currentGuilds.length +
             " servers."
         );
-
     } catch (error) {
         console.error(
             "❌ Guild loading failed:",
@@ -594,8 +742,14 @@ async function refreshGuildsAfterBotAuthorization(
                 String(guildId)
         );
 
-    if (guild && guild.botInstalled) {
-        renderServerScreen(currentGuilds);
+    if (
+        guild &&
+        guild.botInstalled
+    ) {
+        renderServerScreen(
+            currentGuilds
+        );
+
         return true;
     }
 
@@ -608,8 +762,12 @@ async function refreshGuildsAfterBotAuthorization(
     ];
 
     for (const delay of retryDelays) {
-        await new Promise(resolve =>
-            setTimeout(resolve, delay)
+        await new Promise(
+            resolve =>
+                setTimeout(
+                    resolve,
+                    delay
+                )
         );
 
         await loadGuilds();
@@ -621,8 +779,13 @@ async function refreshGuildsAfterBotAuthorization(
                     String(guildId)
             );
 
-        if (guild && guild.botInstalled) {
-            renderServerScreen(currentGuilds);
+        if (
+            guild &&
+            guild.botInstalled
+        ) {
+            renderServerScreen(
+                currentGuilds
+            );
 
             showToast(
                 "✅ ShadowBot installed! The server is now ready to Manage."
@@ -632,16 +795,21 @@ async function refreshGuildsAfterBotAuthorization(
         }
     }
 
-    renderServerScreen(currentGuilds);
+    renderServerScreen(
+        currentGuilds
+    );
 
     return Boolean(
-        guild && guild.botInstalled
+        guild &&
+        guild.botInstalled
     );
 }
 
 function renderServerScreen(guilds) {
     const serverList =
-        document.getElementById("serverList");
+        document.getElementById(
+            "serverList"
+        );
 
     if (!serverList) {
         return;
@@ -662,16 +830,24 @@ function renderServerScreen(guilds) {
 
     guilds.forEach(guild => {
         const card =
-            document.createElement("div");
+            document.createElement(
+                "div"
+            );
 
         card.className =
             "server-card";
 
-        let iconURL = "Goku.png";
+        let iconURL =
+            "Goku.png";
 
         if (guild.icon) {
-            if (guild.icon.startsWith("http")) {
-                iconURL = guild.icon;
+            if (
+                guild.icon.startsWith(
+                    "http"
+                )
+            ) {
+                iconURL =
+                    guild.icon;
             } else {
                 iconURL =
                     "https://cdn.discordapp.com/icons/" +
@@ -682,7 +858,8 @@ function renderServerScreen(guilds) {
             }
         }
 
-        let badges = "";
+        let badges =
+            "";
 
         if (guild.owner) {
             badges +=
@@ -742,16 +919,25 @@ function renderServerScreen(guilds) {
                     const guildId =
                         button.dataset.guildId;
 
-                    if (action === "invite") {
-                        inviteBotToGuild(guildId);
+                    if (
+                        action ===
+                        "invite"
+                    ) {
+                        inviteBotToGuild(
+                            guildId
+                        );
                     } else {
-                        selectServer(guildId);
+                        selectServer(
+                            guildId
+                        );
                     }
                 }
             );
         }
 
-        serverList.appendChild(card);
+        serverList.appendChild(
+            card
+        );
     });
 }
 
@@ -766,7 +952,9 @@ function escapeHTML(value) {
 
 function filterServers() {
     const search =
-        document.getElementById("serverSearch");
+        document.getElementById(
+            "serverSearch"
+        );
 
     if (!search) {
         return;
@@ -782,25 +970,33 @@ function filterServers() {
             .trim()
             .toLowerCase();
 
-    let visibleCount = 0;
+    let visibleCount =
+        0;
 
-    cards.forEach(card => {
-        const name =
-            card
-                .querySelector(".server-name")
-                ?.textContent
-                .toLowerCase() || "";
+    cards.forEach(
+        card => {
+            const name =
+                card
+                    .querySelector(
+                        ".server-name"
+                    )
+                    ?.textContent
+                    .toLowerCase() ||
+                "";
 
-        const visible =
-            name.includes(query);
+            const visible =
+                name.includes(query);
 
-        card.style.display =
-            visible ? "flex" : "none";
+            card.style.display =
+                visible
+                    ? "flex"
+                    : "none";
 
-        if (visible) {
-            visibleCount++;
+            if (visible) {
+                visibleCount++;
+            }
         }
-    });
+    );
 
     const existing =
         document.querySelector(
@@ -811,9 +1007,14 @@ function filterServers() {
         existing.remove();
     }
 
-    if (cards.length && visibleCount === 0) {
+    if (
+        cards.length &&
+        visibleCount === 0
+    ) {
         const empty =
-            document.createElement("div");
+            document.createElement(
+                "div"
+            );
 
         empty.className =
             "server-empty search-empty";
@@ -824,35 +1025,54 @@ function filterServers() {
             '<p>Try another server name.</p>';
 
         document
-            .getElementById("serverList")
-            ?.appendChild(empty);
+            .getElementById(
+                "serverList"
+            )
+            ?.appendChild(
+                empty
+            );
     }
 }
 
 function openServerScreen() {
     const screen =
-        document.getElementById("serverScreen");
+        document.getElementById(
+            "serverScreen"
+        );
 
     if (!screen) {
         return;
     }
 
-    screen.style.display = "flex";
-    screen.style.opacity = "0";
+    screen.style.display =
+        "flex";
 
-    requestAnimationFrame(() => {
-        screen.style.opacity = "1";
-    });
+    screen.style.opacity =
+        "0";
+
+    screen.style.pointerEvents =
+        "auto";
+
+    requestAnimationFrame(
+        () => {
+            screen.style.opacity =
+                "1";
+        }
+    );
 
     const search =
-        document.getElementById("serverSearch");
+        document.getElementById(
+            "serverSearch"
+        );
 
     if (search) {
         search.value = "";
+
         filterServers();
 
         setTimeout(
-            () => search.focus(),
+            () =>
+                search.focus(),
             100
         );
     }
@@ -860,21 +1080,38 @@ function openServerScreen() {
 
 function closeServerScreen() {
     const screen =
-        document.getElementById("serverScreen");
+        document.getElementById(
+            "serverScreen"
+        );
 
     if (!screen) {
         return;
     }
 
-    screen.style.opacity = "0";
+    screen.style.opacity =
+        "0";
 
-    setTimeout(() => {
-        screen.style.display = "none";
-        screen.style.opacity = "";
-    }, 180);
+    screen.style.pointerEvents =
+        "none";
+
+    setTimeout(
+        () => {
+            screen.style.display =
+                "none";
+
+            screen.style.opacity =
+                "";
+
+            screen.style.pointerEvents =
+                "";
+        },
+        200
+    );
 }
 
-async function selectServer(guildId) {
+async function selectServer(
+    guildId
+) {
     if (!guildId) {
         return;
     }
@@ -883,7 +1120,9 @@ async function selectServer(guildId) {
         const response =
             await apiFetch(
                 "/api/guild/" +
-                encodeURIComponent(guildId)
+                encodeURIComponent(
+                    guildId
+                )
             );
 
         const data =
@@ -907,8 +1146,12 @@ async function selectServer(guildId) {
         selectedGuild =
             currentGuilds.find(
                 guild =>
-                    String(guild.id) ===
-                    String(guildId)
+                    String(
+                        guild.id
+                    ) ===
+                    String(
+                        guildId
+                    )
             ) || data;
 
         updateSelectedServerUI(
@@ -917,12 +1160,16 @@ async function selectServer(guildId) {
 
         resetDisplayedStats();
 
-        closeServerScreen();
-
         await loadServerSettings();
         await loadRealStats();
 
-        showPage("overview");
+        closeServerScreen();
+
+        revealDashboard();
+
+        showPage(
+            "overview"
+        );
 
         showToast(
             "🏠 " +
@@ -932,7 +1179,6 @@ async function selectServer(guildId) {
             ) +
             " selected"
         );
-
     } catch (error) {
         console.error(
             "❌ Server selection error:",
@@ -999,7 +1245,6 @@ async function loadServerSettings() {
             announcementsToggle.checked =
                 data.announcementsEnabled !== false;
         }
-
     } catch (error) {
         console.error(
             "❌ Failed to load server settings:",
@@ -1061,13 +1306,16 @@ async function saveServerManagementSettings() {
                 ) +
                 "/settings",
                 {
-                    method: "POST",
+                    method:
+                        "POST",
                     headers: {
                         "Content-Type":
                             "application/json"
                     },
                     body:
-                        JSON.stringify(body)
+                        JSON.stringify(
+                            body
+                        )
                 }
             );
 
@@ -1089,7 +1337,6 @@ async function saveServerManagementSettings() {
         );
 
         return true;
-
     } catch (error) {
         console.error(
             "❌ Server settings save error:",
@@ -1106,49 +1353,66 @@ async function saveServerManagementSettings() {
 
 function setupServerManagementSettings() {
     const toggles = [
-        document.getElementById("welcomeToggle"),
-        document.getElementById("leaveToggle"),
-        document.getElementById("announcementsToggle")
+        document.getElementById(
+            "welcomeToggle"
+        ),
+        document.getElementById(
+            "leaveToggle"
+        ),
+        document.getElementById(
+            "announcementsToggle"
+        )
     ];
 
-    toggles.forEach(toggle => {
-        if (!toggle) {
-            return;
-        }
-
-        if (toggle.dataset.serverSettingsBound) {
-            return;
-        }
-
-        toggle.dataset.serverSettingsBound = "true";
-
-        toggle.addEventListener(
-            "change",
-            async () => {
-                if (!selectedGuild) {
-                    showToast(
-                        "⚠️ Select a server first."
-                    );
-
-                    toggle.checked =
-                        !toggle.checked;
-
-                    return;
-                }
-
-                await saveServerManagementSettings();
+    toggles.forEach(
+        toggle => {
+            if (!toggle) {
+                return;
             }
-        );
-    });
+
+            if (
+                toggle.dataset
+                    .serverSettingsBound
+            ) {
+                return;
+            }
+
+            toggle.dataset
+                .serverSettingsBound =
+                "true";
+
+            toggle.addEventListener(
+                "change",
+                async () => {
+                    if (!selectedGuild) {
+                        showToast(
+                            "⚠️ Select a server first."
+                        );
+
+                        toggle.checked =
+                            !toggle.checked;
+
+                        return;
+                    }
+
+                    await saveServerManagementSettings();
+                }
+            );
+        }
+    );
 }
 
-async function inviteBotToGuild(guildId) {
+async function inviteBotToGuild(
+    guildId
+) {
     if (!guildId) {
         return;
     }
 
     try {
-        savePendingBotGuild(guildId);
+        savePendingBotGuild(
+            guildId
+        );
 
         showToast(
             "🤖 Opening Discord bot authorization..."
@@ -1157,7 +1421,9 @@ async function inviteBotToGuild(guildId) {
         const response =
             await apiFetch(
                 "/api/invite/" +
-                encodeURIComponent(guildId)
+                encodeURIComponent(
+                    guildId
+                )
             );
 
         const data =
@@ -1175,7 +1441,9 @@ async function inviteBotToGuild(guildId) {
             return;
         }
 
-        if (data.alreadyInstalled) {
+        if (
+            data.alreadyInstalled
+        ) {
             clearPendingBotGuild();
 
             await loadGuilds();
@@ -1214,7 +1482,9 @@ async function inviteBotToGuild(guildId) {
     }
 }
 
-function savePendingBotGuild(guildId) {
+function savePendingBotGuild(
+    guildId
+) {
     try {
         sessionStorage.setItem(
             PENDING_GUILD_KEY,
@@ -1271,7 +1541,9 @@ function clearPendingBotGuild() {
     }
 }
 
-function updateSelectedServerUI(guild) {
+function updateSelectedServerUI(
+    guild
+) {
     if (!guild) {
         return;
     }
@@ -1309,7 +1581,8 @@ async function logout() {
         await apiFetch(
             "/auth/logout",
             {
-                method: "POST"
+                method:
+                    "POST"
             }
         );
     } catch (error) {
@@ -1325,12 +1598,15 @@ async function logout() {
         currentGuilds = [];
         selectedGuild = null;
 
-        if (shadowStatsInterval) {
+        if (
+            shadowStatsInterval
+        ) {
             clearInterval(
                 shadowStatsInterval
             );
 
-            shadowStatsInterval = null;
+            shadowStatsInterval =
+                null;
         }
 
         resetDisplayedStats();
@@ -2002,7 +2278,9 @@ function setupMobileNavigation() {
     );
 }
 
-function showToast(message) {
+function showToast(
+    message
+) {
     let toast =
         document.querySelector(
             ".toast"
@@ -2180,7 +2458,6 @@ function loadSavedTheme() {
             select.value =
                 theme;
         }
-
     } catch (error) {
         console.warn(
             "Could not load saved theme."
