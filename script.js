@@ -236,11 +236,11 @@ async function checkDiscordLogin() {
 }
 
 function hideDashboard() {
-    document.body.style.visibility = "hidden";
+    document.body.classList.add("dashboard-auth-loading");
 }
 
 function revealDashboard() {
-    document.body.style.visibility = "";
+    document.body.classList.remove("dashboard-auth-loading");
 }
 
 function showLoginScreen() {
