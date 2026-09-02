@@ -114,14 +114,28 @@ async function checkDiscordLogin() {
     }
 
     // No OAuth callback = brand-new dashboard visit.
-    // Do NOT call /api/me here, otherwise the old HttpOnly cookie
-    // makes the dashboard jump straight to the server selector.
+    // Clear the REAL HttpOnly session cookie so the user
+    // must authenticate with Discord again.
     if (!hasSuccessfulOAuthReturn) {
         clearStoredSession();
 
         currentUser = null;
         currentGuilds = [];
         selectedGuild = null;
+
+        try {
+            await apiFetch(
+                "/auth/logout",
+                {
+                    method: "POST"
+                }
+            );
+        } catch (error) {
+            console.warn(
+                "Could not clear previous dashboard session.",
+                error
+            );
+        }
 
         showLoginScreen();
         revealDashboard();
