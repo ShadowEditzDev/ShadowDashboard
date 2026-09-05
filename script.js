@@ -19,7 +19,10 @@ function getStoredSession() {
     try {
         return localStorage.getItem(SESSION_KEY);
     } catch (error) {
-        console.warn("Could not read stored dashboard session.", error);
+        console.warn(
+            "Could not read stored dashboard session.",
+            error
+        );
         return null;
     }
 }
@@ -32,9 +35,15 @@ function saveStoredSession(sessionId) {
     shadowSession = String(sessionId);
 
     try {
-        localStorage.setItem(SESSION_KEY, shadowSession);
+        localStorage.setItem(
+            SESSION_KEY,
+            shadowSession
+        );
     } catch (error) {
-        console.warn("Could not save dashboard session.", error);
+        console.warn(
+            "Could not save dashboard session.",
+            error
+        );
     }
 }
 
@@ -42,18 +51,29 @@ function clearStoredSession() {
     shadowSession = null;
 
     try {
-        localStorage.removeItem(SESSION_KEY);
+        localStorage.removeItem(
+            SESSION_KEY
+        );
     } catch (error) {
-        console.warn("Could not clear dashboard session.", error);
+        console.warn(
+            "Could not clear dashboard session.",
+            error
+        );
     }
 }
 
 function loginWithDiscord() {
     clearStoredSession();
-    window.location.href = BACKEND_URL + "/auth/discord";
+
+    window.location.href =
+        BACKEND_URL +
+        "/auth/discord";
 }
 
-async function apiFetch(endpoint, options = {}) {
+async function apiFetch(
+    endpoint,
+    options = {}
+) {
     const headers = {
         "Accept": "application/json",
         ...(options.headers || {})
@@ -62,11 +82,14 @@ async function apiFetch(endpoint, options = {}) {
     // Authentication is handled by the secure HttpOnly
     // shadow_session cookie set by DashboardServer.
     // Never expose or forward the session ID from the URL.
-    return fetch(BACKEND_URL + endpoint, {
-        ...options,
-        headers,
-        credentials: "include"
-    });
+    return fetch(
+        BACKEND_URL + endpoint,
+        {
+            ...options,
+            headers,
+            credentials: "include"
+        }
+    );
 }
 
 async function checkDiscordLogin() {
@@ -80,15 +103,22 @@ async function checkDiscordLogin() {
     const loginStatus =
         params.get("login");
 
+    // Discord bot authorization may return the selected guild ID.
+    // Store only the guild ID locally so the dashboard can open
+    // that server automatically after OAuth completes.
     const returnedGuildId =
         params.get("guildId") ||
         params.get("guild_id");
 
-    // IMPORTANT:
-    // A normal/fresh visit must NEVER reuse an existing session cookie.
-    // Only verify /api/me after Discord has redirected back with login=success.
-    const hasSuccessfulOAuthReturn =
-        loginStatus === "success";
+    if (returnedGuildId) {
+        savePendingBotGuild(
+            returnedGuildId
+        );
+    }
+
+    const pendingGuildId =
+        returnedGuildId ||
+        getPendingBotGuild();
 
     if (
         loginStatus === "failed" ||
@@ -113,9 +143,9 @@ async function checkDiscordLogin() {
         return;
     }
 
-    // No OAuth callback = brand-new dashboard visit.
-    // Clear the REAL HttpOnly session cookie so the user
-    // must authenticate with Discord again.
+    const hasSuccessfulOAuthReturn =
+        loginStatus === "success";
+
     if (!hasSuccessfulOAuthReturn) {
         clearStoredSession();
 
@@ -123,35 +153,11 @@ async function checkDiscordLogin() {
         currentGuilds = [];
         selectedGuild = null;
 
-        try {
-            await apiFetch(
-                "/auth/logout",
-                {
-                    method: "POST"
-                }
-            );
-        } catch (error) {
-            console.warn(
-                "Could not clear previous dashboard session.",
-                error
-            );
-        }
-
         showLoginScreen();
         revealDashboard();
 
         return;
     }
-
-    if (returnedGuildId) {
-        savePendingBotGuild(
-            returnedGuildId
-        );
-    }
-
-    const pendingGuildId =
-        returnedGuildId ||
-        getPendingBotGuild();
 
     try {
         const response =
@@ -159,8 +165,12 @@ async function checkDiscordLogin() {
                 "/api/me"
             );
 
-        if (!response.ok) {
-            clearPendingBotGuild();
+        const data =
+            await response.json();
+
+        if (
+            !response.ok
+        ) {
             clearStoredSession();
 
             currentUser = null;
@@ -174,14 +184,10 @@ async function checkDiscordLogin() {
             return;
         }
 
-        const data =
-            await response.json();
-
         if (
             !data.loggedIn ||
             !data.user
         ) {
-            clearPendingBotGuild();
             clearStoredSession();
 
             currentUser = null;
@@ -220,7 +226,6 @@ async function checkDiscordLogin() {
         await loadGuilds();
 
         if (!currentGuilds.length) {
-            clearPendingBotGuild();
             cleanURL();
             showLoginScreen();
             revealDashboard();
@@ -232,19 +237,16 @@ async function checkDiscordLogin() {
             return;
         }
 
-        if (pendingGuildId) {
-            await refreshGuildsAfterBotAuthorization(
-                pendingGuildId
-            );
-
-            clearPendingBotGuild();
-        }
-
         hideLoginScreen();
         cleanURL();
         revealDashboard();
 
         if (pendingGuildId) {
+            const installed =
+                await refreshGuildsAfterBotAuthorization(
+                    pendingGuildId
+                );
+
             const addedGuild =
                 currentGuilds.find(
                     guild =>
@@ -257,18 +259,16 @@ async function checkDiscordLogin() {
                 );
 
             if (
+                installed &&
                 addedGuild &&
                 addedGuild.botInstalled
             ) {
-                selectedGuild =
-                    addedGuild;
+                clearPendingBotGuild();
 
-                updateSelectedServerUI(
-                    addedGuild
-                );
-
-                showPage(
-                    "overview"
+                // Carl-bot-style flow:
+                // automatically open the guild that was just authorized.
+                await selectServer(
+                    pendingGuildId
                 );
 
                 showToast(
@@ -281,47 +281,14 @@ async function checkDiscordLogin() {
                 );
             } else {
                 showToast(
-                    "⚠️ Checking ShadowBot installation..."
+                    "⚠️ ShadowBot installation is still being checked..."
                 );
 
-                setTimeout(
-                    async () => {
-                        await refreshGuildsAfterBotAuthorization(
-                            pendingGuildId
-                        );
-
-                        const refreshedGuild =
-                            currentGuilds.find(
-                                guild =>
-                                    String(
-                                        guild.id
-                                    ) ===
-                                    String(
-                                        pendingGuildId
-                                    )
-                            );
-
-                        if (
-                            refreshedGuild
-                        ) {
-                            selectedGuild =
-                                refreshedGuild;
-
-                            updateSelectedServerUI(
-                                refreshedGuild
-                            );
-
-                            showPage(
-                                "overview"
-                            );
-                        }
-                    },
-                    1500
-                );
+                openServerScreen();
             }
-        } else {
-            // Normal login:
-            // show the server selector ONLY after Discord OAuth.
+        } else if (
+            loginStatus === "success"
+        ) {
             openServerScreen();
 
             showToast(
@@ -329,6 +296,8 @@ async function checkDiscordLogin() {
                 username +
                 "! Select your server."
             );
+        } else {
+            openServerScreen();
         }
     } catch (error) {
         console.error(
@@ -336,7 +305,6 @@ async function checkDiscordLogin() {
             error
         );
 
-        clearPendingBotGuild();
         clearStoredSession();
 
         currentUser = null;
@@ -584,7 +552,9 @@ async function loadRealStats() {
             }
         );
 
-        if (!shadowStatsInterval) {
+        if (
+            !shadowStatsInterval
+        ) {
             shadowStatsInterval =
                 setInterval(
                     () => {
@@ -661,9 +631,7 @@ function findMemberStatElement() {
             ".stat-card"
         );
 
-    for (
-        const card of statCards
-    ) {
+    for (const card of statCards) {
         const text =
             card.textContent.toLowerCase();
 
@@ -689,8 +657,7 @@ function findMemberStatElement() {
     return (
         document.querySelector(
             ".stat-card strong"
-        ) ||
-        null
+        ) || null
     );
 }
 
@@ -741,14 +708,18 @@ function animateNumberChange(
         const eased =
             1 -
             Math.pow(
-                1 - progress,
+                1 -
+                progress,
                 3
             );
 
         const value =
             Math.round(
                 from +
-                (to - from) *
+                (
+                    to -
+                    from
+                ) *
                 eased
             );
 
@@ -756,7 +727,8 @@ function animateNumberChange(
             value.toLocaleString();
 
         if (
-            progress < 1
+            progress <
+            1
         ) {
             requestAnimationFrame(
                 frame
@@ -793,6 +765,7 @@ function updateUserAvatar(
     ) {
         avatarURL =
             user.avatar;
+
     } else if (
         user.avatar &&
         user.id
@@ -803,6 +776,7 @@ function updateUserAvatar(
             "/" +
             user.avatar +
             ".png?size=128";
+
     } else if (
         user.id
     ) {
@@ -815,7 +789,8 @@ function updateUserAvatar(
         avatarURL =
             "https://cdn.discordapp.com/embed/avatars/" +
             (
-                discriminator % 5
+                discriminator %
+                5
             ) +
             ".png";
     }
@@ -970,7 +945,8 @@ async function refreshGuildsAfterBotAuthorization(
     ];
 
     for (
-        const delay of retryDelays
+        const delay of
+        retryDelays
     ) {
         await new Promise(
             resolve =>
@@ -1039,7 +1015,7 @@ function renderServerScreen(
             '<div class="server-empty">' +
             '<div class="server-empty-icon">🏠</div>' +
             '<h3>No servers found</h3>' +
-            '<p>You don\\'t have any manageable servers.</p>' +
+            '<p>You don\'t have any manageable servers.</p>' +
             '</div>';
 
         return;
@@ -1144,10 +1120,12 @@ function renderServerScreen(
                     "click",
                     () => {
                         const action =
-                            button.dataset.action;
+                            button.dataset
+                                .action;
 
                         const guildId =
-                            button.dataset.guildId;
+                            button.dataset
+                                .guildId;
 
                         if (
                             action ===
@@ -1226,9 +1204,10 @@ function filterServers() {
     cards.forEach(
         card => {
             const name =
-                card.querySelector(
-                    ".server-name"
-                )
+                card
+                    .querySelector(
+                        ".server-name"
+                    )
                     ?.textContent
                     .toLowerCase() ||
                 "";
@@ -1565,12 +1544,10 @@ async function saveServerManagementSettings() {
                 {
                     method:
                         "POST",
-
                     headers: {
                         "Content-Type":
                             "application/json"
                     },
-
                     body:
                         JSON.stringify(
                             body
@@ -1726,6 +1703,7 @@ async function inviteBotToGuild(
 
         window.location.href =
             data.url;
+
     } catch (error) {
         clearPendingBotGuild();
 
@@ -1880,7 +1858,6 @@ async function logout() {
             window.location.pathname;
     }
 }
-
 function showPage(
     pageId,
     button = null
@@ -1967,9 +1944,9 @@ function showPage(
                         "'"
                     ) ||
                     onclick.includes(
-                        'showPage("' +
+                        "showPage(\"" +
                         pageId +
-                        '"'
+                        "\""
                     )
                 ) {
                     btn.classList.add(
@@ -1986,29 +1963,14 @@ function showPage(
         );
 
     const titles = {
-        overview:
-            "Dashboard Overview",
-
-        server:
-            "Server Management",
-
-        xp:
-            "XP & Levels",
-
-        games:
-            "Games",
-
-        moderation:
-            "Moderation",
-
-        verification:
-            "Verification",
-
-        polls:
-            "Polls",
-
-        settings:
-            "Settings"
+        overview: "Dashboard Overview",
+        server: "Server Management",
+        xp: "XP & Levels",
+        games: "Games",
+        moderation: "Moderation",
+        verification: "Verification",
+        polls: "Polls",
+        settings: "Settings"
     };
 
     if (
@@ -2020,10 +1982,8 @@ function showPage(
     }
 
     window.scrollTo({
-        top:
-            0,
-        behavior:
-            "smooth"
+        top: 0,
+        behavior: "smooth"
     });
 }
 
@@ -2086,14 +2046,12 @@ function setupRipples() {
         .forEach(
             button => {
                 if (
-                    button.dataset
-                        .rippleBound
+                    button.dataset.rippleBound
                 ) {
                     return;
                 }
 
-                button.dataset
-                    .rippleBound =
+                button.dataset.rippleBound =
                     "true";
 
                 button.addEventListener(
@@ -2292,16 +2250,10 @@ function setupHeroParallax() {
                 rect.height;
 
             const moveX =
-                (
-                    x - 0.5
-                ) *
-                8;
+                (x - 0.5) * 8;
 
             const moveY =
-                (
-                    y - 0.5
-                ) *
-                8;
+                (y - 0.5) * 8;
 
             hero.style.backgroundPosition =
                 (
@@ -2529,8 +2481,7 @@ function setupScrollEffects() {
             }
         },
         {
-            passive:
-                true
+            passive: true
         }
     );
 }
