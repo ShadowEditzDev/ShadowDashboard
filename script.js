@@ -19,10 +19,7 @@ function getStoredSession() {
     try {
         return localStorage.getItem(SESSION_KEY);
     } catch (error) {
-        console.warn(
-            "Could not read stored dashboard session.",
-            error
-        );
+        console.warn("Could not read stored dashboard session.", error);
         return null;
     }
 }
@@ -35,15 +32,9 @@ function saveStoredSession(sessionId) {
     shadowSession = String(sessionId);
 
     try {
-        localStorage.setItem(
-            SESSION_KEY,
-            shadowSession
-        );
+        localStorage.setItem(SESSION_KEY, shadowSession);
     } catch (error) {
-        console.warn(
-            "Could not save dashboard session.",
-            error
-        );
+        console.warn("Could not save dashboard session.", error);
     }
 }
 
@@ -51,29 +42,18 @@ function clearStoredSession() {
     shadowSession = null;
 
     try {
-        localStorage.removeItem(
-            SESSION_KEY
-        );
+        localStorage.removeItem(SESSION_KEY);
     } catch (error) {
-        console.warn(
-            "Could not clear dashboard session.",
-            error
-        );
+        console.warn("Could not clear dashboard session.", error);
     }
 }
 
 function loginWithDiscord() {
     clearStoredSession();
-
-    window.location.href =
-        BACKEND_URL +
-        "/auth/discord";
+    window.location.href = BACKEND_URL + "/auth/discord";
 }
 
-async function apiFetch(
-    endpoint,
-    options = {}
-) {
+async function apiFetch(endpoint, options = {}) {
     const headers = {
         "Accept": "application/json",
         ...(options.headers || {})
@@ -82,26 +62,18 @@ async function apiFetch(
     // Authentication is handled by the secure HttpOnly
     // shadow_session cookie set by DashboardServer.
     // Never expose or forward the session ID from the URL.
-    return fetch(
-        BACKEND_URL + endpoint,
-        {
-            ...options,
-            headers,
-            credentials: "include"
-        }
-    );
+    return fetch(BACKEND_URL + endpoint, {
+        ...options,
+        headers,
+        credentials: "include"
+    });
 }
 
 async function checkDiscordLogin() {
     hideDashboard();
 
-    const params =
-        new URLSearchParams(
-            window.location.search
-        );
-
-    const loginStatus =
-        params.get("login");
+    const params = new URLSearchParams(window.location.search);
+    const loginStatus = params.get("login");
 
     // Discord bot authorization may return the selected guild ID.
     // Store only the guild ID locally so the dashboard can open
@@ -111,9 +83,7 @@ async function checkDiscordLogin() {
         params.get("guild_id");
 
     if (returnedGuildId) {
-        savePendingBotGuild(
-            returnedGuildId
-        );
+        savePendingBotGuild(returnedGuildId);
     }
 
     const pendingGuildId =
@@ -136,41 +106,14 @@ async function checkDiscordLogin() {
         showLoginScreen();
         revealDashboard();
 
-        showToast(
-            "❌ Discord login failed."
-        );
-
-        return;
-    }
-
-    const hasSuccessfulOAuthReturn =
-        loginStatus === "success";
-
-    if (!hasSuccessfulOAuthReturn) {
-        clearStoredSession();
-
-        currentUser = null;
-        currentGuilds = [];
-        selectedGuild = null;
-
-        showLoginScreen();
-        revealDashboard();
-
+        showToast("❌ Discord login failed.");
         return;
     }
 
     try {
-        const response =
-            await apiFetch(
-                "/api/me"
-            );
+        const response = await apiFetch("/api/me");
 
-        const data =
-            await response.json();
-
-        if (
-            !response.ok
-        ) {
+        if (!response.ok) {
             clearStoredSession();
 
             currentUser = null;
@@ -180,14 +123,12 @@ async function checkDiscordLogin() {
             cleanURL();
             showLoginScreen();
             revealDashboard();
-
             return;
         }
 
-        if (
-            !data.loggedIn ||
-            !data.user
-        ) {
+        const data = await response.json();
+
+        if (!data.loggedIn || !data.user) {
             clearStoredSession();
 
             currentUser = null;
@@ -197,31 +138,19 @@ async function checkDiscordLogin() {
             cleanURL();
             showLoginScreen();
             revealDashboard();
-
             return;
         }
 
-        currentUser =
-            data.user;
+        currentUser = data.user;
 
         const username =
             data.user.global_name ||
             data.user.username ||
             "Discord User";
 
-        updateElementText(
-            "topUsername",
-            username
-        );
-
-        updateElementText(
-            "dashboardUsername",
-            username
-        );
-
-        updateUserAvatar(
-            data.user
-        );
+        updateElementText("topUsername", username);
+        updateElementText("dashboardUsername", username);
+        updateUserAvatar(data.user);
 
         await loadGuilds();
 
@@ -230,10 +159,7 @@ async function checkDiscordLogin() {
             showLoginScreen();
             revealDashboard();
 
-            showToast(
-                "⚠️ No manageable servers found."
-            );
-
+            showToast("⚠️ No manageable servers found.");
             return;
         }
 
@@ -250,12 +176,8 @@ async function checkDiscordLogin() {
             const addedGuild =
                 currentGuilds.find(
                     guild =>
-                        String(
-                            guild.id
-                        ) ===
-                        String(
-                            pendingGuildId
-                        )
+                        String(guild.id) ===
+                        String(pendingGuildId)
                 );
 
             if (
@@ -267,16 +189,11 @@ async function checkDiscordLogin() {
 
                 // Carl-bot-style flow:
                 // automatically open the guild that was just authorized.
-                await selectServer(
-                    pendingGuildId
-                );
+                await selectServer(pendingGuildId);
 
                 showToast(
                     "🤖 ShadowBot is now installed in " +
-                    (
-                        addedGuild.name ||
-                        "your server"
-                    ) +
+                    (addedGuild.name || "your server") +
                     "!"
                 );
             } else {
@@ -321,76 +238,53 @@ async function checkDiscordLogin() {
 }
 
 function hideDashboard() {
-    document.body.classList.add(
-        "dashboard-auth-loading"
-    );
+    document.body.classList.add("dashboard-auth-loading");
 }
 
 function revealDashboard() {
-    document.body.classList.remove(
-        "dashboard-auth-loading"
-    );
+    document.body.classList.remove("dashboard-auth-loading");
 }
 
 function showLoginScreen() {
     const loginScreen =
-        document.getElementById(
-            "loginScreen"
-        );
+        document.getElementById("loginScreen");
 
     if (loginScreen) {
-        loginScreen.style.display =
-            "flex";
+        loginScreen.style.display = "flex";
     }
 }
 
 function hideLoginScreen() {
     const loginScreen =
-        document.getElementById(
-            "loginScreen"
-        );
+        document.getElementById("loginScreen");
 
     if (loginScreen) {
-        loginScreen.style.display =
-            "none";
+        loginScreen.style.display = "none";
     }
 }
 
-function updateElementText(
-    id,
-    value
-) {
+function updateElementText(id, value) {
     const element =
-        document.getElementById(
-            id
-        );
+        document.getElementById(id);
 
     if (element) {
-        element.textContent =
-            value;
+        element.textContent = value;
     }
 }
 
 async function loadRealStats() {
-    if (
-        !selectedGuild ||
-        !selectedGuild.id
-    ) {
+    if (!selectedGuild || !selectedGuild.id) {
         return;
     }
 
     try {
         const guildId =
-            String(
-                selectedGuild.id
-            );
+            String(selectedGuild.id);
 
         const response =
             await apiFetch(
                 "/stats?guildId=" +
-                encodeURIComponent(
-                    guildId
-                )
+                encodeURIComponent(guildId)
             );
 
         const data =
@@ -413,14 +307,10 @@ async function loadRealStats() {
         }
 
         const members =
-            Number(
-                data.members
-            );
+            Number(data.members);
 
         if (
-            Number.isFinite(
-                members
-            ) &&
+            Number.isFinite(members) &&
             members >= 0
         ) {
             const memberNumber =
@@ -434,9 +324,7 @@ async function loadRealStats() {
                     );
 
                 memberNumber.dataset.realMembers =
-                    String(
-                        members
-                    );
+                    String(members);
 
                 animateNumberChange(
                     memberNumber,
@@ -455,15 +343,11 @@ async function loadRealStats() {
             );
 
         const xpElement =
-            document.getElementById(
-                "xpCount"
-            );
+            document.getElementById("xpCount");
 
         if (
             xpElement &&
-            Number.isFinite(
-                totalXP
-            ) &&
+            Number.isFinite(totalXP) &&
             totalXP >= 0
         ) {
             const previousXP =
@@ -473,9 +357,7 @@ async function loadRealStats() {
                 );
 
             xpElement.dataset.realXP =
-                String(
-                    totalXP
-                );
+                String(totalXP);
 
             animateNumberChange(
                 xpElement,
@@ -492,15 +374,11 @@ async function loadRealStats() {
             );
 
         const gameElement =
-            document.getElementById(
-                "gameCount"
-            );
+            document.getElementById("gameCount");
 
         if (
             gameElement &&
-            Number.isFinite(
-                gamesPlayed
-            ) &&
+            Number.isFinite(gamesPlayed) &&
             gamesPlayed >= 0
         ) {
             const previousGames =
@@ -510,9 +388,7 @@ async function loadRealStats() {
                 );
 
             gameElement.dataset.realGames =
-                String(
-                    gamesPlayed
-                );
+                String(gamesPlayed);
 
             animateNumberChange(
                 gameElement,
@@ -529,9 +405,7 @@ async function loadRealStats() {
 
         if (
             gamesPageElement &&
-            Number.isFinite(
-                gamesPlayed
-            ) &&
+            Number.isFinite(gamesPlayed) &&
             gamesPlayed >= 0
         ) {
             gamesPageElement.textContent =
@@ -552,21 +426,16 @@ async function loadRealStats() {
             }
         );
 
-        if (
-            !shadowStatsInterval
-        ) {
+        if (!shadowStatsInterval) {
             shadowStatsInterval =
-                setInterval(
-                    () => {
-                        if (
-                            currentUser &&
-                            selectedGuild
-                        ) {
-                            loadRealStats();
-                        }
-                    },
-                    60000
-                );
+                setInterval(() => {
+                    if (
+                        currentUser &&
+                        selectedGuild
+                    ) {
+                        loadRealStats();
+                    }
+                }, 60000);
         }
     } catch (error) {
         console.error(
@@ -636,17 +505,11 @@ function findMemberStatElement() {
             card.textContent.toLowerCase();
 
         if (
-            text.includes(
-                "members"
-            ) ||
-            text.includes(
-                "member"
-            )
+            text.includes("members") ||
+            text.includes("member")
         ) {
             const strong =
-                card.querySelector(
-                    "strong"
-                );
+                card.querySelector("strong");
 
             if (strong) {
                 return strong;
@@ -654,11 +517,9 @@ function findMemberStatElement() {
         }
     }
 
-    return (
-        document.querySelector(
-            ".stat-card strong"
-        ) || null
-    );
+    return document.querySelector(
+        ".stat-card strong"
+    ) || null;
 }
 
 function animateNumberChange(
@@ -671,19 +532,11 @@ function animateNumberChange(
         return;
     }
 
-    if (
-        !Number.isFinite(
-            from
-        )
-    ) {
+    if (!Number.isFinite(from)) {
         from = 0;
     }
 
-    if (
-        !Number.isFinite(
-            to
-        )
-    ) {
+    if (!Number.isFinite(to)) {
         to = 0;
     }
 
@@ -708,42 +561,29 @@ function animateNumberChange(
         const eased =
             1 -
             Math.pow(
-                1 -
-                progress,
+                1 - progress,
                 3
             );
 
         const value =
             Math.round(
                 from +
-                (
-                    to -
-                    from
-                ) *
+                (to - from) *
                 eased
             );
 
         element.textContent =
             value.toLocaleString();
 
-        if (
-            progress <
-            1
-        ) {
-            requestAnimationFrame(
-                frame
-            );
+        if (progress < 1) {
+            requestAnimationFrame(frame);
         }
     }
 
-    requestAnimationFrame(
-        frame
-    );
+    requestAnimationFrame(frame);
 }
 
-function updateUserAvatar(
-    user
-) {
+function updateUserAvatar(user) {
     const avatar =
         document.getElementById(
             "userAvatar"
@@ -753,15 +593,12 @@ function updateUserAvatar(
         return;
     }
 
-    let avatarURL =
-        null;
+    let avatarURL = null;
 
     if (
         typeof user.avatar ===
             "string" &&
-        user.avatar.startsWith(
-            "http"
-        )
+        user.avatar.startsWith("http")
     ) {
         avatarURL =
             user.avatar;
@@ -777,9 +614,7 @@ function updateUserAvatar(
             user.avatar +
             ".png?size=128";
 
-    } else if (
-        user.id
-    ) {
+    } else if (user.id) {
         const discriminator =
             Number(
                 user.discriminator ||
@@ -789,26 +624,20 @@ function updateUserAvatar(
         avatarURL =
             "https://cdn.discordapp.com/embed/avatars/" +
             (
-                discriminator %
-                5
+                discriminator % 5
             ) +
             ".png";
     }
 
     if (!avatarURL) {
-        avatar.textContent =
-            "👤";
-
+        avatar.textContent = "👤";
         return;
     }
 
-    avatar.innerHTML =
-        "";
+    avatar.innerHTML = "";
 
     const img =
-        document.createElement(
-            "img"
-        );
+        document.createElement("img");
 
     img.src =
         avatarURL;
@@ -842,13 +671,10 @@ function updateUserAvatar(
 
     img.onerror =
         () => {
-            avatar.textContent =
-                "👤";
+            avatar.textContent = "👤";
         };
 
-    avatar.appendChild(
-        img
-    );
+    avatar.appendChild(img);
 }
 
 async function loadGuilds() {
@@ -875,9 +701,7 @@ async function loadGuilds() {
             await response.json();
 
         currentGuilds =
-            Array.isArray(
-                data.guilds
-            )
+            Array.isArray(data.guilds)
                 ? data.guilds
                 : [];
 
@@ -903,7 +727,6 @@ async function refreshGuildsAfterBotAuthorization(
 ) {
     if (!guildId) {
         await loadGuilds();
-
         return false;
     }
 
@@ -917,12 +740,8 @@ async function refreshGuildsAfterBotAuthorization(
     let guild =
         currentGuilds.find(
             item =>
-                String(
-                    item.id
-                ) ===
-                String(
-                    guildId
-                )
+                String(item.id) ===
+                String(guildId)
         );
 
     if (
@@ -944,10 +763,7 @@ async function refreshGuildsAfterBotAuthorization(
         7000
     ];
 
-    for (
-        const delay of
-        retryDelays
-    ) {
+    for (const delay of retryDelays) {
         await new Promise(
             resolve =>
                 setTimeout(
@@ -961,12 +777,8 @@ async function refreshGuildsAfterBotAuthorization(
         guild =
             currentGuilds.find(
                 item =>
-                    String(
-                        item.id
-                    ) ===
-                    String(
-                        guildId
-                    )
+                    String(item.id) ===
+                    String(guildId)
             );
 
         if (
@@ -995,9 +807,7 @@ async function refreshGuildsAfterBotAuthorization(
     );
 }
 
-function renderServerScreen(
-    guilds
-) {
+function renderServerScreen(guilds) {
     const serverList =
         document.getElementById(
             "serverList"
@@ -1007,8 +817,7 @@ function renderServerScreen(
         return;
     }
 
-    serverList.innerHTML =
-        "";
+    serverList.innerHTML = "";
 
     if (!guilds.length) {
         serverList.innerHTML =
@@ -1021,161 +830,126 @@ function renderServerScreen(
         return;
     }
 
-    guilds.forEach(
-        guild => {
-            const card =
-                document.createElement(
-                    "div"
-                );
+    guilds.forEach(guild => {
+        const card =
+            document.createElement(
+                "div"
+            );
 
-            card.className =
-                "server-card";
+        card.className =
+            "server-card";
 
-            let iconURL =
-                "Goku.png";
+        let iconURL =
+            "Goku.png";
 
-            if (guild.icon) {
-                if (
-                    guild.icon.startsWith(
-                        "http"
-                    )
-                ) {
-                    iconURL =
-                        guild.icon;
-                } else {
-                    iconURL =
-                        "https://cdn.discordapp.com/icons/" +
-                        guild.id +
-                        "/" +
-                        guild.icon +
-                        ".png?size=128";
-                }
-            }
-
-            let badges =
-                "";
-
-            if (guild.owner) {
-                badges +=
-                    '<span class="server-badge owner">👑 OWNER</span>';
-            }
-
-            if (guild.admin) {
-                badges +=
-                    '<span class="server-badge admin">🛡️ ADMIN</span>';
-            }
-
+        if (guild.icon) {
             if (
-                guild.botInstalled
+                guild.icon.startsWith(
+                    "http"
+                )
             ) {
-                badges +=
-                    '<span class="server-badge bot">✓ BOT INSTALLED</span>';
+                iconURL =
+                    guild.icon;
             } else {
-                badges +=
-                    '<span class="server-badge not-installed">⚠ BOT NOT INSTALLED</span>';
+                iconURL =
+                    "https://cdn.discordapp.com/icons/" +
+                    guild.id +
+                    "/" +
+                    guild.icon +
+                    ".png?size=128";
             }
+        }
 
-            const actionButton =
-                guild.botInstalled
-                    ? '<button class="manage-server-btn" type="button" data-action="manage" data-guild-id="' +
-                      escapeHTML(
-                          guild.id
-                      ) +
-                      '">Manage</button>'
-                    : '<button class="manage-server-btn" type="button" data-action="invite" data-guild-id="' +
-                      escapeHTML(
-                          guild.id
-                      ) +
-                      '">Add Bot</button>';
+        let badges =
+            "";
 
-            card.innerHTML =
-                '<img class="server-icon" src="' +
-                escapeHTML(
-                    iconURL
-                ) +
-                '" alt="' +
-                escapeHTML(
-                    guild.name
-                ) +
-                '" loading="lazy" draggable="false" onerror="this.src=\'Goku.png\'">' +
-                '<div class="server-info">' +
-                '<span class="server-name">' +
-                escapeHTML(
-                    guild.name
-                ) +
-                '</span>' +
-                '<div class="server-badges">' +
-                badges +
-                '</div>' +
-                '</div>' +
-                actionButton;
+        if (guild.owner) {
+            badges +=
+                '<span class="server-badge owner">👑 OWNER</span>';
+        }
 
-            const button =
-                card.querySelector(
-                    ".manage-server-btn"
-                );
+        if (guild.admin) {
+            badges +=
+                '<span class="server-badge admin">🛡️ ADMIN</span>';
+        }
 
-            if (button) {
-                button.addEventListener(
-                    "click",
-                    () => {
-                        const action =
-                            button.dataset
-                                .action;
+        if (guild.botInstalled) {
+            badges +=
+                '<span class="server-badge bot">✓ BOT INSTALLED</span>';
+        } else {
+            badges +=
+                '<span class="server-badge not-installed">⚠ BOT NOT INSTALLED</span>';
+        }
 
-                        const guildId =
-                            button.dataset
-                                .guildId;
+        const actionButton =
+            guild.botInstalled
+                ? '<button class="manage-server-btn" type="button" data-action="manage" data-guild-id="' +
+                  escapeHTML(guild.id) +
+                  '">Manage</button>'
+                : '<button class="manage-server-btn" type="button" data-action="invite" data-guild-id="' +
+                  escapeHTML(guild.id) +
+                  '">Add Bot</button>';
 
-                        if (
-                            action ===
-                            "invite"
-                        ) {
-                            inviteBotToGuild(
-                                guildId
-                            );
-                        } else {
-                            selectServer(
-                                guildId
-                            );
-                        }
+        card.innerHTML =
+            '<img class="server-icon" src="' +
+            escapeHTML(iconURL) +
+            '" alt="' +
+            escapeHTML(guild.name) +
+            '" loading="lazy" draggable="false" onerror="this.src=\'Goku.png\'">' +
+            '<div class="server-info">' +
+            '<span class="server-name">' +
+            escapeHTML(guild.name) +
+            '</span>' +
+            '<div class="server-badges">' +
+            badges +
+            '</div>' +
+            '</div>' +
+            actionButton;
+
+        const button =
+            card.querySelector(
+                ".manage-server-btn"
+            );
+
+        if (button) {
+            button.addEventListener(
+                "click",
+                () => {
+                    const action =
+                        button.dataset.action;
+
+                    const guildId =
+                        button.dataset.guildId;
+
+                    if (
+                        action ===
+                        "invite"
+                    ) {
+                        inviteBotToGuild(
+                            guildId
+                        );
+                    } else {
+                        selectServer(
+                            guildId
+                        );
                     }
-                );
-            }
-
-            serverList.appendChild(
-                card
+                }
             );
         }
-    );
+
+        serverList.appendChild(
+            card
+        );
+    });
 }
 
-function escapeHTML(
-    value
-) {
-    return String(
-        value || ""
-    )
-        .replace(
-            /&/g,
-            "&amp;"
-        )
-        .replace(
-            /</g,
-            "&lt;"
-        )
-        .replace(
-            />/g,
-            "&gt;"
-        )
-        .replace(
-            /"/g,
-            "&quot;"
-        )
-        .replace(
-            /'/g,
-            "&#039;"
-        );
+function escapeHTML(value) {
+    return String(value || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
 }
 
 function filterServers() {
@@ -1213,9 +987,7 @@ function filterServers() {
                 "";
 
             const visible =
-                name.includes(
-                    query
-                );
+                name.includes(query);
 
             card.style.display =
                 visible
@@ -1296,8 +1068,7 @@ function openServerScreen() {
         );
 
     if (search) {
-        search.value =
-            "";
+        search.value = "";
 
         filterServers();
 
@@ -1462,24 +1233,39 @@ async function loadServerSettings() {
                 "announcementsToggle"
             );
 
+        const customWelcomeText =
+            document.getElementById(
+                "customWelcomeText"
+            );
+
+        const customLeaveText =
+            document.getElementById(
+                "customLeaveText"
+            );
+
         if (welcomeToggle) {
             welcomeToggle.checked =
-                data.welcomeEnabled !==
-                false;
+                data.welcomeEnabled !== false;
         }
 
         if (leaveToggle) {
             leaveToggle.checked =
-                data.leaveEnabled !==
-                false;
+                data.leaveEnabled !== false;
         }
 
-        if (
-            announcementsToggle
-        ) {
+        if (announcementsToggle) {
             announcementsToggle.checked =
-                data.announcementsEnabled !==
-                false;
+                data.announcementsEnabled !== false;
+        }
+
+        if (customWelcomeText) {
+            customWelcomeText.value =
+                data.customWelcomeText || "";
+        }
+
+        if (customLeaveText) {
+            customLeaveText.value =
+                data.customLeaveText || "";
         }
     } catch (error) {
         console.error(
@@ -1516,6 +1302,16 @@ async function saveServerManagementSettings() {
             "announcementsToggle"
         );
 
+    const customWelcomeText =
+        document.getElementById(
+            "customWelcomeText"
+        );
+
+    const customLeaveText =
+        document.getElementById(
+            "customLeaveText"
+        );
+
     const body = {
         welcomeEnabled:
             welcomeToggle
@@ -1530,7 +1326,17 @@ async function saveServerManagementSettings() {
         announcementsEnabled:
             announcementsToggle
                 ? announcementsToggle.checked
-                : true
+                : true,
+
+        customWelcomeText:
+            customWelcomeText
+                ? customWelcomeText.value
+                : "",
+
+        customLeaveText:
+            customLeaveText
+                ? customLeaveText.value
+                : ""
     };
 
     try {
@@ -1724,16 +1530,12 @@ function savePendingBotGuild(
     try {
         sessionStorage.setItem(
             PENDING_GUILD_KEY,
-            String(
-                guildId
-            )
+            String(guildId)
         );
 
         localStorage.setItem(
             PENDING_GUILD_KEY,
-            String(
-                guildId
-            )
+            String(guildId)
         );
     } catch (error) {
         console.warn(
@@ -1858,6 +1660,7 @@ async function logout() {
             window.location.pathname;
     }
 }
+
 function showPage(
     pageId,
     button = null
@@ -2595,7 +2398,6 @@ async function saveSettings() {
         serverActive
     ) {
         await saveServerManagementSettings();
-
         return;
     }
 
