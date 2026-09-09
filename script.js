@@ -75,9 +75,9 @@ async function checkDiscordLogin() {
     const params = new URLSearchParams(window.location.search);
     const loginStatus = params.get("login");
 
-    // Discord bot authorization may return the selected guild ID.
-    // Store only the guild ID locally so the dashboard can open
-    // that server automatically after OAuth completes.
+    // Discord bot authorization may return a guild ID. Keep it only
+    // long enough to refresh the server list after authorization; the
+    // user must always select a server before seeing the dashboard.
     const returnedGuildId =
         params.get("guildId") ||
         params.get("guild_id");
@@ -165,7 +165,6 @@ async function checkDiscordLogin() {
 
         hideLoginScreen();
         cleanURL();
-        revealDashboard();
 
         if (pendingGuildId) {
             const installed =
@@ -187,26 +186,24 @@ async function checkDiscordLogin() {
             ) {
                 clearPendingBotGuild();
 
-                // Carl-bot-style flow:
-                // automatically open the guild that was just authorized.
-                await selectServer(pendingGuildId);
-
                 showToast(
                     "🤖 ShadowBot is now installed in " +
                     (addedGuild.name || "your server") +
-                    "!"
+                    "! Select it to continue."
                 );
             } else {
                 showToast(
                     "⚠️ ShadowBot installation is still being checked..."
                 );
-
-                openServerScreen();
             }
+
+            openServerScreen();
+            revealDashboard();
         } else if (
             loginStatus === "success"
         ) {
             openServerScreen();
+            revealDashboard();
 
             showToast(
                 "👋 Welcome, " +
@@ -215,6 +212,7 @@ async function checkDiscordLogin() {
             );
         } else {
             openServerScreen();
+            revealDashboard();
         }
     } catch (error) {
         console.error(
@@ -246,6 +244,8 @@ function revealDashboard() {
 }
 
 function showLoginScreen() {
+    document.body.classList.remove("dashboard-server-selection");
+
     const loginScreen =
         document.getElementById("loginScreen");
 
@@ -1046,6 +1046,11 @@ function openServerScreen() {
         return;
     }
 
+    // Keep the app shell inaccessible until a guild has been selected.
+    // The selector remains visible so the OAuth flow is login -> selector
+    // -> selected server dashboard, with no dashboard flash in between.
+    document.body.classList.add("dashboard-server-selection");
+
     screen.style.display =
         "flex";
 
@@ -1096,18 +1101,22 @@ function closeServerScreen() {
     screen.style.pointerEvents =
         "none";
 
-    setTimeout(
-        () => {
-            screen.style.display =
-                "none";
+        setTimeout(
+            () => {
+                screen.style.display =
+                    "none";
 
             screen.style.opacity =
                 "";
 
-            screen.style.pointerEvents =
-                "";
-        },
-        200
+                screen.style.pointerEvents =
+                    "";
+
+                document.body.classList.remove(
+                    "dashboard-server-selection"
+                );
+            },
+            200
     );
 }
 
@@ -1665,11 +1674,7 @@ function showPage(
     pageId,
     button = null
 ) {
-    if (
-        pageId !== "server" &&
-        pageId !== "overview" &&
-        !selectedGuild
-    ) {
+    if (!selectedGuild) {
         showToast(
             "⚠️ Select a server first."
         );
