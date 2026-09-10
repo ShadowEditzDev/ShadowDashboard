@@ -72,23 +72,23 @@ async function apiFetch(endpoint, options = {}) {
 async function checkDiscordLogin() {
     hideDashboard();
 
-    const params = new URLSearchParams(window.location.search);
-    const loginStatus = params.get("login");
+    const params =
+        new URLSearchParams(
+            window.location.search
+        );
 
-    // Discord bot authorization may return a guild ID. Keep it only
-    // long enough to refresh the server list after authorization; the
-    // user must always select a server before seeing the dashboard.
+    const loginStatus =
+        params.get("login");
+
     const returnedGuildId =
         params.get("guildId") ||
         params.get("guild_id");
 
-    if (returnedGuildId) {
-        savePendingBotGuild(returnedGuildId);
-    }
-
-    const pendingGuildId =
-        returnedGuildId ||
-        getPendingBotGuild();
+    // IMPORTANT:
+    // A normal/fresh visit must always start at Login.
+    // Do NOT reuse an existing Discord session automatically.
+    const hasSuccessfulOAuthReturn =
+        loginStatus === "success";
 
     if (
         loginStatus === "failed" ||
@@ -106,14 +106,47 @@ async function checkDiscordLogin() {
         showLoginScreen();
         revealDashboard();
 
-        showToast("❌ Discord login failed.");
+        showToast(
+            "❌ Discord login failed."
+        );
+
         return;
     }
 
+    // FRESH VISIT
+    // Always show Continue with Discord.
+    if (!hasSuccessfulOAuthReturn) {
+        clearPendingBotGuild();
+        clearStoredSession();
+
+        currentUser = null;
+        currentGuilds = [];
+        selectedGuild = null;
+
+        showLoginScreen();
+        revealDashboard();
+
+        return;
+    }
+
+    if (returnedGuildId) {
+        savePendingBotGuild(
+            returnedGuildId
+        );
+    }
+
+    const pendingGuildId =
+        returnedGuildId ||
+        getPendingBotGuild();
+
     try {
-        const response = await apiFetch("/api/me");
+        const response =
+            await apiFetch(
+                "/api/me"
+            );
 
         if (!response.ok) {
+            clearPendingBotGuild();
             clearStoredSession();
 
             currentUser = null;
@@ -123,12 +156,18 @@ async function checkDiscordLogin() {
             cleanURL();
             showLoginScreen();
             revealDashboard();
+
             return;
         }
 
-        const data = await response.json();
+        const data =
+            await response.json();
 
-        if (!data.loggedIn || !data.user) {
+        if (
+            !data.loggedIn ||
+            !data.user
+        ) {
+            clearPendingBotGuild();
             clearStoredSession();
 
             currentUser = null;
@@ -138,88 +177,132 @@ async function checkDiscordLogin() {
             cleanURL();
             showLoginScreen();
             revealDashboard();
+
             return;
         }
 
-        currentUser = data.user;
+        currentUser =
+            data.user;
 
         const username =
             data.user.global_name ||
             data.user.username ||
             "Discord User";
 
-        updateElementText("topUsername", username);
-        updateElementText("dashboardUsername", username);
-        updateUserAvatar(data.user);
+        updateElementText(
+            "topUsername",
+            username
+        );
+
+        updateElementText(
+            "dashboardUsername",
+            username
+        );
+
+        updateUserAvatar(
+            data.user
+        );
 
         await loadGuilds();
 
         if (!currentGuilds.length) {
+            clearPendingBotGuild();
             cleanURL();
             showLoginScreen();
             revealDashboard();
 
-            showToast("⚠️ No manageable servers found.");
+            showToast(
+                "⚠️ No manageable servers found."
+            );
+
             return;
         }
 
+        // OAuth success goes directly to the dashboard.
+        // Discord handles the server selection + ShadowBot authorization.
         hideLoginScreen();
         cleanURL();
+        hideDashboard();
 
-        if (pendingGuildId) {
-            const installed =
-                await refreshGuildsAfterBotAuthorization(
-                    pendingGuildId
-                );
+        let targetGuildId =
+            returnedGuildId ||
+            pendingGuildId ||
+            null;
 
-            const addedGuild =
+        if (targetGuildId) {
+            await refreshGuildsAfterBotAuthorization(
+                targetGuildId
+            );
+
+            const targetGuild =
                 currentGuilds.find(
                     guild =>
                         String(guild.id) ===
-                        String(pendingGuildId)
+                        String(targetGuildId)
                 );
+
+            clearPendingBotGuild();
 
             if (
-                installed &&
-                addedGuild &&
-                addedGuild.botInstalled
+                targetGuild &&
+                targetGuild.botInstalled
             ) {
-                clearPendingBotGuild();
+                selectedGuild = targetGuild;
+                updateSelectedServerUI(targetGuild);
+                resetDisplayedStats();
+                await loadServerSettings();
+                await loadRealStats();
+                revealDashboard();
+                showPage("overview");
 
                 showToast(
-                    "🤖 ShadowBot is now installed in " +
-                    (addedGuild.name || "your server") +
-                    "! Select it to continue."
+                    "🤖 ShadowBot is ready in " +
+                    (targetGuild.name || "your server") +
+                    "!"
                 );
-            } else {
-                showToast(
-                    "⚠️ ShadowBot installation is still being checked..."
-                );
+
+                return;
             }
+        }
 
-            openServerScreen();
+        // Safe fallback: if exactly one installed server is available,
+        // silently use it. Never open the old dashboard server selector.
+        const installedGuilds =
+            currentGuilds.filter(
+                guild => guild && guild.botInstalled
+            );
+
+        if (installedGuilds.length === 1) {
+            selectedGuild = installedGuilds[0];
+            updateSelectedServerUI(selectedGuild);
+            resetDisplayedStats();
+            await loadServerSettings();
+            await loadRealStats();
             revealDashboard();
-        } else if (
-            loginStatus === "success"
-        ) {
-            openServerScreen();
-            revealDashboard();
+            showPage("overview");
 
             showToast(
-                "👋 Welcome, " +
-                username +
-                "! Select your server."
+                "🏠 Managing " +
+                (selectedGuild.name || "your server")
             );
-        } else {
-            openServerScreen();
-            revealDashboard();
+
+            return;
         }
+
+        clearPendingBotGuild();
+        revealDashboard();
+        showLoginScreen();
+        showToast(
+            "❌ Discord did not return the server you authorized. Please try Continue with Discord again."
+        );
+
     } catch (error) {
         console.error(
             "❌ Login check failed:",
             error
         );
 
+        clearPendingBotGuild();
         clearStoredSession();
 
         currentUser = null;
@@ -244,8 +327,6 @@ function revealDashboard() {
 }
 
 function showLoginScreen() {
-    document.body.classList.remove("dashboard-server-selection");
-
     const loginScreen =
         document.getElementById("loginScreen");
 
@@ -1037,52 +1118,7 @@ function filterServers() {
 }
 
 function openServerScreen() {
-    const screen =
-        document.getElementById(
-            "serverScreen"
-        );
-
-    if (!screen) {
-        return;
-    }
-
-    // Keep the app shell inaccessible until a guild has been selected.
-    // The selector remains visible so the OAuth flow is login -> selector
-    // -> selected server dashboard, with no dashboard flash in between.
-    document.body.classList.add("dashboard-server-selection");
-
-    screen.style.display =
-        "flex";
-
-    screen.style.opacity =
-        "0";
-
-    screen.style.pointerEvents =
-        "auto";
-
-    requestAnimationFrame(
-        () => {
-            screen.style.opacity =
-                "1";
-        }
-    );
-
-    const search =
-        document.getElementById(
-            "serverSearch"
-        );
-
-    if (search) {
-        search.value = "";
-
-        filterServers();
-
-        setTimeout(
-            () =>
-                search.focus(),
-            100
-        );
-    }
+    console.warn("Server selector disabled: Discord handles server authorization.");
 }
 
 function closeServerScreen() {
@@ -1101,22 +1137,18 @@ function closeServerScreen() {
     screen.style.pointerEvents =
         "none";
 
-        setTimeout(
-            () => {
-                screen.style.display =
-                    "none";
+    setTimeout(
+        () => {
+            screen.style.display =
+                "none";
 
             screen.style.opacity =
                 "";
 
-                screen.style.pointerEvents =
-                    "";
-
-                document.body.classList.remove(
-                    "dashboard-server-selection"
-                );
-            },
-            200
+            screen.style.pointerEvents =
+                "";
+        },
+        200
     );
 }
 
@@ -1242,16 +1274,6 @@ async function loadServerSettings() {
                 "announcementsToggle"
             );
 
-        const customWelcomeText =
-            document.getElementById(
-                "customWelcomeText"
-            );
-
-        const customLeaveText =
-            document.getElementById(
-                "customLeaveText"
-            );
-
         if (welcomeToggle) {
             welcomeToggle.checked =
                 data.welcomeEnabled !== false;
@@ -1265,16 +1287,6 @@ async function loadServerSettings() {
         if (announcementsToggle) {
             announcementsToggle.checked =
                 data.announcementsEnabled !== false;
-        }
-
-        if (customWelcomeText) {
-            customWelcomeText.value =
-                data.customWelcomeText || "";
-        }
-
-        if (customLeaveText) {
-            customLeaveText.value =
-                data.customLeaveText || "";
         }
     } catch (error) {
         console.error(
@@ -1311,16 +1323,6 @@ async function saveServerManagementSettings() {
             "announcementsToggle"
         );
 
-    const customWelcomeText =
-        document.getElementById(
-            "customWelcomeText"
-        );
-
-    const customLeaveText =
-        document.getElementById(
-            "customLeaveText"
-        );
-
     const body = {
         welcomeEnabled:
             welcomeToggle
@@ -1335,17 +1337,7 @@ async function saveServerManagementSettings() {
         announcementsEnabled:
             announcementsToggle
                 ? announcementsToggle.checked
-                : true,
-
-        customWelcomeText:
-            customWelcomeText
-                ? customWelcomeText.value
-                : "",
-
-        customLeaveText:
-            customLeaveText
-                ? customLeaveText.value
-                : ""
+                : true
     };
 
     try {
@@ -1674,16 +1666,6 @@ function showPage(
     pageId,
     button = null
 ) {
-    if (!selectedGuild) {
-        showToast(
-            "⚠️ Select a server first."
-        );
-
-        openServerScreen();
-
-        return;
-    }
-
     const pages =
         document.querySelectorAll(
             ".page"
@@ -1794,24 +1776,6 @@ function showPage(
         behavior: "smooth"
     });
 }
-
-document.addEventListener(
-    "click",
-    event => {
-        const target =
-            event.target.closest(
-                "[data-open-server]"
-            );
-
-        if (target) {
-            if (currentUser) {
-                openServerScreen();
-            } else {
-                showLoginScreen();
-            }
-        }
-    }
-);
 
 document.addEventListener(
     "DOMContentLoaded",
@@ -2254,9 +2218,8 @@ function setupKeyboardShortcuts() {
             ) {
                 event.preventDefault();
 
-                if (currentUser) {
-                    openServerScreen();
-                }
+                // Server selection is now handled by Discord OAuth.
+                // Ctrl+K no longer opens the old in-dashboard selector.
             }
         }
     );
